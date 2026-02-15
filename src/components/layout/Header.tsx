@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { SearchModal } from '@/components/search/SearchModal'
 
 const navItems = [
   { href: '/', label: 'Live Feed', disabled: false },
@@ -12,6 +14,18 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname()
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   return (
     <header
@@ -71,14 +85,27 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Right: Status */}
-        <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-success" />
-          <span className="text-[10px] uppercase tracking-widest text-text-muted">
-            Mainnet
-          </span>
+        {/* Right: Search + Status */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 border border-border bg-surface px-3 py-1 text-xs font-mono text-text-muted transition-colors hover:text-text-secondary"
+          >
+            Search
+            <kbd className="border border-border px-1 py-0.5 text-[10px]">
+              {'\u2318'}K
+            </kbd>
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            <span className="text-[10px] uppercase tracking-widest text-text-muted">
+              Mainnet
+            </span>
+          </div>
         </div>
       </div>
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   )
 }
