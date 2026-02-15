@@ -1,41 +1,26 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #000000;
-  --surface: #0a0a0a;
-  --surface-hover: #111111;
-  --border: #222222;
-  --border-bright: #333333;
-  --text-primary: #ffffff;
-  --text-secondary: #888888;
-  --text-muted: #555555;
-  --accent: #0df2f2;
-  --success: #34c759;
-  --warning: #ffcc00;
-  --critical: #ff3b30;
-}
-
 @theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-hover: var(--surface-hover);
-  --color-border: var(--border);
-  --color-border-bright: var(--border-bright);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-text-muted: var(--text-muted);
-  --color-accent: var(--accent);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-critical: var(--critical);
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-hover: #111111;
+  --color-border: #222222;
+  --color-border-bright: #333333;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #888888;
+  --color-text-muted: #555555;
+  --color-accent: #0df2f2;
+  --color-success: #34c759;
+  --color-warning: #ffcc00;
+  --color-critical: #ff3b30;
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 }
 
 body {
-  background: var(--bg);
-  color: var(--text-primary);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
@@ -74,16 +59,16 @@ body::after {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg);
+  background: var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--color-border);
   border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-bright);
+  background: var(--color-border-bright);
 }
 
 /* Status pills */
@@ -99,33 +84,33 @@ body::after {
 }
 
 .status-pill-success {
-  background: rgba(52, 199, 89, 0.12);
-  color: var(--success);
-  border: 1px solid rgba(52, 199, 89, 0.25);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
 }
 
 .status-pill-critical {
-  background: rgba(255, 59, 48, 0.12);
-  color: var(--critical);
-  border: 1px solid rgba(255, 59, 48, 0.25);
+  background: color-mix(in srgb, var(--color-critical) 12%, transparent);
+  color: var(--color-critical);
+  border: 1px solid color-mix(in srgb, var(--color-critical) 25%, transparent);
 }
 
 .status-pill-warning {
-  background: rgba(255, 204, 0, 0.12);
-  color: var(--warning);
-  border: 1px solid rgba(255, 204, 0, 0.25);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: var(--color-warning);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
 }
 
 .status-pill-neutral {
-  background: rgba(136, 136, 136, 0.12);
-  color: var(--text-secondary);
-  border: 1px solid rgba(136, 136, 136, 0.25);
+  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+  color: var(--color-text-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-text-secondary) 25%, transparent);
 }
 
 .status-pill-accent {
-  background: rgba(13, 242, 242, 0.12);
-  color: var(--accent);
-  border: 1px solid rgba(13, 242, 242, 0.25);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
 /* Grid background utility */

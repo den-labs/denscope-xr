@@ -15,8 +15,7 @@ export function Header() {
 
   return (
     <header
-      className="border-b bg-black px-6 py-3"
-      style={{ borderColor: '#222' }}
+      className="border-b border-border bg-bg px-6 py-3"
     >
       <div className="flex items-center justify-between">
         {/* Left: Logo + Nav */}
@@ -24,12 +23,11 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
             <span
-              className="flex h-7 w-8 items-center justify-center border text-[10px] font-bold tracking-tight text-white"
-              style={{ borderColor: '#444', borderRadius: '0px' }}
+              className="flex h-7 w-8 items-center justify-center border border-border-bright text-[10px] font-bold tracking-tight text-text-primary"
             >
               DS
             </span>
-            <span className="font-display text-sm font-bold uppercase tracking-widest text-white">
+            <span className="font-display text-sm font-bold uppercase tracking-widest text-text-primary">
               Denscope XR
             </span>
           </Link>
@@ -43,7 +41,7 @@ export function Header() {
                 return (
                   <span
                     key={item.href}
-                    className="cursor-not-allowed px-0 py-1.5 text-xs uppercase tracking-widest text-zinc-600"
+                    className="cursor-not-allowed px-0 py-1.5 text-xs uppercase tracking-widest text-text-muted"
                   >
                     {item.label}
                   </span>
@@ -56,14 +54,14 @@ export function Header() {
                   href={item.href}
                   className={`relative px-0 py-1.5 text-xs uppercase tracking-widest transition-colors ${
                     isActive
-                      ? 'text-white'
-                      : 'text-zinc-500 hover:text-zinc-300'
+                      ? 'text-text-primary'
+                      : 'text-text-muted hover:text-text-secondary'
                   }`}
                 >
                   {item.label}
                   {isActive && (
                     <span
-                      className="absolute bottom-0 left-0 h-px w-full bg-white"
+                      className="absolute bottom-0 left-0 h-px w-full bg-text-primary"
                       aria-hidden="true"
                     />
                   )}
@@ -82,12 +80,10 @@ export function Header() {
               placeholder="Search agent ID..."
               readOnly
               tabIndex={-1}
-              className="h-7 w-52 cursor-default border bg-transparent px-2.5 text-xs text-zinc-500 placeholder-zinc-600 outline-none"
-              style={{ borderColor: '#333', borderRadius: '0px' }}
+              className="h-7 w-52 cursor-default border border-border-bright bg-transparent px-2.5 text-xs text-text-muted placeholder-text-muted outline-none"
             />
             <kbd
-              className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 border px-1 py-0.5 text-[10px] leading-none text-zinc-600"
-              style={{ borderColor: '#333', borderRadius: '0px' }}
+              className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 border border-border-bright px-1 py-0.5 text-[10px] leading-none text-text-muted"
             >
               Cmd+K
             </kbd>
@@ -95,14 +91,14 @@ export function Header() {
 
           {/* MAINNET Status */}
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            <span className="text-[10px] uppercase tracking-widest text-text-muted">
               Mainnet
             </span>
           </div>
 
           {/* RTT Indicator */}
-          <span className="text-[10px] font-mono tabular-nums text-zinc-600">
+          <span className="text-[10px] font-mono tabular-nums text-text-muted">
             RTT 42ms
           </span>
         </div>

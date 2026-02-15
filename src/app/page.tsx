@@ -70,7 +70,7 @@ export default function FeedPage() {
       </div>
 
       {/* Bottom gradient fade overlay */}
-      <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent" />
+      <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-bg to-transparent" />
     </div>
   )
 }
