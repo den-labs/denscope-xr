@@ -34,6 +34,25 @@ export const chains: ChainConfig[] = [
     confirmations: 1,
     pollingInterval: 5000,
   },
+  {
+    id: 11142220,
+    name: 'Celo Sepolia',
+    rpc: {
+      http:
+        process.env.NEXT_PUBLIC_CELO_SEPOLIA_RPC_URL ??
+        'https://forno.celo-sepolia.celo-testnet.org',
+    },
+    contracts: {
+      identity: '0x8004A818BFB912233c491871b3d84c89A494BD9e',
+      reputation: '0x8004B663056A597Dffe9eCcC1965A193B7388713',
+    },
+    explorer: 'https://sepolia.celoscan.io',
+    badge: { label: 'Sepolia', color: '#FCFF52' },
+    backfillWindow: 500,
+    backfillChunkSize: 10,
+    confirmations: 1,
+    pollingInterval: 5000,
+  },
 ]
 
 export function getChain(chainId: number): ChainConfig | undefined {
