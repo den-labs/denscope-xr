@@ -43,8 +43,8 @@ export const useAgentStore = create<AgentStoreState>()((set, get) => ({
       case 'feedback': {
         const d = event.data as FeedbackData
         existing.feedbackCount++
-        if (d.value > 0n) existing.positiveFeedback++
-        else if (d.value < 0n) existing.negativeFeedback++
+        if (d.value > BigInt(0)) existing.positiveFeedback++
+        else if (d.value < BigInt(0)) existing.negativeFeedback++
         break
       }
     }
