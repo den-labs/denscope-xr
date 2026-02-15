@@ -1,14 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEventStore } from '@/stores/events'
+import type { FeedFilters } from '@/hooks/useFeedFilters'
 import { FeedLine } from './FeedLine'
 import { PulseEffect } from './PulseEffect'
 
-export function LiveFeed({ onAgentClick }: { onAgentClick?: (key: string) => void }) {
+export function LiveFeed({ onAgentClick, filters }: { onAgentClick?: (key: string) => void; filters?: FeedFilters }) {
   const events = useEventStore((s) => s.events)
   const [paused, setPaused] = useState(false)
+
+  const filteredEvents = useMemo(() => {
+    if (!filters) return events
+    return events.filter((e) => {
+      if (filters.kinds.size > 0 && !filters.kinds.has(e.kind)) return false
+      if (filters.chainId !== null && e.chainId !== filters.chainId) return false
+      if (filters.agentId !== '' && e.agentId !== Number(filters.agentId)) return false
+      return true
+    })
+  }, [events, filters])
 
   return (
     <div
@@ -33,10 +44,17 @@ export function LiveFeed({ onAgentClick }: { onAgentClick?: (key: string) => voi
             <p className="mt-1 text-sm">Listening on ERC-8004 contracts</p>
           </div>
         </div>
+      ) : filteredEvents.length === 0 ? (
+        <div className="flex h-full items-center justify-center text-text-muted">
+          <div className="text-center">
+            <p className="text-lg">No events match filters</p>
+            <p className="mt-1 text-sm">Try adjusting your filter criteria</p>
+          </div>
+        </div>
       ) : (
         <div className="py-0">
           <AnimatePresence initial={false}>
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <motion.div
                 key={`${event.txHash}:${event.logIndex}`}
                 initial={{ opacity: 0, height: 0 }}
