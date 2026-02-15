@@ -4,6 +4,7 @@ import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
 import { AddressChip } from '@/components/shared/AddressChip'
+import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -298,7 +299,8 @@ export default async function AgentPage({ params }: Props) {
               </div>
             </div>
 
-            {/* Event Log — placeholder for future real event history */}
+            {/* Event History */}
+            <AgentEventTimeline chainId={chainConfig.id} agentId={agentId} explorerUrl={chainConfig.explorer} />
           </div>
         </div>
 
