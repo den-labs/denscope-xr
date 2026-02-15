@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getChain } from '@/config/chains'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
+import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -229,6 +230,7 @@ export default async function AgentPage({ params }: Props) {
         >
           Post on X
         </a>
+        <EmbedSnippet chainId={chainConfig.id} agentId={agentId} />
         <a
           href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
           target="_blank"
