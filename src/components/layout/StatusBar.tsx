@@ -24,14 +24,14 @@ export function StatusBar() {
   }, [])
 
   return (
-    <footer className="border-t border-[#222] bg-black px-6 py-2 font-mono text-xs uppercase tracking-wider text-[#888]">
+    <footer className="border-t border-border bg-bg px-6 py-2 font-mono text-xs uppercase tracking-wider text-text-secondary">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span>System Uptime: {formatUptime(uptime)}</span>
-          <span className="border border-[#222] px-2 py-0.5">v0.1.0</span>
+          <span className="border border-border px-2 py-0.5">v0.1.0</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="h-1.5 w-1.5 rounded-full bg-success" />
           <span>Feed Active</span>
         </div>
       </div>

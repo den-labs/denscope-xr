@@ -96,7 +96,7 @@ export async function GET(_req: Request, { params }: Props) {
                 width: '8px',
                 height: '8px',
                 borderRadius: '999px',
-                background: '#22c55e',
+                background: '#34c759',
               }}
             />
             <span
@@ -168,7 +168,7 @@ export async function GET(_req: Request, { params }: Props) {
                 width: 300,
                 height: 6,
                 background: '#222222',
-                borderRadius: 3,
+                borderRadius: 0,
               }}
             >
               <div
@@ -176,7 +176,7 @@ export async function GET(_req: Request, { params }: Props) {
                   width: '80%',
                   height: '100%',
                   background: '#0df2f2',
-                  borderRadius: 3,
+                  borderRadius: 0,
                 }}
               />
             </div>
@@ -259,7 +259,7 @@ export async function GET(_req: Request, { params }: Props) {
                   width: 6,
                   height: 6,
                   borderRadius: 999,
-                  background: '#22c55e',
+                  background: '#34c759',
                 }}
               />
               <span style={{ fontSize: 11, color: '#555555' }}>Optimal</span>
@@ -270,7 +270,7 @@ export async function GET(_req: Request, { params }: Props) {
                   width: 6,
                   height: 6,
                   borderRadius: 999,
-                  background: '#eab308',
+                  background: '#ffcc00',
                 }}
               />
               <span style={{ fontSize: 11, color: '#555555' }}>Warning</span>
@@ -281,7 +281,7 @@ export async function GET(_req: Request, { params }: Props) {
                   width: 6,
                   height: 6,
                   borderRadius: 999,
-                  background: '#ef4444',
+                  background: '#ff3b30',
                 }}
               />
               <span style={{ fontSize: 11, color: '#555555' }}>Critical</span>
