@@ -1,10 +1,11 @@
 import { create } from 'zustand'
-import type { AgentSummary } from '@/types/agents'
+import type { AgentSummary, AgentMetadata } from '@/types/agents'
 import type { ScopeEvent, FeedbackData } from '@/types/events'
 
 type AgentStoreState = {
   agents: Map<string, AgentSummary>
   upsertFromEvent: (event: ScopeEvent) => void
+  cacheMetadata: (key: string, metadata: AgentMetadata) => void
   clear: () => void
 }
 
@@ -38,6 +39,7 @@ export const useAgentStore = create<AgentStoreState>()((set, get) => ({
       case 'uri_update': {
         const d = event.data as { newURI: string }
         existing.agentURI = d.newURI
+        existing.metadata = undefined
         break
       }
       case 'feedback': {
@@ -50,6 +52,14 @@ export const useAgentStore = create<AgentStoreState>()((set, get) => ({
     }
 
     agents.set(key, { ...existing })
+    set({ agents })
+  },
+
+  cacheMetadata: (key, metadata) => {
+    const agents = new Map(get().agents)
+    const existing = agents.get(key)
+    if (!existing) return
+    agents.set(key, { ...existing, metadata })
     set({ agents })
   },
 
