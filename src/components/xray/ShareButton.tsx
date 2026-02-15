@@ -20,7 +20,7 @@ export function ShareButton({ agent }: { agent: AgentSummary }) {
           setCopied(true)
           setTimeout(() => setCopied(false), 2000)
         }}
-        className="rounded-md bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700"
+        className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
       >
         {copied ? 'Copied!' : 'Copy Tweet'}
       </button>
@@ -28,7 +28,7 @@ export function ShareButton({ agent }: { agent: AgentSummary }) {
         href={agentUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded-md bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-700"
+        className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
       >
         Share Link
       </a>

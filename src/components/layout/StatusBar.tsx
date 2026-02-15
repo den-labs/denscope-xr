@@ -1,18 +1,39 @@
 'use client'
 
-import { useEventStore } from '@/stores/events'
+import { useState, useEffect } from 'react'
+
+function formatUptime(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, '0')
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, '0')
+  const s = (seconds % 60).toString().padStart(2, '0')
+  return `${h}:${m}:${s}`
+}
 
 export function StatusBar() {
-  const eventCount = useEventStore((s) => s.events.length)
+  const [uptime, setUptime] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUptime((prev) => prev + 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <footer className="border-t border-zinc-800 bg-zinc-950 px-6 py-2">
-      <div className="flex items-center gap-4 text-xs text-zinc-500">
-        <span className="flex items-center gap-1.5">
+    <footer className="border-t border-[#222] bg-black px-6 py-2 font-mono text-xs uppercase tracking-wider text-[#888]">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <span>System Uptime: {formatUptime(uptime)}</span>
+          <span className="border border-[#222] px-2 py-0.5">v0.1.0</span>
+        </div>
+        <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          connected
-        </span>
-        <span>{eventCount} events</span>
+          <span>Feed Active</span>
+        </div>
       </div>
     </footer>
   )

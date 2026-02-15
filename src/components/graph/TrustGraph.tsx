@@ -35,11 +35,31 @@ export function TrustGraph() {
 
     if (nodes.length === 0) {
       ctx.clearRect(0, 0, width, height)
-      ctx.fillStyle = '#52525b'
+      ctx.fillStyle = '#555555'
       ctx.textAlign = 'center'
-      ctx.font = '16px system-ui'
+      ctx.font = '14px monospace'
       ctx.fillText('No agents in graph yet', width / 2, height / 2)
       return
+    }
+
+    // Pre-compute per-node feedback from edges
+    const negativeFeedback = new Map<string, number>()
+    const positiveFeedback = new Map<string, number>()
+    for (const edge of edges) {
+      const target = edge.target as string
+      if (edge.value < 0) {
+        negativeFeedback.set(target, (negativeFeedback.get(target) ?? 0) + 1)
+      } else {
+        positiveFeedback.set(target, (positiveFeedback.get(target) ?? 0) + 1)
+      }
+    }
+
+    function getNodeColor(nodeId: string): string {
+      const neg = negativeFeedback.get(nodeId) ?? 0
+      const pos = positiveFeedback.get(nodeId) ?? 0
+      if (neg > 0 && neg > pos) return '#ff3b30'
+      if (neg > 0) return '#ffcc00'
+      return '#34c759'
     }
 
     const sim = createSimulation(nodes, links, width, height)
@@ -48,7 +68,7 @@ export function TrustGraph() {
       ctx.clearRect(0, 0, width, height)
 
       // Draw edges
-      ctx.strokeStyle = '#3f3f46'
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)'
       ctx.lineWidth = 1
       for (const link of links) {
         const s = link.source as SimNode
@@ -66,14 +86,14 @@ export function TrustGraph() {
         const radius = Math.max(4, Math.min(16, 4 + node.feedbackCount * 2))
         ctx.beginPath()
         ctx.arc(node.x, node.y!, radius, 0, Math.PI * 2)
-        ctx.fillStyle = '#34d399'
+        ctx.fillStyle = getNodeColor(node.id)
         ctx.fill()
-        ctx.strokeStyle = '#064e3b'
+        ctx.strokeStyle = '#222222'
         ctx.lineWidth = 1.5
         ctx.stroke()
 
         // Label
-        ctx.fillStyle = '#d4d4d8'
+        ctx.fillStyle = '#888888'
         ctx.font = '10px monospace'
         ctx.textAlign = 'center'
         ctx.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12)

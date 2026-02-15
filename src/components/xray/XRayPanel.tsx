@@ -34,18 +34,18 @@ export function XRayPanel({ agentKey, onClose }: XRayPanelProps) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed right-0 top-0 z-50 h-full w-96 border-l border-zinc-800 bg-zinc-950 p-6 shadow-2xl"
+          className="fixed right-0 top-0 z-50 h-full w-96 border-l border-border bg-bg p-6 shadow-2xl"
         >
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 text-zinc-500 hover:text-white"
+            className="absolute right-4 top-4 text-text-muted hover:text-text-primary"
           >
             ✕
           </button>
           {loading ? (
             <div className="animate-pulse space-y-4">
-              <div className="h-6 w-48 rounded bg-zinc-800" />
-              <div className="h-4 w-64 rounded bg-zinc-800" />
+              <div className="h-6 w-48 bg-surface" />
+              <div className="h-4 w-64 bg-surface" />
             </div>
           ) : (
             <div className="space-y-6">

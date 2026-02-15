@@ -8,11 +8,11 @@ export function AddressChip({ address, chainId }: { address: string; chainId?: n
   const explorerUrl = chain ? `${chain.explorer}/address/${address}` : null
 
   return (
-    <span className="inline-flex items-center gap-1 font-mono text-sm text-zinc-400">
+    <span className="inline-flex items-center gap-1 font-mono text-xs text-text-secondary">
       <span>{truncated}</span>
       <button
         onClick={() => navigator.clipboard.writeText(address)}
-        className="text-zinc-600 hover:text-zinc-300"
+        className="text-text-muted hover:text-accent"
         title="Copy"
       >
         copy
@@ -22,7 +22,7 @@ export function AddressChip({ address, chainId }: { address: string; chainId?: n
           href={explorerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-600 hover:text-zinc-300"
+          className="text-text-muted hover:text-accent"
         >
           ↗
         </a>
