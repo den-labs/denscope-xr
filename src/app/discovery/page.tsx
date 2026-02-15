@@ -1,10 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { useDiscoveryStore } from '@/stores/discovery'
 import { DiscoveryFeed } from '@/components/discovery/DiscoveryFeed'
 
 export default function DiscoveryPage() {
   const signals = useDiscoveryStore((s) => s.signals)
+  const [severity, setSeverity] = useState<string>('')
+  const [search, setSearch] = useState('')
 
   const criticalCount = signals.filter((s) => s.severity === 'critical').length
   const warningCount = signals.filter((s) => s.severity === 'warning').length
@@ -36,22 +39,28 @@ export default function DiscoveryPage() {
         </div>
 
         <div className="flex items-center gap-3 mt-4">
-          <select className="bg-surface border border-border text-text-primary text-xs font-mono px-3 py-1.5 appearance-none cursor-pointer focus:outline-none focus:border-border-bright">
-            <option>All Severities</option>
-            <option>Critical</option>
-            <option>Warning</option>
-            <option>Info</option>
+          <select
+            value={severity}
+            onChange={(e) => setSeverity(e.target.value)}
+            className="bg-surface border border-border text-text-primary text-xs font-mono px-3 py-1.5 appearance-none cursor-pointer focus:outline-none focus:border-border-bright"
+          >
+            <option value="">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="warning">Warning</option>
+            <option value="info">Info</option>
           </select>
           <input
             type="text"
             placeholder="Search signals..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="bg-surface border border-border text-text-primary text-xs font-mono px-3 py-1.5 flex-1 placeholder:text-text-muted focus:outline-none focus:border-border-bright"
           />
         </div>
       </header>
 
       <div className="flex-1 overflow-hidden">
-        <DiscoveryFeed />
+        <DiscoveryFeed severity={severity} search={search} />
       </div>
     </div>
   )
