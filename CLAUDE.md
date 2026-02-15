@@ -1,12 +1,12 @@
 # DenScope
 
-Real-time ERC-8004 agent explorer with Supabase-backed historical indexing.
+Real-time ERC-8004 agent explorer with serverless event-driven sync.
 
 ## Tech Stack
 
 - Next.js 16 (App Router), TypeScript, Tailwind CSS
 - viem (chain client), zustand (state), d3-force (graph), framer-motion (animations)
-- Supabase (Postgres + Realtime for historical event storage)
+- Supabase (Postgres + Realtime + Edge Functions + pg_cron)
 - next/og (share cards), idb (IndexedDB persistence)
 - moduleResolution: bundler — no `.js` extensions needed
 - Package manager: pnpm
@@ -19,8 +19,20 @@ pnpm build            # Production build
 pnpm test             # Run vitest tests
 pnpm test:watch       # Watch mode
 pnpm lint             # ESLint
-pnpm run indexer      # Backfill + realtime sync (requires SUPABASE_SERVICE_ROLE_KEY)
-pnpm run indexer:backfill  # One-shot backfill only
+```
+
+### Edge Function (deployed to Supabase)
+
+```bash
+supabase functions deploy erc8004-poller --no-verify-jwt   # Deploy/update
+curl https://ioxjqabngtannnfsueqa.supabase.co/functions/v1/erc8004-poller  # Manual invoke
+```
+
+### Manual Indexer (backup/initial backfill only)
+
+```bash
+pnpm run indexer              # Backfill + realtime sync (requires SUPABASE_SERVICE_ROLE_KEY)
+pnpm run indexer:backfill     # One-shot backfill only
 ```
 
 ## Architecture
@@ -35,8 +47,9 @@ pnpm run indexer:backfill  # One-shot backfill only
 - `src/stores/` — Zustand stores (events, agents, graph, discovery)
 - `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers)
 - `src/app/` — Next.js pages + API routes
-- `scripts/indexer.ts` — Standalone event indexer (backfill + sync to Supabase)
-- `supabase/migrations/` — Database schema (scope_events, agents, indexer_cursors)
+- `supabase/functions/erc8004-poller/` — Edge Function: polls Forno RPCs, writes events to DB
+- `supabase/migrations/` — Database schema + pg_cron schedule
+- `scripts/indexer.ts` — Manual indexer (backup, initial backfill)
 
 ## Routes
 
@@ -50,28 +63,47 @@ pnpm run indexer:backfill  # One-shot backfill only
 
 ## Adding a Chain
 
-Edit `src/config/chains.ts`, add a `ChainConfig` entry. Zero code changes elsewhere.
+1. Edit `src/config/chains.ts` — add a `ChainConfig` entry
+2. Update `supabase/functions/erc8004-poller/index.ts` — add chain to `CHAINS` array
+3. Insert deploy block in `deploy_blocks` table
+4. Redeploy: `supabase functions deploy erc8004-poller --no-verify-jwt`
 
-## Data Flow
+## Data Flow (Serverless)
 
-Two data source modes (auto-selected in PipelineProvider):
+```
+On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
+                                                          ↓
+                                              eth_getLogs + decode
+                                                          ↓
+                                              INSERT scope_events
+                                                          ↓
+                                          Supabase Realtime → Browser
+```
 
-1. **Supabase mode** (when `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` set):
-   - Frontend fetches historical events from Supabase, subscribes to Realtime INSERT
-   - Indexer script (`scripts/indexer.ts`) runs separately — backfills from deploy block, then syncs every 10s
-   - Indexer uses Forno public RPCs (no Alchemy limits) with 2000-block chunks
+**Primary mode** (serverless, always-on):
+- pg_cron invokes the `erc8004-poller` Edge Function every minute
+- Edge Function reads `indexer_cursors`, calls `eth_getLogs` on Forno (500 blocks/chunk)
+- Parses events using viem ABI decoding, upserts into `scope_events` + `agents`
+- Frontend subscribes to Supabase Realtime for live updates
+- Zero infrastructure, zero manual intervention
 
-2. **RPC fallback** (no Supabase env vars):
-   - Browser polls chains directly via viem `getContractEvents`
-   - Limited to recent window (`backfillWindow` blocks)
+**RPC fallback** (no Supabase env vars):
+- Browser polls chains directly via viem `getContractEvents`
+- Limited to recent window (`backfillWindow` blocks)
+
+**Manual indexer** (`scripts/indexer.ts`) — backup/recovery:
+- Only needed for initial backfill or catching up after extended downtime
+- Uses Forno RPCs with 2000-block chunks, processes all history
 
 ## Supabase
 
 - **Project ref**: `ioxjqabngtannnfsueqa`
 - **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`
-- **RLS**: Public read, service_role write
+- **Edge Function**: `erc8004-poller` (verify_jwt = false, invoked by pg_cron)
+- **Cron**: `erc8004-poll` — runs every minute via pg_cron + pg_net
+- **RLS**: Public read (events, agents), service_role write
 - **Realtime**: Enabled on `scope_events` for live UI updates
-- Migrations in `supabase/migrations/`
+- **Migrations**: `supabase/migrations/`
 
 ## Chains
 
@@ -82,13 +114,14 @@ Two data source modes (auto-selected in PipelineProvider):
 
 ## Key Constraints
 
-- HTTP polling (no WebSocket) — configurable `pollingInterval` per chain
-- getLogs paginated in `backfillChunkSize` chunks to avoid RPC limits
-- Alchemy free tier: 10-block max for `eth_getLogs` — indexer uses Forno instead
+- Serverless sync: pg_cron every 1 min, Edge Function processes 500 blocks/chain
+- Alchemy free tier: 10-block max for `eth_getLogs` — all indexing uses Forno instead
+- Supabase free tier: 500K Edge Function invocations/month (~86K used by cron)
 - Timestamps: `Date.now()` for realtime, `getBlock()` batch for backfill
 - IndexedDB client-only; SSR routes use `readContract()` directly
 - Reorg detection via `lastBlockHash` in cursor state
 - ERC-8004 contracts: Identity Registry + Reputation Registry per chain
+- `supabase/functions/` excluded from tsconfig (Deno runtime, not Node.js)
 
 ## Testing
 
