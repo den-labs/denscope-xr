@@ -1,5 +1,5 @@
 export type AgentService = {
-  type: 'a2a' | 'mcp' | 'x402' | 'web' | 'ens' | 'did' | 'email'
+  type: string
   url?: string; version?: string
 }
 export type AgentMetadata = {

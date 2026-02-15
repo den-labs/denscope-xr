@@ -55,7 +55,9 @@ export async function GET(_req: Request, { params }: Props) {
   const ownerTruncated = owner
     ? `${owner.slice(0, 6)}...${owner.slice(-4)}`
     : 'unknown'
-  const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
+  const services = metadata?.services
+    ?.map((s) => s.type?.toUpperCase())
+    .filter(Boolean) ?? []
   const description = metadata?.description
     ? metadata.description.length > 80
       ? `${metadata.description.slice(0, 80)}...`
@@ -161,14 +163,14 @@ export async function GET(_req: Request, { params }: Props) {
             </div>
 
             {/* Agent name */}
-            <span style={{ fontSize: 18, color: '#6b7280', letterSpacing: '0.05em', fontWeight: 400 }}>
+            <span style={{ fontSize: 18, color: '#F0F0F0', letterSpacing: '0.05em', fontWeight: 400 }}>
               {name}
             </span>
 
             {/* Description (if available) */}
             {description && (
               <span style={{
-                fontSize: 13, color: '#4b5563', fontWeight: 400,
+                fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 400,
                 marginTop: 12, maxWidth: 500, textAlign: 'center',
                 lineHeight: 1.5,
               }}>
