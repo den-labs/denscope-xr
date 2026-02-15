@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getChain } from '@/config/chains'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
-import { fetchAgentMetadata } from '@/lib/agent/metadata'
+import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!chainConfig) return { title: 'Agent Not Found — DenScope XR' }
 
   const uri = await readAgentURI(chainConfig, agentId)
-  const metadata = uri ? await fetchAgentMetadata(uri) : null
+  const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
 
   return {
@@ -45,7 +45,7 @@ export default async function AgentPage({ params }: Props) {
     readAgentOwner(chainConfig, agentId),
     readAgentURI(chainConfig, agentId),
   ])
-  const metadata = uri ? await fetchAgentMetadata(uri) : null
+  const metadata = uri ? await fetchAgentMetadataServer(uri) : null
 
   const serviceTypes = new Set(
     metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
