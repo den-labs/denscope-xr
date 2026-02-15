@@ -22,7 +22,20 @@ function resolveIPFS(uri: string): string {
   return uri
 }
 
+/** Client-side: proxies through /api/metadata to avoid Private Network Access prompts */
 export async function fetchAgentMetadata(agentURI: string): Promise<AgentMetadata | null> {
+  try {
+    const res = await fetch(`/api/metadata?uri=${encodeURIComponent(agentURI)}`)
+    if (!res.ok) return null
+    const json = await res.json()
+    return parseAgentMetadata(json)
+  } catch {
+    return null
+  }
+}
+
+/** Server-side: fetches directly (for API routes, SSR) */
+export async function fetchAgentMetadataServer(agentURI: string): Promise<AgentMetadata | null> {
   const url = resolveIPFS(agentURI)
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), METADATA_FETCH_TIMEOUT_MS)

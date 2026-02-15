@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { getChain } from '@/config/chains'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
-import { fetchAgentMetadata } from '@/lib/agent/metadata'
+import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -37,7 +37,7 @@ export async function GET(_req: Request, { params }: Props) {
     readAgentOwner(chainConfig, agentId),
     readAgentURI(chainConfig, agentId),
   ])
-  const metadata = uri ? await fetchAgentMetadata(uri) : null
+  const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
   const ownerTruncated = owner
     ? `${owner.slice(0, 6)}...${owner.slice(-4)}`
