@@ -208,40 +208,9 @@ export default async function AgentPage({ params }: Props) {
               <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
                 Reputation
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-text-secondary font-mono">
-                      Feedback Count
-                    </span>
-                    <span className="font-mono text-xs text-text-primary">
-                      --
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-border w-full">
-                    <div
-                      className="h-full bg-success"
-                      style={{ width: '0%' }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-text-secondary font-mono">
-                      Positive Rate
-                    </span>
-                    <span className="font-mono text-xs text-text-primary">
-                      --%
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-border w-full">
-                    <div
-                      className="h-full bg-success"
-                      style={{ width: '0%' }}
-                    />
-                  </div>
-                </div>
-              </div>
+              <p className="text-xs text-text-muted font-mono">
+                No feedback yet
+              </p>
             </div>
           </div>
 

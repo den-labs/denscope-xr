@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { DiscoverySignal } from '@/types/discovery'
 import { ChainBadge } from '@/components/shared/ChainBadge'
 
@@ -41,20 +42,16 @@ export function SignalCard({ signal }: { signal: DiscoverySignal }) {
         {new Date(signal.timestamp).toLocaleTimeString()}
       </time>
 
-      <div className="flex items-center gap-2 mt-3">
-        <button
-          type="button"
-          className="text-xs border border-border px-3 py-1 text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors"
-        >
-          Open Agent
-        </button>
-        <button
-          type="button"
-          className="text-xs border border-border px-3 py-1 text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors"
-        >
-          Context Graph
-        </button>
-      </div>
+      {signal.agentIds[0] != null && (
+        <div className="mt-3">
+          <Link
+            href={`/agent/${signal.chainId}/${signal.agentIds[0]}`}
+            className="text-xs border border-border px-3 py-1 text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors"
+          >
+            Open Agent
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

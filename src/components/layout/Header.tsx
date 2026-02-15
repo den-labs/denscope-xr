@@ -71,31 +71,12 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Right: Search + Status + RTT */}
-        <div className="flex items-center gap-5">
-          {/* Cosmetic Search */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search agent ID..."
-              readOnly
-              tabIndex={-1}
-              className="h-7 w-52 cursor-default border border-border-bright bg-transparent px-2.5 text-xs text-text-muted placeholder-text-muted outline-none"
-            />
-            <kbd
-              className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 border border-border-bright px-1 py-0.5 text-[10px] leading-none text-text-muted"
-            >
-              Cmd+K
-            </kbd>
-          </div>
-
-          {/* MAINNET Status */}
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            <span className="text-[10px] uppercase tracking-widest text-text-muted">
-              Mainnet
-            </span>
-          </div>
+        {/* Right: Status */}
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-success" />
+          <span className="text-[10px] uppercase tracking-widest text-text-muted">
+            Mainnet
+          </span>
         </div>
       </div>
     </header>
