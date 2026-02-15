@@ -8,8 +8,8 @@ export function parseAgentMetadata(json: Record<string, unknown>): AgentMetadata
     image: json.image as string | undefined,
     services: Array.isArray(json.services)
       ? json.services.map((s: Record<string, string>) => ({
-          type: s.type as AgentMetadata['services'][number]['type'],
-          url: s.url,
+          type: (s.type ?? s.name) as AgentMetadata['services'][number]['type'],
+          url: s.url ?? s.endpoint,
           version: s.version,
         }))
       : [],
