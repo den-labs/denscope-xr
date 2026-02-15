@@ -2,18 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { chains, getChain } from '../chains'
 
 describe('chains', () => {
-  it('has Celo Alfajores configured', () => {
-    const chain = getChain(44787)
-    expect(chain).toBeDefined()
-    expect(chain!.name).toBe('Celo Alfajores')
-    expect(chain!.contracts.identity).toMatch(/^0x/)
-    expect(chain!.contracts.reputation).toMatch(/^0x/)
-  })
-
   it('has Celo Mainnet configured', () => {
     const chain = getChain(42220)
     expect(chain).toBeDefined()
     expect(chain!.name).toBe('Celo')
+    expect(chain!.contracts.identity).toMatch(/^0x/)
+    expect(chain!.contracts.reputation).toMatch(/^0x/)
   })
 
   it('returns undefined for unknown chain', () => {
