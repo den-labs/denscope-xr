@@ -6,6 +6,7 @@ import { useAgentStore } from '@/stores/agents'
 import { fetchAgentMetadata } from '@/lib/agent/metadata'
 import { AgentIdentity } from './AgentIdentity'
 import { AgentServices } from './AgentServices'
+import { ShareButton } from './ShareButton'
 import type { AgentMetadata } from '@/types/agents'
 
 type XRayPanelProps = { agentKey: string | null; onClose: () => void }
@@ -50,6 +51,7 @@ export function XRayPanel({ agentKey, onClose }: XRayPanelProps) {
             <div className="space-y-6">
               <AgentIdentity agent={enriched} />
               <AgentServices metadata={enriched.metadata} />
+              <ShareButton agent={enriched} />
             </div>
           )}
         </motion.div>
