@@ -13,21 +13,27 @@ type XRayPanelProps = { agentKey: string | null; onClose: () => void }
 
 export function XRayPanel({ agentKey, onClose }: XRayPanelProps) {
   const agent = useAgentStore((s) => (agentKey ? s.agents.get(agentKey) : undefined))
-  const [metadata, setMetadata] = useState<AgentMetadata | null>(null)
+  const cacheMetadata = useAgentStore((s) => s.cacheMetadata)
+  const [metadata, setMetadata] = useState<AgentMetadata | null>(agent?.metadata ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     if (!agent?.agentURI) return
+    if (agent.metadata) {
+      setMetadata(agent.metadata)
+      return
+    }
     setLoading(true)
     setError(false)
     fetchAgentMetadata(agent.agentURI)
       .then((result) => {
         if (!result && agent.agentURI) setError(true)
         setMetadata(result)
+        if (result && agentKey) cacheMetadata(agentKey, result)
       })
       .finally(() => setLoading(false))
-  }, [agent?.agentURI])
+  }, [agent?.agentURI, agent?.metadata, agentKey, cacheMetadata])
 
   const enriched = agent ? { ...agent, metadata: metadata ?? agent.metadata } : null
 
@@ -39,6 +45,7 @@ export function XRayPanel({ agentKey, onClose }: XRayPanelProps) {
       .then((result) => {
         if (!result && agent.agentURI) setError(true)
         setMetadata(result)
+        if (result && agentKey) cacheMetadata(agentKey, result)
       })
       .finally(() => setLoading(false))
   }
