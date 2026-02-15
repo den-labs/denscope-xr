@@ -10,6 +10,7 @@ import { useAgentStore } from '@/stores/agents'
 import { useGraphStore } from '@/stores/graph'
 import type { ScopeEvent, FeedbackData } from '@/types/events'
 import { CURSOR_SAVE_INTERVAL_MS } from '@/config/constants'
+import { runDiscoveryRules } from '@/lib/discovery/engine'
 
 export type PipelineHandle = {
   stop: () => void
@@ -45,6 +46,8 @@ export async function startPipeline(chain: ChainConfig): Promise<PipelineHandle>
       label: `Agent #${event.agentId}`,
       feedbackCount: useAgentStore.getState().agents.get(`${event.chainId}:${event.agentId}`)?.feedbackCount ?? 0,
     })
+
+    runDiscoveryRules(event)
   }
 
   // Paginated backfill with getLogs
