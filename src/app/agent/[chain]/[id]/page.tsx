@@ -47,9 +47,8 @@ export default async function AgentPage({ params }: Props) {
   ])
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
 
-  const serviceTypes = new Set(
-    metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
-  )
+  const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
+  const serviceTypes = new Set(services)
 
   return (
     <div className="bg-grid mx-auto max-w-6xl px-6 py-10">
@@ -218,16 +217,34 @@ export default async function AgentPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Footer links */}
-      <div className="mt-8 flex items-center gap-6">
+      {/* Actions */}
+      <div className="mt-8 flex items-center gap-4">
+        <a
+          href={`https://x.com/intent/post?text=${encodeURIComponent(
+            `${metadata?.name ?? `Agent #${agentId}`}${services.length > 0 ? ` [${services.join(' / ')}]` : ''} on ${chainConfig.name}\n\nhttps://denscope.vercel.app/agent/${chainConfig.id}/${agentId}\n\nExplored with @denlabs_app`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+        >
+          Post on X
+        </a>
         <a
           href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-accent font-mono text-sm hover:underline"
+          className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
         >
-          View on {chainConfig.name} Explorer
+          View on Explorer
         </a>
+      </div>
+
+      {/* Claim */}
+      <div className="mt-6 border-t border-border pt-6">
+        <p className="text-xs text-text-muted font-mono">
+          Are you the owner of this agent?{' '}
+          <span className="text-text-secondary">Claim &amp; verify coming soon.</span>
+        </p>
       </div>
     </div>
   )

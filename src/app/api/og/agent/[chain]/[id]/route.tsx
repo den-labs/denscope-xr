@@ -42,6 +42,7 @@ export async function GET(_req: Request, { params }: Props) {
   const ownerTruncated = owner
     ? `${owner.slice(0, 6)}...${owner.slice(-4)}`
     : 'unknown'
+  const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
 
   return new ImageResponse(
     (
@@ -54,34 +55,10 @@ export async function GET(_req: Request, { params }: Props) {
           background: '#000000',
           padding: '48px 60px',
           fontFamily: 'monospace',
-          border: '1px solid #1a1a1a',
+          justifyContent: 'space-between',
         }}
       >
-        {/* Massive watermark */}
-        <div
-          style={{
-            display: 'flex',
-            width: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '0px',
-            overflow: 'visible',
-            marginTop: '80px',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 180,
-              fontWeight: 'bold',
-              color: 'rgba(255,255,255,0.04)',
-              letterSpacing: 40,
-            }}
-          >
-            AGENT
-          </span>
-        </div>
-
-        {/* Top section */}
+        {/* Top bar */}
         <div
           style={{
             display: 'flex',
@@ -89,179 +66,142 @@ export async function GET(_req: Request, { params }: Props) {
             alignItems: 'center',
           }}
         >
-          {/* Left: system status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '999px',
-                background: '#34c759',
-              }}
-            />
-            <span
-              style={{
-                color: '#888888',
-                fontSize: 12,
-                textTransform: 'uppercase',
-                letterSpacing: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 36,
+                height: 32,
+                border: '1px solid #444',
+                fontSize: 11,
+                fontWeight: 'bold',
+                color: '#ffffff',
               }}
             >
-              SYSTEM ONLINE
+              DS
+            </div>
+            <span
+              style={{
+                color: '#0df2f2',
+                fontSize: 14,
+                fontWeight: 'bold',
+                letterSpacing: 5,
+                textTransform: 'uppercase',
+              }}
+            >
+              DENSCOPE
             </span>
           </div>
-
-          {/* Right: DENSCOPE */}
           <span
             style={{
-              color: '#0df2f2',
-              fontSize: 14,
-              fontWeight: 'bold',
-              letterSpacing: 6,
-              textTransform: 'uppercase',
-            }}
-          >
-            DENSCOPE
-          </span>
-        </div>
-
-        {/* Center section */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            flex: 1,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 72,
-              fontWeight: 'bold',
-              color: '#ffffff',
-              letterSpacing: 2,
-            }}
-          >
-            #{agentId}
-          </span>
-          <span
-            style={{
-              fontSize: 24,
-              color: '#888888',
-              marginTop: 8,
-            }}
-          >
-            {name}
-          </span>
-
-          {/* Chain badge */}
-          <span
-            style={{
-              fontSize: 13,
               color: chainConfig.badge.color,
+              fontSize: 13,
               fontWeight: 'bold',
-              marginTop: 16,
               letterSpacing: 3,
               textTransform: 'uppercase',
+              border: `1px solid ${chainConfig.badge.color}`,
+              padding: '4px 12px',
             }}
           >
             {chainConfig.badge.label}
           </span>
         </div>
 
-        {/* Bottom section */}
+        {/* Center: Agent identity */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            justifyContent: 'center',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              color: '#555555',
+              letterSpacing: 4,
+              textTransform: 'uppercase',
+              marginBottom: 12,
+            }}
+          >
+            ERC-8004 AGENT
+          </span>
+          <span
+            style={{
+              fontSize: 64,
+              fontWeight: 'bold',
+              color: '#ffffff',
+              letterSpacing: -1,
+              lineHeight: 1,
+            }}
+          >
+            {name}
+          </span>
+          <span
+            style={{
+              fontSize: 28,
+              color: '#555555',
+              marginTop: 8,
+            }}
+          >
+            #{agentId}
+          </span>
+
+          {/* Service badges */}
+          {services.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+              {services.map((s, i) => (
+                <span
+                  key={i}
+                  style={{
+                    fontSize: 12,
+                    color: s === 'X402' ? '#0df2f2' : '#34c759',
+                    border: `1px solid ${s === 'X402' ? 'rgba(13,242,242,0.3)' : 'rgba(52,199,89,0.3)'}`,
+                    padding: '3px 10px',
+                    letterSpacing: 2,
+                  }}
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom bar */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-end',
-            gap: 40,
           }}
         >
-          {/* Left group: Owner + Chain badge */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span
-              style={{
-                color: '#888888',
-                fontSize: 14,
-                fontFamily: 'monospace',
-              }}
-            >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#555555', letterSpacing: 3, textTransform: 'uppercase' }}>
+              OWNER
+            </span>
+            <span style={{ fontSize: 14, color: '#888888' }}>
               {ownerTruncated}
             </span>
+          </div>
+          {metadata?.description && (
             <span
               style={{
-                color: chainConfig.badge.color,
-                fontSize: 13,
-                fontWeight: 'bold',
+                fontSize: 12,
+                color: '#555555',
+                maxWidth: 400,
+                textAlign: 'right',
+                lineHeight: 1.4,
               }}
             >
-              {chainConfig.badge.label}
+              {metadata.description.length > 100
+                ? `${metadata.description.slice(0, 100)}...`
+                : metadata.description}
             </span>
-          </div>
-
-          {/* Middle: Services */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {metadata?.services && metadata.services.length > 0 ? (
-              metadata.services.map((s, i) => (
-                <span
-                  key={i}
-                  style={{
-                    color: '#555555',
-                    fontSize: 12,
-                  }}
-                >
-                  {s.type}
-                </span>
-              ))
-            ) : (
-              <span style={{ color: '#555555', fontSize: 12 }}>
-                No services
-              </span>
-            )}
-            {metadata?.x402 && (
-              <span style={{ color: '#0df2f2', fontSize: 12 }}>
-                x402
-              </span>
-            )}
-          </div>
-
-          {/* Right: Status legend */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 999,
-                  background: '#34c759',
-                }}
-              />
-              <span style={{ fontSize: 11, color: '#555555' }}>Optimal</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 999,
-                  background: '#ffcc00',
-                }}
-              />
-              <span style={{ fontSize: 11, color: '#555555' }}>Warning</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 999,
-                  background: '#ff3b30',
-                }}
-              />
-              <span style={{ fontSize: 11, color: '#555555' }}>Critical</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     ),

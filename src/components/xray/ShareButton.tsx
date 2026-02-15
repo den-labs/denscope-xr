@@ -10,7 +10,9 @@ export function ShareButton({ agent }: { agent: AgentSummary }) {
       ? `${window.location.origin}/agent/${agent.chainId}/${agent.agentId}`
       : `/agent/${agent.chainId}/${agent.agentId}`
   const name = agent.metadata?.name ?? `Agent #${agent.agentId}`
-  const tweetText = `${name} on ERC-8004\n\n${agentUrl}\n\nExplored with @denlabs_app`
+  const services = agent.metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
+  const serviceSuffix = services.length > 0 ? ` [${services.join(' / ')}]` : ''
+  const tweetText = `${name}${serviceSuffix} on ERC-8004\n\n${agentUrl}\n\nExplored with @denlabs_app`
   const tweetUrl = `https://x.com/intent/post?text=${encodeURIComponent(tweetText)}`
 
   return (
