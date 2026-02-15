@@ -36,41 +36,10 @@ export default function GraphPage() {
         </span>
       </div>
 
-      {/* Bottom-left: Parameters panel */}
-      <div className="absolute bottom-4 left-4 z-10 w-56 border border-border bg-surface/80 backdrop-blur-sm p-4 font-mono text-xs">
-        <p className="mb-2 text-text-muted">Parameters</p>
-
-        <div className="mb-3">
-          <p className="mb-1">Time Window</p>
-          <div className="flex gap-1">
-            <button className="border border-border px-2 py-0.5">1H</button>
-            <button className="border border-border px-2 py-0.5">6H</button>
-            <button className="border border-border px-2 py-0.5">24H</button>
-          </div>
-        </div>
-
-        <div className="mb-3 flex items-center gap-2">
-          <span className="inline-block h-3 w-3 border border-border" />
-          <span>Show Edges</span>
-        </div>
-
-        <div>
-          <p className="mb-1">Node Density</p>
-          <div className="h-1 w-full bg-border">
-            <div className="h-1 w-1/2 bg-accent" />
-          </div>
-        </div>
-      </div>
-
       {/* Bottom-right: Stats HUD */}
       <div className="absolute bottom-4 right-4 z-10 font-mono text-xs text-right">
-        <p>Net Latency <span className="text-text-muted">12ms</span></p>
         <p>Nodes <span className="text-text-muted">{nodes.size}</span></p>
         <p>Edges <span className="text-text-muted">{edges.length}</span></p>
-        <p className="mt-1 flex items-center justify-end gap-1.5">
-          <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: '#34c759' }} />
-          System Status: Active
-        </p>
       </div>
 
       {/* Corner crosshairs */}

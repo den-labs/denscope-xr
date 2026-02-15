@@ -154,44 +154,19 @@ export async function GET(_req: Request, { params }: Props) {
             {name}
           </span>
 
-          {/* Trust Score bar */}
-          <div
+          {/* Chain badge */}
+          <span
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              marginTop: 20,
+              fontSize: 13,
+              color: chainConfig.badge.color,
+              fontWeight: 'bold',
+              marginTop: 16,
+              letterSpacing: 3,
+              textTransform: 'uppercase',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                width: 300,
-                height: 6,
-                background: '#222222',
-                borderRadius: 0,
-              }}
-            >
-              <div
-                style={{
-                  width: '80%',
-                  height: '100%',
-                  background: '#0df2f2',
-                  borderRadius: 0,
-                }}
-              />
-            </div>
-            <span
-              style={{
-                fontSize: 11,
-                color: '#555555',
-                marginTop: 6,
-                letterSpacing: 3,
-                textTransform: 'uppercase',
-              }}
-            >
-              TRUST SCORE
-            </span>
-          </div>
+            {chainConfig.badge.label}
+          </span>
         </div>
 
         {/* Bottom section */}
