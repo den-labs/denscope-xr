@@ -16,7 +16,7 @@ export default function GraphPage() {
 
       {/* Top-left: Title */}
       <div className="absolute top-4 left-4 z-10">
-        <h1 className="font-display font-bold text-sm">DenScope XR</h1>
+        <h1 className="font-display font-bold text-sm">DenScope</h1>
         <p className="font-mono text-xs text-text-muted">Trust Graph Explorer</p>
       </div>
 

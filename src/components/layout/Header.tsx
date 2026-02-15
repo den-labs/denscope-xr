@@ -28,7 +28,7 @@ export function Header() {
               DS
             </span>
             <span className="font-display text-sm font-bold uppercase tracking-widest text-text-primary">
-              Denscope XR
+              Denscope
             </span>
           </Link>
 

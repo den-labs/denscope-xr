@@ -9,17 +9,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { chain, id } = await params
   const chainConfig = getChain(Number(chain))
   const agentId = Number(id)
-  if (!chainConfig) return { title: 'Agent Not Found — DenScope XR' }
+  if (!chainConfig) return { title: 'Agent Not Found — DenScope' }
 
   const uri = await readAgentURI(chainConfig, agentId)
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
 
   return {
-    title: `${name} — DenScope XR`,
+    title: `${name} — DenScope`,
     description: `ERC-8004 agent on ${chainConfig.name}`,
     openGraph: {
-      title: `${name} — DenScope XR`,
+      title: `${name} — DenScope`,
       description: `ERC-8004 agent on ${chainConfig.name}`,
       images: [`/api/og/agent/${chain}/${id}`],
     },

@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'DenScope XR — ERC-8004 Agent Explorer',
+  title: 'DenScope — ERC-8004 Agent Explorer',
   description: 'Real-time explorer for ERC-8004 trustless agent identity and reputation',
 }
 

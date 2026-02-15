@@ -111,7 +111,7 @@ export async function GET(_req: Request, { params }: Props) {
             </span>
           </div>
 
-          {/* Right: DENSCOPE XR */}
+          {/* Right: DENSCOPE */}
           <span
             style={{
               color: '#0df2f2',
@@ -121,7 +121,7 @@ export async function GET(_req: Request, { params }: Props) {
               textTransform: 'uppercase',
             }}
           >
-            DENSCOPE XR
+            DENSCOPE
           </span>
         </div>
 
