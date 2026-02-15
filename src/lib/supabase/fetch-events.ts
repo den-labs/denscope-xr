@@ -75,6 +75,26 @@ export async function fetchHistoricalEvents(): Promise<number> {
   return data.length
 }
 
+/** Fetch events for a specific agent from Supabase */
+export async function fetchAgentEvents(chainId: number, agentId: number): Promise<ScopeEvent[]> {
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from('scope_events')
+    .select('*')
+    .eq('chain_id', chainId)
+    .eq('agent_id', agentId)
+    .order('block_number', { ascending: false })
+    .limit(50)
+
+  if (error || !data) {
+    console.error('Failed to fetch agent events:', error?.message)
+    return []
+  }
+
+  return (data as DbEvent[]).map(toScopeEvent)
+}
+
 /** Subscribe to realtime inserts on scope_events */
 export function subscribeToEvents(): (() => void) | null {
   if (!supabase) return null
