@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { chains } from '@/config/chains'
 
 const navItems = [
   { href: '/', label: 'Live Feed' },
@@ -32,7 +33,11 @@ export function Header() {
           </nav>
         </div>
         <div className="flex gap-2">
-          <span className="rounded-full bg-yellow-400/10 px-2.5 py-0.5 text-xs font-medium text-yellow-400">Alfajores</span>
+          {chains.map((c) => (
+            <span key={c.id} className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ backgroundColor: `${c.badge.color}15`, color: c.badge.color }}>
+              {c.badge.label}
+            </span>
+          ))}
         </div>
       </div>
     </header>
