@@ -9,7 +9,7 @@
  *   pnpm run indexer:backfill     # one-shot backfill only
  */
 import 'dotenv/config'
-import { createPublicClient, http, type Log } from 'viem'
+import { createPublicClient, http, type Chain, type Log } from 'viem'
 import { celo, celoSepolia } from 'viem/chains'
 import { createClient } from '@supabase/supabase-js'
 // Use relative imports (tsx doesn't resolve @/ paths)
@@ -27,7 +27,7 @@ const DEPLOY_BLOCKS: Record<number, number> = {
   11142220: 17013547,
 }
 
-const VIEM_CHAINS: Record<number, typeof celo> = {
+const VIEM_CHAINS: Record<number, Chain> = {
   42220: celo,
   11142220: celoSepolia,
 }
