@@ -15,16 +15,33 @@ export function XRayPanel({ agentKey, onClose }: XRayPanelProps) {
   const agent = useAgentStore((s) => (agentKey ? s.agents.get(agentKey) : undefined))
   const [metadata, setMetadata] = useState<AgentMetadata | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     if (!agent?.agentURI) return
     setLoading(true)
+    setError(false)
     fetchAgentMetadata(agent.agentURI)
-      .then(setMetadata)
+      .then((result) => {
+        if (!result && agent.agentURI) setError(true)
+        setMetadata(result)
+      })
       .finally(() => setLoading(false))
   }, [agent?.agentURI])
 
   const enriched = agent ? { ...agent, metadata: metadata ?? agent.metadata } : null
+
+  function retry() {
+    if (!agent?.agentURI) return
+    setLoading(true)
+    setError(false)
+    fetchAgentMetadata(agent.agentURI)
+      .then((result) => {
+        if (!result && agent.agentURI) setError(true)
+        setMetadata(result)
+      })
+      .finally(() => setLoading(false))
+  }
 
   return (
     <AnimatePresence>
@@ -50,6 +67,17 @@ export function XRayPanel({ agentKey, onClose }: XRayPanelProps) {
           ) : (
             <div className="space-y-6">
               <AgentIdentity agent={enriched} />
+              {error && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-text-muted font-mono">Metadata unavailable</span>
+                  <button
+                    onClick={retry}
+                    className="text-xs text-accent font-mono hover:underline"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
               <AgentServices metadata={enriched.metadata} />
               <ShareButton agent={enriched} />
             </div>
