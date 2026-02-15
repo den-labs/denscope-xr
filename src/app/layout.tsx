@@ -1,29 +1,34 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { PipelineProvider } from '@/components/providers/PipelineProvider'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-display',
   subsets: ['latin'],
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-sans',
+  subsets: ['latin'],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-mono',
   subsets: ['latin'],
 })
 
 export const metadata: Metadata = {
-  title: 'DenScope — ERC-8004 Agent Explorer',
+  title: 'DenScope XR — ERC-8004 Agent Explorer',
   description: 'Real-time explorer for ERC-8004 trustless agent identity and reputation',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} flex h-screen flex-col bg-zinc-950 text-white antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} flex h-screen flex-col bg-black text-white antialiased`}>
         <PipelineProvider>
           <Header />
           <main className="flex-1 overflow-hidden">{children}</main>

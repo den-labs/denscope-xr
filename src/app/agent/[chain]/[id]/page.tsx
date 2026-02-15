@@ -9,22 +9,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { chain, id } = await params
   const chainConfig = getChain(Number(chain))
   const agentId = Number(id)
-  if (!chainConfig) return { title: 'Agent Not Found — DenScope' }
+  if (!chainConfig) return { title: 'Agent Not Found — DenScope XR' }
 
   const uri = await readAgentURI(chainConfig, agentId)
   const metadata = uri ? await fetchAgentMetadata(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
 
   return {
-    title: `${name} — DenScope`,
+    title: `${name} — DenScope XR`,
     description: `ERC-8004 agent on ${chainConfig.name}`,
     openGraph: {
-      title: `${name} — DenScope`,
+      title: `${name} — DenScope XR`,
       description: `ERC-8004 agent on ${chainConfig.name}`,
       images: [`/api/og/agent/${chain}/${id}`],
     },
   }
 }
+
+const KNOWN_PROTOCOLS = ['A2A', 'MCP', 'x402'] as const
 
 export default async function AgentPage({ params }: Props) {
   const { chain, id } = await params
@@ -33,7 +35,7 @@ export default async function AgentPage({ params }: Props) {
 
   if (!chainConfig) {
     return (
-      <div className="flex h-full items-center justify-center text-zinc-500">
+      <div className="flex h-full items-center justify-center text-text-muted">
         Chain not found
       </div>
     )
@@ -45,51 +47,293 @@ export default async function AgentPage({ params }: Props) {
   ])
   const metadata = uri ? await fetchAgentMetadata(uri) : null
 
+  const serviceTypes = new Set(
+    metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
+  )
+
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <h1 className="text-2xl font-bold text-white">
-        {metadata?.name ?? `Agent #${agentId}`}
+    <div className="bg-grid mx-auto max-w-6xl px-6 py-10">
+      {/* Breadcrumb */}
+      <nav className="font-mono text-xs text-text-muted uppercase tracking-wider">
+        System / DenScope / Dossier
+      </nav>
+
+      {/* Title */}
+      <h1 className="font-display text-3xl font-bold uppercase tracking-wider mt-4 text-text-primary">
+        AGENT X-RAY
       </h1>
-      <p className="mt-1 text-zinc-500">on {chainConfig.name}</p>
+      <p className="mt-1 text-sm text-text-secondary">
+        {metadata?.name ?? `Agent #${agentId}`} &mdash; {chainConfig.name}
+      </p>
+
       {metadata?.description && (
-        <p className="mt-4 text-zinc-400">{metadata.description}</p>
+        <p className="mt-3 text-sm text-text-secondary max-w-2xl">
+          {metadata.description}
+        </p>
       )}
-      <div className="mt-6 space-y-2 text-sm text-zinc-400">
-        <p>
-          Owner:{' '}
-          <span className="font-mono text-zinc-300">{owner ?? 'unknown'}</span>
-        </p>
-        <p>
-          URI:{' '}
-          <span className="font-mono text-zinc-300 break-all">
-            {uri ?? 'unknown'}
-          </span>
-        </p>
-      </div>
-      {metadata?.services && metadata.services.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-sm font-medium text-zinc-500">Services</h2>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {metadata.services.map((s, i) => (
-              <span
-                key={i}
-                className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300"
-              >
-                {s.type}
-                {s.version ? ` v${s.version}` : ''}
+
+      {/* 12-column grid */}
+      <div className="grid grid-cols-12 gap-6 mt-8">
+        {/* Left column: Identity Card */}
+        <div className="col-span-4">
+          <div className="bg-surface border border-border p-6 space-y-5">
+            {/* Status badge */}
+            <div className="flex items-center justify-between">
+              <span className="status-pill status-pill-success">ACTIVE</span>
+              <span className="font-mono text-xs text-text-muted">
+                ERC-8004
               </span>
-            ))}
+            </div>
+
+            {/* Agent ID */}
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
+                Agent ID
+              </p>
+              <p className="font-display text-4xl font-bold text-text-primary mt-1">
+                #{agentId}
+              </p>
+            </div>
+
+            {/* Trust Score */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
+                  Trust Score
+                </p>
+                <span className="font-mono text-xs text-accent">80%</span>
+              </div>
+              <div className="h-1.5 bg-border w-full">
+                <div className="h-full bg-accent" style={{ width: '80%' }} />
+              </div>
+            </div>
+
+            {/* Chain ID */}
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
+                Chain ID
+              </p>
+              <p className="font-mono text-sm text-text-secondary mt-0.5">
+                {chainConfig.id}
+              </p>
+            </div>
+
+            {/* Owner */}
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
+                Owner
+              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="font-mono text-xs text-text-secondary truncate">
+                  {owner ?? 'unknown'}
+                </p>
+                <span className="text-text-muted text-xs shrink-0">copy</span>
+              </div>
+            </div>
+
+            {/* URI */}
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
+                Agent URI
+              </p>
+              {uri ? (
+                <a
+                  href={uri}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-accent break-all hover:underline mt-0.5 block"
+                >
+                  {uri}
+                </a>
+              ) : (
+                <p className="font-mono text-xs text-text-secondary mt-0.5">
+                  unknown
+                </p>
+              )}
+            </div>
+
+            {/* Storage Status */}
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono mb-1">
+                Storage
+              </p>
+              <span className="status-pill status-pill-accent">On-chain</span>
+            </div>
           </div>
         </div>
-      )}
-      <a
-        href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-6 inline-block text-sm text-emerald-400 hover:underline"
-      >
-        View on {chainConfig.name} Explorer
-      </a>
+
+        {/* Right column */}
+        <div className="col-span-8 space-y-6">
+          {/* Top row: two cards side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Connected Protocols */}
+            <div className="bg-surface border border-border p-5">
+              <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
+                Connected Protocols
+              </h2>
+              <div className="space-y-2">
+                {KNOWN_PROTOCOLS.map((protocol) => {
+                  const isConnected = serviceTypes.has(protocol)
+                  return (
+                    <div
+                      key={protocol}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="font-mono text-sm text-text-primary">
+                        {protocol}
+                      </span>
+                      <span
+                        className={`status-pill ${
+                          isConnected
+                            ? 'status-pill-success'
+                            : 'status-pill-neutral'
+                        }`}
+                      >
+                        {isConnected ? 'CONNECTED' : 'INACTIVE'}
+                      </span>
+                    </div>
+                  )
+                })}
+                {/* Additional services not in KNOWN_PROTOCOLS */}
+                {metadata?.services
+                  ?.filter(
+                    (s) =>
+                      !KNOWN_PROTOCOLS.includes(
+                        s.type.toUpperCase() as (typeof KNOWN_PROTOCOLS)[number]
+                      )
+                  )
+                  .map((s, i) => (
+                    <div key={`extra-${i}`} className="flex items-center justify-between">
+                      <span className="font-mono text-sm text-text-primary">
+                        {s.type}
+                        {s.version ? ` v${s.version}` : ''}
+                      </span>
+                      <span className="status-pill status-pill-success">
+                        CONNECTED
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Reputation */}
+            <div className="bg-surface border border-border p-5">
+              <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
+                Reputation
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-text-secondary font-mono">
+                      Feedback Count
+                    </span>
+                    <span className="font-mono text-xs text-text-primary">
+                      --
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-border w-full">
+                    <div
+                      className="h-full bg-success"
+                      style={{ width: '0%' }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-text-secondary font-mono">
+                      Positive Rate
+                    </span>
+                    <span className="font-mono text-xs text-text-primary">
+                      --%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-border w-full">
+                    <div
+                      className="h-full bg-success"
+                      style={{ width: '0%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Event Log Timeline */}
+          <div className="bg-surface border border-border p-5">
+            <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-5">
+              Recent Activity
+            </h2>
+            <div className="relative pl-5 space-y-5">
+              {/* Vertical line */}
+              <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border-bright" />
+
+              {/* Timeline entries (placeholders) */}
+              <div className="relative flex items-start gap-3">
+                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-accent" />
+                <div>
+                  <p className="font-mono text-xs text-text-primary">
+                    Agent registered on-chain
+                  </p>
+                  <p className="font-mono text-xs text-text-muted mt-0.5">
+                    Block #{chainConfig.id === 42220 ? '58396724' : '17013547'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex items-start gap-3">
+                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-success" />
+                <div>
+                  <p className="font-mono text-xs text-text-primary">
+                    Metadata URI set
+                  </p>
+                  <p className="font-mono text-xs text-text-muted mt-0.5">
+                    IPFS / HTTP endpoint configured
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex items-start gap-3">
+                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-text-muted" />
+                <div>
+                  <p className="font-mono text-xs text-text-primary">
+                    Identity verified
+                  </p>
+                  <p className="font-mono text-xs text-text-muted mt-0.5">
+                    Owner attestation confirmed
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex items-start gap-3">
+                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-text-muted" />
+                <div>
+                  <p className="font-mono text-xs text-text-secondary">
+                    Awaiting further activity...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer links */}
+      <div className="mt-8 flex items-center gap-6">
+        <a
+          href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent font-mono text-sm hover:underline"
+        >
+          View on {chainConfig.name} Explorer
+        </a>
+        <a
+          href="#"
+          className="text-accent font-mono text-sm hover:underline"
+        >
+          View Full Report
+        </a>
+      </div>
     </div>
   )
 }

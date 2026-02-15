@@ -4,25 +4,30 @@ import { AddressChip } from '@/components/shared/AddressChip'
 
 export function AgentIdentity({ agent }: { agent: AgentSummary }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg font-bold text-white">
-          {agent.metadata?.name ?? `Agent #${agent.agentId}`}
-        </h2>
-        <ChainBadge chainId={agent.chainId} />
+    <div className="bg-surface border border-border p-4">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-display font-bold text-text-primary">
+            {agent.metadata?.name ?? `Agent #${agent.agentId}`}
+          </h2>
+          <ChainBadge chainId={agent.chainId} />
+        </div>
+        {agent.metadata?.description && (
+          <p className="text-sm text-text-secondary">{agent.metadata.description}</p>
+        )}
       </div>
-      {agent.metadata?.description && (
-        <p className="text-sm text-zinc-400">{agent.metadata.description}</p>
-      )}
-      <div className="space-y-1 text-sm">
+
+      <div className="border-t border-border my-3" />
+
+      <div className="space-y-1">
         <div className="flex justify-between">
-          <span className="text-zinc-500">Owner</span>
+          <span className="text-text-muted font-mono text-xs uppercase tracking-wider">Owner</span>
           <AddressChip address={agent.owner} chainId={agent.chainId} />
         </div>
         <div className="flex justify-between">
-          <span className="text-zinc-500">Feedback</span>
-          <span className="text-zinc-300">
-            {agent.feedbackCount} ({agent.positiveFeedback}+ / {agent.negativeFeedback}-)
+          <span className="text-text-muted font-mono text-xs uppercase tracking-wider">Feedback</span>
+          <span className="text-text-secondary font-mono text-sm">
+            {agent.feedbackCount} (<span className="text-success">{agent.positiveFeedback}+</span> / <span className="text-critical">{agent.negativeFeedback}-</span>)
           </span>
         </div>
       </div>

@@ -17,12 +17,16 @@ export function AgentServices({ metadata }: { metadata?: AgentMetadata }) {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-medium text-zinc-500">Services</h3>
+      <h3 className="font-mono text-xs uppercase tracking-wider text-text-muted">Services</h3>
       <div className="flex flex-wrap gap-1.5">
         {badges.map((s, i) => (
           <span
             key={i}
-            className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300"
+            className={
+              s.type === 'x402'
+                ? 'status-pill status-pill-accent'
+                : 'status-pill status-pill-success'
+            }
           >
             {serviceLabels[s.type] ?? s.type}
             {s.version ? ` v${s.version}` : ''}
