@@ -1,13 +1,85 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { useGraphStore } from '@/stores/graph'
+import { useAgentStore } from '@/stores/agents'
+import { getChain } from '@/config/chains'
 import { createSimulation, type SimNode, type SimLink } from '@/lib/graph/layout'
+import { GraphTooltip } from './GraphTooltip'
 
-export function TrustGraph() {
+export type HoveredNode = {
+  agentId: number
+  chainId: number
+  label: string
+  feedbackCount: number
+  agentName?: string
+  chainLabel: string
+  x: number
+  y: number
+}
+
+function getNodeRadius(feedbackCount: number): number {
+  return Math.max(4, Math.min(16, 4 + feedbackCount * 2))
+}
+
+export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const nodesRef = useRef<SimNode[]>([])
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
+  const agents = useAgentStore((s) => s.agents)
+  const [hovered, setHovered] = useState<HoveredNode | null>(null)
+
+  const hitTest = useCallback((clientX: number, clientY: number): SimNode | null => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+    const rect = canvas.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+
+    for (const node of nodesRef.current) {
+      if (node.x == null || node.y == null) continue
+      const radius = getNodeRadius(node.feedbackCount)
+      const dx = x - node.x
+      const dy = y - node.y!
+      if (dx * dx + dy * dy <= (radius + 4) * (radius + 4)) {
+        return node
+      }
+    }
+    return null
+  }, [])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const node = hitTest(e.clientX, e.clientY)
+    if (node) {
+      const canvas = canvasRef.current!
+      const rect = canvas.getBoundingClientRect()
+      const agentKey = `${node.chainId}:${node.agentId}`
+      const agent = agents.get(agentKey)
+      const chain = getChain(node.chainId)
+      setHovered({
+        agentId: node.agentId,
+        chainId: node.chainId,
+        label: node.label,
+        feedbackCount: node.feedbackCount,
+        agentName: agent?.metadata?.name,
+        chainLabel: chain?.badge.label ?? `Chain ${node.chainId}`,
+        x: node.x! + rect.left,
+        y: node.y! + rect.top,
+      })
+      canvas.style.cursor = 'pointer'
+    } else {
+      setHovered(null)
+      if (canvasRef.current) canvasRef.current.style.cursor = 'default'
+    }
+  }, [hitTest, agents])
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const node = hitTest(e.clientX, e.clientY)
+    if (node && onNodeClick) {
+      onNodeClick(`${node.chainId}:${node.agentId}`)
+    }
+  }, [hitTest, onNodeClick])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -21,6 +93,8 @@ export function TrustGraph() {
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => ({ ...n }))
+    nodesRef.current = nodes
+
     const links: SimLink[] = edges
       .filter(
         (e) =>
@@ -83,7 +157,7 @@ export function TrustGraph() {
       // Draw nodes
       for (const node of nodes) {
         if (node.x == null) continue
-        const radius = Math.max(4, Math.min(16, 4 + node.feedbackCount * 2))
+        const radius = getNodeRadius(node.feedbackCount)
         ctx.beginPath()
         ctx.arc(node.x, node.y!, radius, 0, Math.PI * 2)
         ctx.fillStyle = getNodeColor(node.id)
@@ -103,5 +177,16 @@ export function TrustGraph() {
     return () => { sim.stop() }
   }, [nodesMap, edges])
 
-  return <canvas ref={canvasRef} className="h-full w-full" />
+  return (
+    <>
+      <canvas
+        ref={canvasRef}
+        className="h-full w-full"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHovered(null)}
+        onClick={handleClick}
+      />
+      {hovered && <GraphTooltip node={hovered} />}
+    </>
+  )
 }
