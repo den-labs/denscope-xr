@@ -8,9 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "indexer": "tsx scripts/indexer.ts",
+    "indexer:backfill": "tsx scripts/indexer.ts --backfill-only"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "d3-force": "^3.0.0",
     "framer-motion": "^12.34.0",
     "idb": "^8.0.3",
@@ -34,10 +37,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.4",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "jsdom": "^28.0.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
   }
