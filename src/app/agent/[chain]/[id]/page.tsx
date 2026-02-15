@@ -95,19 +95,6 @@ export default async function AgentPage({ params }: Props) {
               </p>
             </div>
 
-            {/* Trust Score */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
-                  Trust Score
-                </p>
-                <span className="font-mono text-xs text-accent">80%</span>
-              </div>
-              <div className="h-1.5 bg-border w-full">
-                <div className="h-full bg-accent" style={{ width: '80%' }} />
-              </div>
-            </div>
-
             {/* Chain ID */}
             <div>
               <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
@@ -258,62 +245,7 @@ export default async function AgentPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Event Log Timeline */}
-          <div className="bg-surface border border-border p-5">
-            <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-5">
-              Recent Activity
-            </h2>
-            <div className="relative pl-5 space-y-5">
-              {/* Vertical line */}
-              <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border-bright" />
-
-              {/* Timeline entries (placeholders) */}
-              <div className="relative flex items-start gap-3">
-                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-accent" />
-                <div>
-                  <p className="font-mono text-xs text-text-primary">
-                    Agent registered on-chain
-                  </p>
-                  <p className="font-mono text-xs text-text-muted mt-0.5">
-                    Block #{chainConfig.id === 42220 ? '58396724' : '17013547'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="relative flex items-start gap-3">
-                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-success" />
-                <div>
-                  <p className="font-mono text-xs text-text-primary">
-                    Metadata URI set
-                  </p>
-                  <p className="font-mono text-xs text-text-muted mt-0.5">
-                    IPFS / HTTP endpoint configured
-                  </p>
-                </div>
-              </div>
-
-              <div className="relative flex items-start gap-3">
-                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-text-muted" />
-                <div>
-                  <p className="font-mono text-xs text-text-primary">
-                    Identity verified
-                  </p>
-                  <p className="font-mono text-xs text-text-muted mt-0.5">
-                    Owner attestation confirmed
-                  </p>
-                </div>
-              </div>
-
-              <div className="relative flex items-start gap-3">
-                <div className="absolute left-[-13px] top-1 h-2 w-2 rounded-full bg-text-muted" />
-                <div>
-                  <p className="font-mono text-xs text-text-secondary">
-                    Awaiting further activity...
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Event Log — placeholder for future real event history */}
         </div>
       </div>
 
@@ -326,12 +258,6 @@ export default async function AgentPage({ params }: Props) {
           className="text-accent font-mono text-sm hover:underline"
         >
           View on {chainConfig.name} Explorer
-        </a>
-        <a
-          href="#"
-          className="text-accent font-mono text-sm hover:underline"
-        >
-          View Full Report
         </a>
       </div>
     </div>

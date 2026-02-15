@@ -4,60 +4,39 @@ import { useState } from 'react'
 import { LiveFeed } from '@/components/feed/LiveFeed'
 import { XRayPanel } from '@/components/xray/XRayPanel'
 import { useEventStore } from '@/stores/events'
+import { useAgentStore } from '@/stores/agents'
 
 export default function FeedPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
-  const eventCount = useEventStore((s) => s.events.length)
+  const events = useEventStore((s) => s.events)
+  const agentCount = useAgentStore((s) => s.agents.size)
+  const headBlock = events.length > 0 ? events[0].block : 0
 
   return (
     <div className="flex h-full flex-col">
       {/* Page Title */}
       <div className="border-b border-border px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold uppercase tracking-wider">
-              LIVE FEED
-            </h1>
-            <p className="text-text-secondary text-xs uppercase tracking-widest font-mono">
-              REAL-TIME AGENT OBSERVABILITY LAYER
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button className="border border-border bg-surface px-4 py-1.5 text-xs font-mono uppercase tracking-wider text-text-secondary hover:bg-surface-hover transition-colors">
-              Filter
-            </button>
-            <button className="border border-border bg-surface px-4 py-1.5 text-xs font-mono uppercase tracking-wider text-text-secondary hover:bg-surface-hover transition-colors">
-              Export
-            </button>
-          </div>
-        </div>
+        <h1 className="font-display text-2xl font-bold uppercase tracking-wider">
+          LIVE FEED
+        </h1>
+        <p className="text-text-secondary text-xs uppercase tracking-widest font-mono">
+          REAL-TIME AGENT OBSERVABILITY LAYER
+        </p>
       </div>
 
       {/* Stat Strip */}
-      <div className="grid grid-cols-6 border-b border-border">
+      <div className="grid grid-cols-3 border-b border-border">
         <div className="bg-surface border-r border-border px-4 py-2">
           <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Head Block</p>
-          <p className="text-sm font-mono text-text-primary">58,401,224</p>
+          <p className="text-sm font-mono text-text-primary">{headBlock > 0 ? headBlock.toLocaleString() : '\u2014'}</p>
         </div>
         <div className="bg-surface border-r border-border px-4 py-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Finalized</p>
-          <p className="text-sm font-mono text-text-primary">&mdash;</p>
-        </div>
-        <div className="bg-surface border-r border-border px-4 py-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Cursor</p>
-          <p className="text-sm font-mono text-text-primary">&mdash;</p>
-        </div>
-        <div className="bg-surface border-r border-border px-4 py-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Network Lag</p>
-          <p className="text-sm font-mono text-text-primary">&mdash;</p>
-        </div>
-        <div className="bg-surface border-r border-border px-4 py-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Events/Sec</p>
-          <p className="text-sm font-mono text-text-primary">{eventCount}</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Agents</p>
+          <p className="text-sm font-mono text-text-primary">{agentCount}</p>
         </div>
         <div className="bg-surface border-border px-4 py-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Backfill Status</p>
-          <p className="text-sm font-mono text-text-primary">&mdash;</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Events</p>
+          <p className="text-sm font-mono text-text-primary">{events.length}</p>
         </div>
       </div>
 

@@ -96,11 +96,6 @@ export function Header() {
               Mainnet
             </span>
           </div>
-
-          {/* RTT Indicator */}
-          <span className="text-[10px] font-mono tabular-nums text-text-muted">
-            RTT 42ms
-          </span>
         </div>
       </div>
     </header>
