@@ -1,17 +1,20 @@
 'use client'
 
+import { useState } from 'react'
 import { TrustGraph } from '@/components/graph/TrustGraph'
+import { XRayPanel } from '@/components/xray/XRayPanel'
 import { useGraphStore } from '@/stores/graph'
 
 export default function GraphPage() {
   const nodes = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
 
   return (
     <div className="relative h-full bg-grid">
       {/* Canvas layer */}
       <div className="absolute inset-0">
-        <TrustGraph />
+        <TrustGraph onNodeClick={setSelectedAgent} />
       </div>
 
       {/* Top-left: Title */}
@@ -51,6 +54,9 @@ export default function GraphPage() {
       <div className="absolute bottom-0 left-0 z-0 h-4 w-4 border-b border-l border-accent/20" />
       {/* Bottom-right */}
       <div className="absolute bottom-0 right-0 z-0 h-4 w-4 border-b border-r border-accent/20" />
+
+      {/* XRay Panel */}
+      <XRayPanel agentKey={selectedAgent} onClose={() => setSelectedAgent(null)} />
     </div>
   )
 }
