@@ -46,8 +46,10 @@ pnpm run indexer:backfill     # One-shot backfill only
 - `src/lib/graph/` — d3-force layout engine
 - `src/lib/cache/` — IndexedDB cursor persistence + block timestamp cache
 - `src/lib/auth/` — SIWE message creation, nonce generation, signature verification
-- `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime, owner profiles, incidents, alerts
+- `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime, owner profiles, incidents, alerts, trust scores
 - `src/lib/signals/` — Server-side signal detection rules (5 detectors: first_interaction, validation_complete, feedback_spike, reputation_drop, sybil_cluster)
+- `src/lib/reputation/` — Trust score computation (v1 formula: positiveRatio + age + activity - incidents - sybil)
+- `src/lib/api-keys/` — API key generation, hashing, validation, authentication middleware, rate limiting
 - `src/stores/` — Zustand stores (events, agents, graph, discovery, auth, incidents, alerts)
 - `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers, auth, console)
 - `src/app/` — Next.js pages + API routes
@@ -70,6 +72,13 @@ pnpm run indexer:backfill     # One-shot backfill only
 | `/api/alerts/rules` | API | GET/POST/PATCH alert rules |
 | `/api/alerts/webhook-test` | API | Test webhook delivery |
 | `/api/og/agent/[chain]/[id]` | Edge/Node | OG share card image generation |
+| `/api/v1/agent/[chain]/[id]` | API | Agent profile (rate-limited, API key required) |
+| `/api/v1/agent/[chain]/[id]/score` | API | Trust score with breakdown |
+| `/api/v1/agent/[chain]/[id]/signals` | API | Incidents (?status=open\|resolved\|all) |
+| `/api/v1/agent/[chain]/[id]/events` | API | Paginated event history |
+| `/api/v1/keys` | API | API key CRUD (GET/POST/DELETE) |
+| `/api/v1/search` | API | Search agents by ID, owner, or chain |
+| `/docs/api` | Client | Public API documentation page |
 
 ## Adding a Chain
 
@@ -95,6 +104,7 @@ On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
 - Edge Function reads `indexer_cursors`, calls `eth_getLogs` on Forno (500 blocks/chunk)
 - Parses events using viem ABI decoding, upserts into `scope_events` + `agents`
 - Runs 5 signal detection rules for claimed agents, inserts incidents, dispatches webhooks
+- Computes and upserts trust scores after each event (inlined formula, not imported from src/)
 - Frontend subscribes to Supabase Realtime for live updates (events + incidents)
 - Zero infrastructure, zero manual intervention
 
@@ -120,10 +130,30 @@ The Edge Function runs 5 detection rules after ingesting each event (only for cl
 
 Alert rules dispatch webhooks for `reputation_drop` and `sybil_detected`. Logs stored in `webhook_logs`.
 
+## Reputation API (M6)
+
+Pre-computed trust scores exposed via authenticated REST API.
+
+**Trust Score v1 Formula** (0-100, clamped):
+
+| Component | Weight | Computation |
+|-----------|--------|-------------|
+| Positive Ratio | 40% | positiveCount / feedbackCount |
+| Age Score | 20% | min(ageDays / 90, 1.0) |
+| Activity Score | 20% | min(feedbackCount / (ageDays * 2), 1.0) |
+| Incident Penalty | 10% | critical * 0.15 + warning * 0.05 |
+| Sybil Penalty | 10% | 1.0 if sybil incident exists |
+
+**Confidence**: low (0 feedbacks), medium (3-9), high (10+).
+
+**API Authentication**: `Authorization: Bearer ds_...` or `X-API-Key: ds_...` header. Keys are SHA-256 hashed in DB.
+
+**Rate Limits**: Free tier 100 req/day, Pro 10K/day. Tracked via `api_usage_log` table. Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
+
 ## Supabase
 
 - **Project ref**: `ioxjqabngtannnfsueqa`
-- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`, `incidents`, `alert_rules`, `webhook_logs`
+- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`, `incidents`, `alert_rules`, `webhook_logs`, `trust_scores`, `api_keys`, `api_usage_log`
 - **Edge Function**: `erc8004-poller` (verify_jwt = false, invoked by pg_cron)
 - **Cron**: `erc8004-poll` — runs every minute via pg_cron + pg_net
 - **RLS**: Public read (events, agents), service_role write
@@ -151,7 +181,7 @@ Alert rules dispatch webhooks for `reputation_drop` and `sybil_detected`. Logs s
 ## Testing
 
 ```bash
-pnpm test                    # All tests (79 tests, 19 files)
+pnpm test                    # All tests (104 tests, 24 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
@@ -159,6 +189,8 @@ pnpm test src/config/        # Chain config tests
 
 - Signal detection tests: pure functions in `src/lib/signals/__tests__/detect.test.ts` (13 tests)
 - Store tests: `src/stores/__tests__/incidents.test.ts` (4 tests)
+- Reputation tests: `src/lib/reputation/__tests__/compute.test.ts` (9 tests)
+- API key tests: `src/lib/api-keys/__tests__/` (generate 7 + rate-limit 4 + authenticate 5 = 16 tests)
 - Type + helper tests: `src/types/__tests__/`, `src/lib/supabase/__tests__/`
 - Mock patterns: zustand stores reset via `getState().clear()` in `beforeEach`
 - BigInt: use `BigInt(n)` not `0n` literals (ES2017 target)
