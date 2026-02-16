@@ -8,11 +8,10 @@ import { ConnectButton } from '@/components/auth/ConnectButton'
 import { IncidentBadge } from '@/components/console/IncidentBadge'
 
 const navItems = [
-  { href: '/', label: 'Live Feed', disabled: false },
-  { href: '/graph', label: 'Trust Graph', disabled: false },
-  { href: '/discovery', label: 'Discovery', disabled: false },
-  { href: '/console', label: 'Console', disabled: false },
-  { href: '/topology', label: 'Topology', disabled: true },
+  { href: '/', label: 'Live Feed' },
+  { href: '/graph', label: 'Trust Graph' },
+  { href: '/discovery', label: 'Discovery' },
+  { href: '/console', label: 'Console' },
 ]
 
 export function Header() {
@@ -53,17 +52,6 @@ export function Header() {
           <nav className="flex gap-6">
             {navItems.map((item) => {
               const isActive = pathname === item.href
-
-              if (item.disabled) {
-                return (
-                  <span
-                    key={item.href}
-                    className="cursor-not-allowed px-0 py-1.5 text-xs uppercase tracking-widest text-text-muted"
-                  >
-                    {item.label}
-                  </span>
-                )
-              }
 
               return (
                 <Link

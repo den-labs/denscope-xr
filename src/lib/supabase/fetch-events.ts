@@ -2,6 +2,7 @@ import { supabase } from './client'
 import { useEventStore } from '@/stores/events'
 import { useAgentStore } from '@/stores/agents'
 import { useGraphStore } from '@/stores/graph'
+import { runDiscoveryRules } from '@/lib/discovery/engine'
 import type { ScopeEvent, FeedbackData } from '@/types/events'
 import type { EventKind } from '@/types/events'
 
@@ -51,6 +52,8 @@ function processEvent(event: ScopeEvent) {
     label: `Agent #${event.agentId}`,
     feedbackCount: useAgentStore.getState().agents.get(`${event.chainId}:${event.agentId}`)?.feedbackCount ?? 0,
   })
+
+  runDiscoveryRules(event)
 }
 
 /** Fetch all historical events from Supabase and populate stores */
