@@ -1,5 +1,7 @@
 import { ConsoleGuard } from '@/components/console/ConsoleGuard'
 import { ClaimedAgentsList } from '@/components/console/ClaimedAgentsList'
+import { IncidentTimeline } from '@/components/console/IncidentTimeline'
+import { AlertsPanel } from '@/components/console/AlertsPanel'
 
 export const metadata = {
   title: 'Console — DenScope',
@@ -29,20 +31,17 @@ export default function ConsolePage() {
             <ClaimedAgentsList />
           </div>
 
-          {/* Placeholder sections for M5 */}
-          <div className="mt-10 grid grid-cols-2 gap-4">
-            <div className="bg-surface border border-border p-5">
-              <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-2">
-                Signals
-              </h2>
-              <p className="text-xs text-text-muted font-mono">Coming in M5</p>
-            </div>
-            <div className="bg-surface border border-border p-5">
-              <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-2">
-                Alerts
-              </h2>
-              <p className="text-xs text-text-muted font-mono">Coming in M5</p>
-            </div>
+          {/* Signals Timeline */}
+          <div className="mt-10">
+            <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
+              Signals
+            </h2>
+            <IncidentTimeline />
+          </div>
+
+          {/* Alerts Configuration */}
+          <div className="mt-10">
+            <AlertsPanel />
           </div>
         </ConsoleGuard>
       </div>
