@@ -50,6 +50,7 @@ pnpm run indexer:backfill     # One-shot backfill only
 - `src/lib/signals/` — Server-side signal detection rules (5 detectors: first_interaction, validation_complete, feedback_spike, reputation_drop, sybil_cluster)
 - `src/lib/reputation/` — Trust score computation (v1 formula: positiveRatio + age + activity - incidents - sybil)
 - `src/lib/api-keys/` — API key generation, hashing, validation, authentication middleware, rate limiting
+- `src/lib/x402/` — x402 micropayment types, config, payment-required builder, facilitator client (verify+settle), hybrid auth middleware, payment recording
 - `src/lib/dossier/` — Agent dossier helpers (status, relative time, sybil risk, activity summary) + SSR data fetcher
 - `src/stores/` — Zustand stores (events, agents, graph, discovery, auth, incidents, alerts)
 - `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers, auth, console, agent dossier)
@@ -72,10 +73,11 @@ pnpm run indexer:backfill     # One-shot backfill only
 | `/api/incidents/resolve` | API | Mark incident as resolved |
 | `/api/alerts/rules` | API | GET/POST/PATCH alert rules |
 | `/api/alerts/webhook-test` | API | Test webhook delivery |
-| `/api/og/agent/[chain]/[id]` | Edge/Node | OG share card image generation |
+| `/api/og` | Edge/Node | Root OG share card (site-level) |
+| `/api/og/agent/[chain]/[id]` | Edge/Node | Agent OG share card image generation |
 | `/api/v1/agent/[chain]/[id]` | API | Agent profile (rate-limited, API key required) |
-| `/api/v1/agent/[chain]/[id]/score` | API | Trust score with breakdown |
-| `/api/v1/agent/[chain]/[id]/signals` | API | Incidents (?status=open\|resolved\|all) |
+| `/api/v1/agent/[chain]/[id]/score` | API | Trust score with breakdown (API key or x402) |
+| `/api/v1/agent/[chain]/[id]/signals` | API | Incidents (?status=open\|resolved\|all) (API key or x402) |
 | `/api/v1/agent/[chain]/[id]/events` | API | Paginated event history |
 | `/api/v1/keys` | API | API key CRUD (GET/POST/DELETE) |
 | `/api/v1/search` | API | Search agents by ID, owner, or chain |
@@ -151,10 +153,31 @@ Pre-computed trust scores exposed via authenticated REST API.
 
 **Rate Limits**: Free tier 100 req/day, Pro 10K/day. Tracked via `api_usage_log` table. Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
 
+## x402 Trust Oracle (M7)
+
+Pay-per-call micropayments on `/score` and `/signals` via HTTP 402. Enables autonomous agents to query trust data without API keys.
+
+**Hybrid auth flow** (in `src/lib/x402/middleware.ts`):
+1. `Authorization`/`X-API-Key` header → existing M6 API key auth
+2. `X-PAYMENT` header → x402 verify + settle via UltravioletaDAO facilitator
+3. Neither → 402 Payment Required (with `PAYMENT-REQUIRED` header)
+
+**Pricing**: `/score` $0.001 (1000 micro-USDC), `/signals` $0.0005 (500 micro-USDC).
+
+**Facilitator**: UltravioletaDAO (`facilitator.ultravioletadao.xyz`) — Celo mainnet USDC, EIP-3009 off-chain signatures.
+
+**Payment recording**: `x402_payments` table (append-only audit trail). Insert via `recordX402Payment()` — fire-and-forget after settlement.
+
+**Env vars** (required to enable x402):
+- `X402_PAY_TO` — wallet receiving USDC payments
+- `X402_NETWORK` — CAIP-2 chain ID (default: `eip155:42220`)
+- `X402_ASSET_ADDRESS` — USDC contract (default: Celo mainnet)
+- `X402_FACILITATOR_URL` — facilitator endpoint
+
 ## Supabase
 
 - **Project ref**: `ioxjqabngtannnfsueqa`
-- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`, `incidents`, `alert_rules`, `webhook_logs`, `trust_scores`, `api_keys`, `api_usage_log`
+- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`, `incidents`, `alert_rules`, `webhook_logs`, `trust_scores`, `api_keys`, `api_usage_log`, `x402_payments`
 - **Edge Function**: `erc8004-poller` (verify_jwt = false, invoked by pg_cron)
 - **Cron**: `erc8004-poll` — runs every minute via pg_cron + pg_net
 - **RLS**: Public read (events, agents), service_role write
@@ -182,7 +205,7 @@ Pre-computed trust scores exposed via authenticated REST API.
 ## Testing
 
 ```bash
-pnpm test                    # All tests (122 tests, 25 files)
+pnpm test                    # All tests (144 tests, 29 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
@@ -193,6 +216,7 @@ pnpm test src/config/        # Chain config tests
 - Dossier tests: `src/lib/dossier/__tests__/helpers.test.ts` (18 tests — status, relative time, sybil risk, activity summary)
 - Reputation tests: `src/lib/reputation/__tests__/compute.test.ts` (9 tests)
 - API key tests: `src/lib/api-keys/__tests__/` (generate 7 + rate-limit 4 + authenticate 5 = 16 tests)
+- x402 tests: `src/lib/x402/__tests__/` (config 3 + payment-required 5 + facilitator 7 + middleware 7 = 22 tests)
 - Type + helper tests: `src/types/__tests__/`, `src/lib/supabase/__tests__/`
 - Mock patterns: zustand stores reset via `getState().clear()` in `beforeEach`
 - BigInt: use `BigInt(n)` not `0n` literals (ES2017 target)
