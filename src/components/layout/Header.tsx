@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SearchModal } from '@/components/search/SearchModal'
 import { ConnectButton } from '@/components/auth/ConnectButton'
+import { IncidentBadge } from '@/components/console/IncidentBadge'
 
 const navItems = [
   { href: '/', label: 'Live Feed', disabled: false },
@@ -75,6 +76,9 @@ export function Header() {
                   }`}
                 >
                   {item.label}
+                  {item.href === '/console' && (
+                    <span className="ml-1"><IncidentBadge /></span>
+                  )}
                   {isActive && (
                     <span
                       className="absolute bottom-0 left-0 h-px w-full bg-text-primary"
