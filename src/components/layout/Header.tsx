@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SearchModal } from '@/components/search/SearchModal'
+import { ConnectButton } from '@/components/auth/ConnectButton'
 
 const navItems = [
   { href: '/', label: 'Live Feed', disabled: false },
   { href: '/graph', label: 'Trust Graph', disabled: false },
   { href: '/discovery', label: 'Discovery', disabled: false },
+  { href: '/console', label: 'Console', disabled: false },
   { href: '/topology', label: 'Topology', disabled: true },
 ]
 
@@ -96,6 +98,7 @@ export function Header() {
               {'\u2318'}K
             </kbd>
           </button>
+          <ConnectButton />
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
             <span className="text-[10px] uppercase tracking-widest text-text-muted">
