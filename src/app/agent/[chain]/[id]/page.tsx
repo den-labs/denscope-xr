@@ -6,6 +6,8 @@ import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
 import { AddressChip } from '@/components/shared/AddressChip'
 import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
 import { AgentClaimSection } from '@/components/agent/AgentClaimSection'
+import { TrustScoreBadge } from '@/components/agent/TrustScoreBadge'
+import { toTrustScore } from '@/types/trust-score'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -125,6 +127,20 @@ export default async function AgentPage({ params }: Props) {
     }
   ).then(r => r.json()).catch(() => [])
   const isClaimed = Array.isArray(claimStatusRes) && claimStatusRes.length > 0
+
+  const trustScoreRes = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/trust_scores?chain_id=eq.${chainConfig.id}&agent_id=eq.${agentId}&select=*`,
+    {
+      headers: {
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+      },
+      next: { revalidate: 60 },
+    }
+  ).then(r => r.json()).catch(() => [])
+  const trustScore = Array.isArray(trustScoreRes) && trustScoreRes.length > 0
+    ? toTrustScore(trustScoreRes[0])
+    : null
 
   const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
   const serviceTypes = new Set(services)
@@ -304,14 +320,18 @@ export default async function AgentPage({ params }: Props) {
                 </div>
               </div>
 
-              {/* Reputation */}
+              {/* Trust Score */}
               <div className="bg-surface border border-border p-5">
                 <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
-                  Reputation
+                  Trust Score
                 </h2>
-                <p className="text-xs text-text-muted font-mono">
-                  No feedback yet
-                </p>
+                {trustScore ? (
+                  <TrustScoreBadge score={trustScore} />
+                ) : (
+                  <p className="text-xs text-text-muted font-mono">
+                    No trust score yet — waiting for on-chain activity.
+                  </p>
+                )}
               </div>
             </div>
 

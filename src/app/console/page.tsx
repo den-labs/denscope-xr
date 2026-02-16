@@ -2,6 +2,7 @@ import { ConsoleGuard } from '@/components/console/ConsoleGuard'
 import { ClaimedAgentsList } from '@/components/console/ClaimedAgentsList'
 import { IncidentTimeline } from '@/components/console/IncidentTimeline'
 import { AlertsPanel } from '@/components/console/AlertsPanel'
+import { ApiKeysPanel } from '@/components/console/ApiKeysPanel'
 
 export const metadata = {
   title: 'Console — DenScope',
@@ -43,6 +44,14 @@ export default function ConsolePage() {
           <div className="mt-10">
             <AlertsPanel />
           </div>
+
+          {/* API Keys */}
+          <section>
+            <h2 className="font-display text-xl font-bold uppercase tracking-wider text-text-primary mb-4">
+              API ACCESS
+            </h2>
+            <ApiKeysPanel />
+          </section>
         </ConsoleGuard>
       </div>
     </div>
