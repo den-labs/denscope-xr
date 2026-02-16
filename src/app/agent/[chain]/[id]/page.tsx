@@ -5,6 +5,7 @@ import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
 import { AddressChip } from '@/components/shared/AddressChip'
 import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
+import { AgentClaimSection } from '@/components/agent/AgentClaimSection'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -113,6 +114,18 @@ export default async function AgentPage({ params }: Props) {
   ])
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
 
+  const claimStatusRes = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/owner_profiles?chain_id=eq.${chainConfig.id}&agent_id=eq.${agentId}&select=id`,
+    {
+      headers: {
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+      },
+      next: { revalidate: 60 },
+    }
+  ).then(r => r.json()).catch(() => [])
+  const isClaimed = Array.isArray(claimStatusRes) && claimStatusRes.length > 0
+
   const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
   const serviceTypes = new Set(services)
 
@@ -168,7 +181,10 @@ export default async function AgentPage({ params }: Props) {
             <div className="bg-surface border border-border p-6 space-y-5">
               {/* Status badge */}
               <div className="flex items-center justify-between">
-                <span className="status-pill status-pill-success">ACTIVE</span>
+                <div className="flex items-center gap-2">
+                  <span className="status-pill status-pill-success">ACTIVE</span>
+                  {isClaimed && <span className="status-pill status-pill-success">CLAIMED</span>}
+                </div>
                 <span className="font-mono text-xs text-text-muted">
                   ERC-8004
                 </span>
@@ -305,12 +321,7 @@ export default async function AgentPage({ params }: Props) {
         </div>
 
         {/* Claim */}
-        <div className="mt-6 border-t border-border pt-6">
-          <p className="text-xs text-text-muted font-mono">
-            Are you the owner of this agent?{' '}
-            <span className="text-text-secondary">Claim &amp; verify coming soon.</span>
-          </p>
-        </div>
+        <AgentClaimSection chainId={chainConfig.id} agentId={agentId} ownerAddress={owner} />
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { PipelineProvider } from '@/components/providers/PipelineProvider'
+import { WalletProvider } from '@/components/providers/WalletProvider'
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-display',
@@ -29,11 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} flex h-screen flex-col bg-bg text-text-primary antialiased`}>
-        <PipelineProvider>
-          <Header />
-          <main className="flex-1 overflow-hidden">{children}</main>
-          <StatusBar />
-        </PipelineProvider>
+        <WalletProvider>
+          <PipelineProvider>
+            <Header />
+            <main className="flex-1 overflow-hidden">{children}</main>
+            <StatusBar />
+          </PipelineProvider>
+        </WalletProvider>
       </body>
     </html>
   )
