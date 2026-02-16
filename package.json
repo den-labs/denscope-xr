@@ -14,13 +14,18 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "@tanstack/react-query": "^5.90.21",
+    "@wagmi/connectors": "^7.1.7",
+    "@wagmi/core": "^3.3.3",
     "d3-force": "^3.0.0",
     "framer-motion": "^12.34.0",
     "idb": "^8.0.3",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "siwe": "^3.0.0",
     "viem": "^2.45.3",
+    "wagmi": "^3.4.3",
     "zustand": "^5.0.11"
   },
   "pnpm": {
