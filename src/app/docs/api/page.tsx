@@ -31,11 +31,27 @@ export default function ApiDocsPage() {
 
         <Section title="Authentication">
           <p className="text-sm text-text-secondary">
-            All endpoints require an API key. Pass it via:
+            Two authentication methods are supported. Use whichever fits your use case:
+          </p>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Option 1: API Key (for developers)</h4>
+          <p className="text-sm text-text-secondary">
+            Best for bulk integrations, dashboards, and analytics. Get a key from the Console.
           </p>
           <ul className="list-disc list-inside text-sm text-text-secondary mt-2 space-y-1">
             <li><code className="text-xs font-mono">Authorization: Bearer ds_...</code> (recommended)</li>
             <li><code className="text-xs font-mono">X-API-Key: ds_...</code></li>
+          </ul>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Option 2: x402 Payment (for agents)</h4>
+          <p className="text-sm text-text-secondary">
+            Any wallet can query trust data with zero setup. No API key, no account needed.
+            Available on <code className="text-xs font-mono">/score</code> and <code className="text-xs font-mono">/signals</code> endpoints.
+          </p>
+          <ul className="list-disc list-inside text-sm text-text-secondary mt-2 space-y-1">
+            <li>Call the endpoint without auth &rarr; receive HTTP 402 + <code className="text-xs font-mono">PAYMENT-REQUIRED</code> header</li>
+            <li>Sign an EIP-712 authorization (off-chain, no gas)</li>
+            <li>Retry with <code className="text-xs font-mono">X-PAYMENT</code> header &rarr; receive the data</li>
           </ul>
         </Section>
 
@@ -58,12 +74,12 @@ export default function ApiDocsPage() {
           <Endpoint
             method="GET"
             path="/api/v1/agent/{chain}/{id}/score"
-            desc="Trust score (0-100) with confidence level and component breakdown."
+            desc="Trust score (0-100) with confidence level and component breakdown. Supports x402 ($0.001/call)."
           />
           <Endpoint
             method="GET"
             path="/api/v1/agent/{chain}/{id}/signals"
-            desc="Active incidents/signals. Query param: ?status=open|resolved|all"
+            desc="Active incidents/signals. Query param: ?status=open|resolved|all. Supports x402 ($0.0005/call)."
           />
           <Endpoint
             method="GET"
@@ -99,6 +115,41 @@ export default function ApiDocsPage() {
           </div>
         </Section>
 
+        <Section title="x402 Payment Flow" id="x402-payment-flow">
+          <p className="text-sm text-text-secondary">
+            The <code className="text-xs font-mono">/score</code> and <code className="text-xs font-mono">/signals</code> endpoints
+            accept x402 micropayments via the UltravioletaDAO facilitator on Celo. This enables autonomous agents to query trust
+            data without human-managed API keys.
+          </p>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Flow</h4>
+          <CodeBlock>{`# 1. Call without auth -> get 402 with payment instructions
+curl -i https://denscope.vercel.app/api/v1/agent/42220/5/score
+# HTTP/2 402
+# PAYMENT-REQUIRED: <base64-encoded JSON>
+
+# 2. Decode PAYMENT-REQUIRED header -> sign EIP-712 off-chain
+
+# 3. Retry with X-PAYMENT header
+curl -H "X-PAYMENT: <base64-encoded payment>" \\
+  https://denscope.vercel.app/api/v1/agent/42220/5/score
+# HTTP/2 200 { score: { value: 85, ... } }`}</CodeBlock>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Pricing</h4>
+          <Table headers={['Endpoint', 'Price (USDC)', 'micro-USDC']}>
+            <Row cells={['/score', '$0.001', '1000']} />
+            <Row cells={['/signals', '$0.0005', '500']} />
+          </Table>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Details</h4>
+          <ul className="list-disc list-inside text-sm text-text-secondary mt-2 space-y-1">
+            <li>Protocol: x402 v2 (HTTP 402 Payment Required)</li>
+            <li>Settlement: EIP-3009 TransferWithAuthorization (off-chain signature, no gas for the caller)</li>
+            <li>Stablecoin: USDC on Celo (chain ID 42220)</li>
+            <li>Facilitator: UltravioletaDAO (<code className="text-xs font-mono">facilitator.ultravioletadao.xyz</code>)</li>
+          </ul>
+        </Section>
+
         <Section title="Supported Chains">
           <Table headers={['Chain', 'Chain ID']}>
             <Row cells={['Celo Mainnet', '42220']} />
@@ -110,6 +161,7 @@ export default function ApiDocsPage() {
           <Table headers={['Status', 'Meaning']}>
             <Row cells={['400', 'Invalid parameters']} />
             <Row cells={['401', 'Missing or invalid API key']} />
+            <Row cells={['402', 'Payment required (x402 — see PAYMENT-REQUIRED header)']} />
             <Row cells={['403', 'API key disabled']} />
             <Row cells={['404', 'Agent or score not found']} />
             <Row cells={['429', 'Rate limit exceeded']} />

@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { authenticateApiKey, buildRateLimitHeaders } from '@/lib/api-keys/authenticate'
+import { authenticateHybrid, buildHybridHeaders } from '@/lib/x402/middleware'
+import { recordX402Payment } from '@/lib/x402/payments'
 import { toTrustScore } from '@/types/trust-score'
 
 type RouteParams = { params: Promise<{ chain: string; id: string }> }
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  const auth = await authenticateApiKey(req.headers)
-  if (!auth.ok) return auth.error
-
   const { chain, id } = await params
   const chainId = Number(chain)
   const agentId = Number(id)
+
+  const endpointPath = `/api/v1/agent/${chain}/${id}/score`
+  const auth = await authenticateHybrid(req.headers, {
+    path: endpointPath,
+    priceKey: 'score',
+    description: 'Trust score query for ERC-8004 agent',
+  })
+  if (!auth.ok) return auth.error
 
   if (!chainId || !agentId) {
     return NextResponse.json({ error: 'Invalid chain or agent ID' }, { status: 400 })
@@ -29,6 +35,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       { error: 'Trust score not available. Agent may have no events yet.' },
       { status: 404 }
     )
+  }
+
+  // Record x402 payment (fire-and-forget)
+  if (auth.method === 'x402') {
+    recordX402Payment({ chainId, agentId, endpoint: endpointPath, x402: auth.x402, priceKey: 'score' })
   }
 
   const score = toTrustScore(data)
@@ -52,5 +63,5 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       updatedAt: score.updatedAt,
     },
     formula: 'https://denscope.vercel.app/docs/api#trust-score-formula',
-  }, { headers: buildRateLimitHeaders(auth.rateLimit) })
+  }, { headers: buildHybridHeaders(auth) })
 }
