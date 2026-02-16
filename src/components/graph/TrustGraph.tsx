@@ -6,6 +6,8 @@ import { useAgentStore } from '@/stores/agents'
 import { getChain } from '@/config/chains'
 import { createSimulation, type SimNode, type SimLink } from '@/lib/graph/layout'
 import { GraphTooltip } from './GraphTooltip'
+import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom'
+import { select } from 'd3-selection'
 
 export type HoveredNode = {
   agentId: number
@@ -25,17 +27,27 @@ function getNodeRadius(feedbackCount: number): number {
 export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const nodesRef = useRef<SimNode[]>([])
+  const transformRef = useRef<ZoomTransform>(zoomIdentity)
+  const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
   const [hovered, setHovered] = useState<HoveredNode | null>(null)
 
+  // Transform screen coordinates to simulation coordinates
+  const screenToSim = useCallback((screenX: number, screenY: number) => {
+    const t = transformRef.current
+    return {
+      x: (screenX - t.x) / t.k,
+      y: (screenY - t.y) / t.k,
+    }
+  }, [])
+
   const hitTest = useCallback((clientX: number, clientY: number): SimNode | null => {
     const canvas = canvasRef.current
     if (!canvas) return null
     const rect = canvas.getBoundingClientRect()
-    const x = clientX - rect.left
-    const y = clientY - rect.top
+    const { x, y } = screenToSim(clientX - rect.left, clientY - rect.top)
 
     for (const node of nodesRef.current) {
       if (node.x == null || node.y == null) continue
@@ -47,7 +59,7 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       }
     }
     return null
-  }, [])
+  }, [screenToSim])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const node = hitTest(e.clientX, e.clientY)
@@ -57,6 +69,7 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       const agentKey = `${node.chainId}:${node.agentId}`
       const agent = agents.get(agentKey)
       const chain = getChain(node.chainId)
+      const t = transformRef.current
       setHovered({
         agentId: node.agentId,
         chainId: node.chainId,
@@ -64,13 +77,13 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
         feedbackCount: node.feedbackCount,
         agentName: agent?.metadata?.name,
         chainLabel: chain?.badge.label ?? `Chain ${node.chainId}`,
-        x: node.x! + rect.left,
-        y: node.y! + rect.top,
+        x: node.x! * t.k + t.x + rect.left,
+        y: node.y! * t.k + t.y + rect.top,
       })
       canvas.style.cursor = 'pointer'
     } else {
       setHovered(null)
-      if (canvasRef.current) canvasRef.current.style.cursor = 'default'
+      if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
     }
   }, [hitTest, agents])
 
@@ -81,11 +94,44 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     }
   }, [hitTest, onNodeClick])
 
+  // Fit all nodes in viewport
+  const fitToView = useCallback(() => {
+    const canvas = canvasRef.current
+    const nodes = nodesRef.current
+    if (!canvas || nodes.length === 0 || !zoomRef.current) return
+
+    const { width, height } = canvas.getBoundingClientRect()
+    const padding = 60
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+    for (const n of nodes) {
+      if (n.x == null || n.y == null) continue
+      minX = Math.min(minX, n.x)
+      maxX = Math.max(maxX, n.x)
+      minY = Math.min(minY, n.y!)
+      maxY = Math.max(maxY, n.y!)
+    }
+
+    const graphW = maxX - minX || 1
+    const graphH = maxY - minY || 1
+    const scale = Math.min((width - padding * 2) / graphW, (height - padding * 2) / graphH, 2)
+    const cx = (minX + maxX) / 2
+    const cy = (minY + maxY) / 2
+
+    const t = zoomIdentity
+      .translate(width / 2, height / 2)
+      .scale(scale)
+      .translate(-cx, -cy)
+
+    select(canvas).call(zoomRef.current.transform, t)
+  }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const maybeCtx = canvas.getContext('2d')
+    if (!maybeCtx) return
+    const ctx: CanvasRenderingContext2D = maybeCtx
 
     const { width, height } = canvas.getBoundingClientRect()
     canvas.width = width * window.devicePixelRatio
@@ -136,21 +182,23 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       return '#34c759'
     }
 
-    const sim = createSimulation(nodes, links, width, height)
-
-    sim.on('tick', () => {
+    function draw() {
+      const t = transformRef.current
+      ctx.save()
       ctx.clearRect(0, 0, width, height)
+      ctx.translate(t.x, t.y)
+      ctx.scale(t.k, t.k)
 
       // Draw edges
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)'
-      ctx.lineWidth = 1
+      ctx.lineWidth = 1 / t.k
       for (const link of links) {
         const s = link.source as SimNode
-        const t = link.target as SimNode
-        if (s.x == null || t.x == null) continue
+        const tgt = link.target as SimNode
+        if (s.x == null || tgt.x == null) continue
         ctx.beginPath()
         ctx.moveTo(s.x, s.y!)
-        ctx.lineTo(t.x, t.y!)
+        ctx.lineTo(tgt.x, tgt.y!)
         ctx.stroke()
       }
 
@@ -163,30 +211,63 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
         ctx.fillStyle = getNodeColor(node.id)
         ctx.fill()
         ctx.strokeStyle = '#222222'
-        ctx.lineWidth = 1.5
+        ctx.lineWidth = 1.5 / t.k
         ctx.stroke()
 
         // Label
         ctx.fillStyle = '#888888'
-        ctx.font = '10px monospace'
+        ctx.font = `${10 / t.k}px monospace`
         ctx.textAlign = 'center'
-        ctx.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12)
+        ctx.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
       }
+
+      ctx.restore()
+    }
+
+    // Setup d3-zoom
+    const zoomBehavior = zoom<HTMLCanvasElement, unknown>()
+      .scaleExtent([0.2, 5])
+      .on('zoom', (event) => {
+        transformRef.current = event.transform
+        draw()
+      })
+
+    zoomRef.current = zoomBehavior
+    select(canvas)
+      .call(zoomBehavior)
+      .on('dblclick.zoom', null) // disable double-click zoom
+
+    const sim = createSimulation(nodes, links, width, height)
+
+    sim.on('tick', draw)
+
+    // Fit to view once simulation settles
+    sim.on('end', () => {
+      fitToView()
     })
 
-    return () => { sim.stop() }
-  }, [nodesMap, edges])
+    return () => {
+      sim.stop()
+      select(canvas).on('.zoom', null)
+    }
+  }, [nodesMap, edges, fitToView])
 
   return (
-    <>
+    <div className="relative h-full w-full">
       <canvas
         ref={canvasRef}
-        className="h-full w-full"
+        className="h-full w-full cursor-grab active:cursor-grabbing"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
         onClick={handleClick}
       />
+      <button
+        onClick={fitToView}
+        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
+      >
+        Fit to view
+      </button>
       {hovered && <GraphTooltip node={hovered} />}
-    </>
+    </div>
   )
 }
