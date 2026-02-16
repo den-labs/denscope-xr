@@ -153,6 +153,214 @@ async function upsertAgent(db: DB, event: ParsedEvent) {
   }
 }
 
+// --- Signal Detection (M5) ---
+
+type SignalResult = {
+  chain_id: number
+  agent_id: number
+  signal_kind: string
+  severity: string
+  title: string
+  description: string
+  why_it_matters: string
+  source_tx_hash: string | null
+  metadata: Record<string, unknown>
+}
+
+async function detectSignals(
+  db: DB,
+  event: ParsedEvent
+): Promise<SignalResult[]> {
+  const signals: SignalResult[] = []
+  const agentKey = `${event.chain_id}:${event.agent_id}`
+
+  // Only detect signals for claimed agents
+  const { data: owner } = await db
+    .from('owner_profiles')
+    .select('id')
+    .eq('chain_id', event.chain_id)
+    .eq('agent_id', event.agent_id)
+    .maybeSingle()
+  if (!owner) return signals
+
+  // Get agent state
+  const { data: agent } = await db
+    .from('agents')
+    .select('feedback_count, positive_count, negative_count')
+    .eq('id', agentKey)
+    .single()
+
+  // Rule 1: First Interaction
+  if (event.kind === 'feedback' && agent && agent.feedback_count === 1) {
+    signals.push({
+      chain_id: event.chain_id,
+      agent_id: event.agent_id,
+      signal_kind: 'first_interaction',
+      severity: 'info',
+      title: 'First Feedback',
+      description: `Agent #${event.agent_id} received its first-ever feedback`,
+      why_it_matters: 'Your agent is now visible to clients on the network.',
+      source_tx_hash: event.tx_hash,
+      metadata: {},
+    })
+  }
+
+  // Rule 2: Validation Complete
+  if (event.kind === 'validation_res') {
+    signals.push({
+      chain_id: event.chain_id,
+      agent_id: event.agent_id,
+      signal_kind: 'validation_complete',
+      severity: 'info',
+      title: 'Validation Complete',
+      description: `A validator responded about Agent #${event.agent_id}`,
+      why_it_matters: "Validator feedback affects your agent's trust score.",
+      source_tx_hash: event.tx_hash,
+      metadata: {},
+    })
+  }
+
+  // Rule 3: Reputation Drop (negative ratio > 50%)
+  if (event.kind === 'feedback' && agent && agent.feedback_count >= 3) {
+    const negRatio = agent.negative_count / agent.feedback_count
+    if (negRatio >= 0.5) {
+      const severity = negRatio >= 0.8 ? 'critical' : 'warning'
+      signals.push({
+        chain_id: event.chain_id,
+        agent_id: event.agent_id,
+        signal_kind: 'reputation_drop',
+        severity,
+        title: 'Reputation Drop',
+        description: `Agent #${event.agent_id} has ${Math.round(negRatio * 100)}% negative feedback`,
+        why_it_matters: 'A high negative feedback ratio may indicate trust issues.',
+        source_tx_hash: event.tx_hash,
+        metadata: { positive: agent.positive_count, negative: agent.negative_count, total: agent.feedback_count },
+      })
+    }
+  }
+
+  // Rule 4: Feedback Spike (>5 feedbacks in last hour)
+  if (event.kind === 'feedback') {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const { count } = await db
+      .from('scope_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('chain_id', event.chain_id)
+      .eq('agent_id', event.agent_id)
+      .eq('kind', 'feedback')
+      .gte('created_at', oneHourAgo)
+    if (count && count >= 5) {
+      signals.push({
+        chain_id: event.chain_id,
+        agent_id: event.agent_id,
+        signal_kind: 'feedback_spike',
+        severity: 'info',
+        title: 'Feedback Spike',
+        description: `Agent #${event.agent_id} received ${count} feedbacks in the last hour`,
+        why_it_matters: 'Unusual activity may indicate growing interest or coordinated behavior.',
+        source_tx_hash: event.tx_hash,
+        metadata: { count, window_hours: 1 },
+      })
+    }
+  }
+
+  // Rule 5: Sybil Cluster (>3 unique addresses in 1 hour)
+  if (event.kind === 'feedback') {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const { data: recentFeedbacks } = await db
+      .from('scope_events')
+      .select('data')
+      .eq('chain_id', event.chain_id)
+      .eq('agent_id', event.agent_id)
+      .eq('kind', 'feedback')
+      .gte('created_at', oneHourAgo)
+    if (recentFeedbacks) {
+      const addresses = new Set(recentFeedbacks.map((e: { data: { clientAddress?: string } }) => e.data.clientAddress).filter(Boolean))
+      if (addresses.size >= 4) {
+        signals.push({
+          chain_id: event.chain_id,
+          agent_id: event.agent_id,
+          signal_kind: 'sybil_cluster',
+          severity: 'critical',
+          title: 'Sybil Pattern Detected',
+          description: `${addresses.size} different addresses submitted feedback for Agent #${event.agent_id} in 1h`,
+          why_it_matters: 'Coordinated feedback from multiple new accounts may indicate a sybil attack.',
+          source_tx_hash: event.tx_hash,
+          metadata: { unique_addresses: addresses.size, window_hours: 1 },
+        })
+      }
+    }
+  }
+
+  return signals
+}
+
+async function insertIncidents(db: DB, signals: SignalResult[]) {
+  if (signals.length === 0) return
+  const { error } = await db
+    .from('incidents')
+    .upsert(signals, { onConflict: 'chain_id,agent_id,signal_kind,source_tx_hash', ignoreDuplicates: true })
+  if (error) console.error('Incident insert error:', error.message)
+}
+
+async function dispatchWebhooks(db: DB, signals: SignalResult[]) {
+  for (const signal of signals) {
+    // Only dispatch for alertable signal types
+    const alertKind = signal.signal_kind === 'reputation_drop' ? 'reputation_drop'
+      : signal.signal_kind === 'sybil_cluster' ? 'sybil_detected'
+      : null
+    if (!alertKind) continue
+
+    const { data: rules } = await db
+      .from('alert_rules')
+      .select('id, webhook_url')
+      .eq('chain_id', signal.chain_id)
+      .eq('agent_id', signal.agent_id)
+      .eq('rule_type', alertKind)
+      .eq('enabled', true)
+      .not('webhook_url', 'is', null)
+
+    if (!rules) continue
+
+    for (const rule of rules) {
+      if (!rule.webhook_url) continue
+      const payload = {
+        incident: {
+          signalKind: signal.signal_kind,
+          severity: signal.severity,
+          title: signal.title,
+          description: signal.description,
+          whyItMatters: signal.why_it_matters,
+        },
+        agent: { chainId: signal.chain_id, agentId: signal.agent_id },
+        timestamp: new Date().toISOString(),
+        consoleUrl: `https://denscope.vercel.app/console`,
+      }
+
+      try {
+        const res = await fetch(rule.webhook_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        await db.from('webhook_logs').insert({
+          incident_id: null,
+          webhook_url: rule.webhook_url,
+          request_payload: payload,
+          response_status: res.status,
+        })
+      } catch (err) {
+        await db.from('webhook_logs').insert({
+          incident_id: null,
+          webhook_url: rule.webhook_url,
+          request_payload: payload,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+  }
+}
+
 // --- Poll one chain ---
 
 async function pollChain(db: DB, chain: typeof CHAINS[number]) {
@@ -183,6 +391,13 @@ async function pollChain(db: DB, chain: typeof CHAINS[number]) {
     const { error } = await db.from('scope_events').upsert(events, { onConflict: 'chain_id,tx_hash,log_index', ignoreDuplicates: true })
     if (error) console.error(`[${chain.name}] Insert error:`, error.message)
     for (const e of events) await upsertAgent(db, e)
+
+    // M5: Signal detection + webhook dispatch
+    for (const e of events) {
+      const signals = await detectSignals(db, e)
+      await insertIncidents(db, signals)
+      await dispatchWebhooks(db, signals)
+    }
   }
 
   await db.from('indexer_cursors').upsert({
