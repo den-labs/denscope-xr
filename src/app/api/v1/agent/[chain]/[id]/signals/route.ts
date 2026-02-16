@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { authenticateApiKey, buildRateLimitHeaders } from '@/lib/api-keys/authenticate'
+import { authenticateHybrid, buildHybridHeaders } from '@/lib/x402/middleware'
+import { recordX402Payment } from '@/lib/x402/payments'
 
 type RouteParams = { params: Promise<{ chain: string; id: string }> }
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  const auth = await authenticateApiKey(req.headers)
-  if (!auth.ok) return auth.error
-
   const { chain, id } = await params
   const chainId = Number(chain)
   const agentId = Number(id)
+
+  const endpointPath = `/api/v1/agent/${chain}/${id}/signals`
+  const auth = await authenticateHybrid(req.headers, {
+    path: endpointPath,
+    priceKey: 'signals',
+    description: 'Risk signals for ERC-8004 agent',
+  })
+  if (!auth.ok) return auth.error
 
   if (!chainId || !agentId) {
     return NextResponse.json({ error: 'Invalid chain or agent ID' }, { status: 400 })
@@ -34,6 +40,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   const { data } = await query
 
+  // Record x402 payment (fire-and-forget)
+  if (auth.method === 'x402') {
+    recordX402Payment({ chainId, agentId, endpoint: endpointPath, x402: auth.x402, priceKey: 'signals' })
+  }
+
   const signals = (data ?? []).map((row) => ({
     id: row.id,
     signalKind: row.signal_kind,
@@ -48,6 +59,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   return NextResponse.json(
     { signals, count: signals.length },
-    { headers: buildRateLimitHeaders(auth.rateLimit) }
+    { headers: buildHybridHeaders(auth) }
   )
 }
