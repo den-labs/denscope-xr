@@ -6,6 +6,8 @@ Real-time ERC-8004 agent explorer with serverless event-driven sync.
 
 - Next.js 16 (App Router), TypeScript, Tailwind CSS
 - viem (chain client), zustand (state), d3-force (graph), framer-motion (animations)
+- wagmi + @wagmi/connectors (wallet connection), siwe (Sign-In with Ethereum)
+- @tanstack/react-query (async state for wagmi)
 - Supabase (Postgres + Realtime + Edge Functions + pg_cron)
 - next/og (share cards), idb (IndexedDB persistence)
 - moduleResolution: bundler — no `.js` extensions needed
@@ -43,9 +45,10 @@ pnpm run indexer:backfill     # One-shot backfill only
 - `src/lib/agent/` — Contract reads + metadata fetch (IPFS gateway fallback)
 - `src/lib/graph/` — d3-force layout engine
 - `src/lib/cache/` — IndexedDB cursor persistence + block timestamp cache
-- `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime
-- `src/stores/` — Zustand stores (events, agents, graph, discovery)
-- `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers)
+- `src/lib/auth/` — SIWE message creation, nonce generation, signature verification
+- `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime, owner profiles
+- `src/stores/` — Zustand stores (events, agents, graph, discovery, auth)
+- `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers, auth, console)
 - `src/app/` — Next.js pages + API routes
 - `supabase/functions/erc8004-poller/` — Edge Function: polls Forno RPCs, writes events to DB
 - `supabase/migrations/` — Database schema + pg_cron schedule
@@ -58,7 +61,10 @@ pnpm run indexer:backfill     # One-shot backfill only
 | `/` | Client | Live Feed (event stream) |
 | `/graph` | Client | Trust Graph (d3-force canvas) |
 | `/discovery` | Client | Discovery Signals |
-| `/agent/[chain]/[id]` | SSR | Agent deep link with OG metadata |
+| `/console` | Client | Owner Console (wallet-gated, claimed agents) |
+| `/agent/[chain]/[id]` | SSR | Agent deep link with OG metadata + claim flow |
+| `/api/auth/nonce` | API | Generate SIWE nonce (5-min expiry) |
+| `/api/claim` | API | Claim agent ownership (SIWE + ownerOf verification) |
 | `/api/og/agent/[chain]/[id]` | Edge/Node | OG share card image generation |
 
 ## Adding a Chain
@@ -98,7 +104,7 @@ On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
 ## Supabase
 
 - **Project ref**: `ioxjqabngtannnfsueqa`
-- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`
+- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`
 - **Edge Function**: `erc8004-poller` (verify_jwt = false, invoked by pg_cron)
 - **Cron**: `erc8004-poll` — runs every minute via pg_cron + pg_net
 - **RLS**: Public read (events, agents), service_role write
@@ -126,7 +132,7 @@ On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
 ## Testing
 
 ```bash
-pnpm test                    # All tests (45 tests, 10 files)
+pnpm test                    # All tests (55 tests, 14 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
