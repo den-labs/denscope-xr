@@ -175,13 +175,28 @@ Event-driven. Each milestone is independently shippable and generates visibility
 
 **Shippable moment:** "Any dApp can now query agent reputation via the DenScope API."
 
-### M7+: Scale & Moat (future, no scope yet)
+### M7: x402 Trust Oracle
+
+**Unlock:** Autonomous agents can query trust data via micropayments — no API key, no account, just a wallet. DenScope becomes a **trust oracle** for the agent economy.
+
+- x402 (HTTP 402) pay-per-call on `/score` and `/signals` endpoints
+- Hybrid auth: existing API keys (developers) + x402 payments (agents)
+- Settlement via UltravioletaDAO facilitator (supports Celo, ERC-8004 aware, $0 gas for agents)
+- USDC micropayments: $0.001/score query, $0.0005/signals query
+- Revenue tracking + payment audit trail
+
+**Shippable moment:** "Any AI agent can now check trust scores by paying $0.001 — no signup required."
+
+See: `docs/plans/2026-02-16-m7-x402-trust-oracle.md` for full design, SDK evaluation, and open questions.
+
+### M8+: Scale & Moat (future, no scope yet)
 
 - More chains (Avalanche, Base, Arbitrum)
 - Agent framework SDKs (npm package for LangChain, CrewAI)
 - Trust score v2 (ML-based, historical trends)
 - Agent comparison tool
 - Embeddable trust badges for third-party sites
+- Multi-stablecoin x402 (EURC, AUSD, PYUSD)
 
 ## Competitive Moat
 
