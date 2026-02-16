@@ -46,8 +46,9 @@ pnpm run indexer:backfill     # One-shot backfill only
 - `src/lib/graph/` — d3-force layout engine
 - `src/lib/cache/` — IndexedDB cursor persistence + block timestamp cache
 - `src/lib/auth/` — SIWE message creation, nonce generation, signature verification
-- `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime, owner profiles
-- `src/stores/` — Zustand stores (events, agents, graph, discovery, auth)
+- `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime, owner profiles, incidents, alerts
+- `src/lib/signals/` — Server-side signal detection rules (5 detectors: first_interaction, validation_complete, feedback_spike, reputation_drop, sybil_cluster)
+- `src/stores/` — Zustand stores (events, agents, graph, discovery, auth, incidents, alerts)
 - `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers, auth, console)
 - `src/app/` — Next.js pages + API routes
 - `supabase/functions/erc8004-poller/` — Edge Function: polls Forno RPCs, writes events to DB
@@ -65,6 +66,9 @@ pnpm run indexer:backfill     # One-shot backfill only
 | `/agent/[chain]/[id]` | SSR | Agent deep link with OG metadata + claim flow |
 | `/api/auth/nonce` | API | Generate SIWE nonce (5-min expiry) |
 | `/api/claim` | API | Claim agent ownership (SIWE + ownerOf verification) |
+| `/api/incidents/resolve` | API | Mark incident as resolved |
+| `/api/alerts/rules` | API | GET/POST/PATCH alert rules |
+| `/api/alerts/webhook-test` | API | Test webhook delivery |
 | `/api/og/agent/[chain]/[id]` | Edge/Node | OG share card image generation |
 
 ## Adding a Chain
@@ -90,7 +94,8 @@ On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
 - pg_cron invokes the `erc8004-poller` Edge Function every minute
 - Edge Function reads `indexer_cursors`, calls `eth_getLogs` on Forno (500 blocks/chunk)
 - Parses events using viem ABI decoding, upserts into `scope_events` + `agents`
-- Frontend subscribes to Supabase Realtime for live updates
+- Runs 5 signal detection rules for claimed agents, inserts incidents, dispatches webhooks
+- Frontend subscribes to Supabase Realtime for live updates (events + incidents)
 - Zero infrastructure, zero manual intervention
 
 **RPC fallback** (no Supabase env vars):
@@ -101,14 +106,28 @@ On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
 - Only needed for initial backfill or catching up after extended downtime
 - Uses Forno RPCs with 2000-block chunks, processes all history
 
+## Signal Detection (M5)
+
+The Edge Function runs 5 detection rules after ingesting each event (only for claimed agents):
+
+| Rule | Signal Kind | Fires When | Severity |
+|------|-------------|-----------|----------|
+| First Interaction | `first_interaction` | feedback_count goes from 0 to 1 | info |
+| Validation Complete | `validation_complete` | validation_res event | info |
+| Reputation Drop | `reputation_drop` | negative ratio >= 50% (3+ feedbacks) | warning/critical |
+| Feedback Spike | `feedback_spike` | >= 5 feedbacks in 1 hour | info |
+| Sybil Cluster | `sybil_cluster` | >= 4 unique addresses in 1 hour | critical |
+
+Alert rules dispatch webhooks for `reputation_drop` and `sybil_detected`. Logs stored in `webhook_logs`.
+
 ## Supabase
 
 - **Project ref**: `ioxjqabngtannnfsueqa`
-- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`
+- **Tables**: `scope_events`, `agents`, `indexer_cursors`, `deploy_blocks`, `owner_profiles`, `incidents`, `alert_rules`, `webhook_logs`
 - **Edge Function**: `erc8004-poller` (verify_jwt = false, invoked by pg_cron)
 - **Cron**: `erc8004-poll` — runs every minute via pg_cron + pg_net
 - **RLS**: Public read (events, agents), service_role write
-- **Realtime**: Enabled on `scope_events` for live UI updates
+- **Realtime**: Enabled on `scope_events` and `incidents` for live UI updates
 - **Migrations**: `supabase/migrations/`
 
 ## Chains
@@ -132,12 +151,15 @@ On-chain event → pg_cron (every 1 min) → Edge Function → Forno RPC
 ## Testing
 
 ```bash
-pnpm test                    # All tests (55 tests, 14 files)
+pnpm test                    # All tests (79 tests, 19 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
 ```
 
+- Signal detection tests: pure functions in `src/lib/signals/__tests__/detect.test.ts` (13 tests)
+- Store tests: `src/stores/__tests__/incidents.test.ts` (4 tests)
+- Type + helper tests: `src/types/__tests__/`, `src/lib/supabase/__tests__/`
 - Mock patterns: zustand stores reset via `getState().clear()` in `beforeEach`
 - BigInt: use `BigInt(n)` not `0n` literals (ES2017 target)
 - No RPC mocking needed for unit tests — integration code tested via `pnpm build`
