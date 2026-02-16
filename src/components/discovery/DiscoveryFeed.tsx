@@ -28,9 +28,22 @@ export function DiscoveryFeed({ severity, search }: Props) {
   if (signals.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-text-muted">
-        <div className="text-center font-mono">
-          <p className="text-lg">No discovery signals yet</p>
-          <p className="mt-1 text-sm">Patterns will appear as events flow in</p>
+        <div className="text-center font-mono max-w-md">
+          <p className="text-lg">Listening for patterns...</p>
+          <p className="mt-2 text-sm">
+            Discovery detects signals like an agent&apos;s first interaction or unusual feedback spikes.
+            Signals appear in real-time as on-chain events are processed.
+          </p>
+          <div className="mt-6 flex flex-col gap-2 text-xs text-left mx-auto w-fit">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />
+              <span>First Blood — agent receives its first feedback</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+              <span>Rising Star — 5+ feedbacks within 24 hours</span>
+            </div>
+          </div>
         </div>
       </div>
     )
