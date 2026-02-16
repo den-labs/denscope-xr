@@ -1,6 +1,6 @@
 # M7: x402 Trust Oracle — Roadmap & Design
 
-> **Status:** Planned (not yet scoped for implementation)
+> **Status:** Ready (all questions resolved, scoped for implementation)
 >
 > **Goal:** Enable autonomous agents to query trust scores and signals via pay-per-call micropayments (HTTP 402), without needing an API key or human-managed account.
 
@@ -207,19 +207,52 @@ If the `uvd-x402-sdk` drops the Node 24 requirement or `@x402/core` adds Ultravi
 
 ---
 
-## Open questions (pre-implementation)
+## Resolved questions
 
-1. **Settlement latency vs. trust check speed.** `/settle` takes 2-10s on-chain. Is that acceptable for an agent making a trust decision before interacting? Alternative: verify-only mode (trust the signature, settle async).
+1. **Settlement latency (2-10s): Acceptable.** Trust checks happen before interactions of value. A few seconds of latency is fine — agents are not latency-sensitive at the sub-second level.
 
-2. **Celo USDC EIP-3009 support.** The x402 protocol requires `transferWithAuthorization` (EIP-3009) on the USDC contract. Need to verify Celo mainnet USDC supports this. If not, the facilitator may handle it differently.
+2. **Celo USDC EIP-3009: Confirmed.** Celo mainnet USDC supports `transferWithAuthorization`. No blockers.
 
-3. **Double-payment protection.** If an agent retries a failed request, they could be charged twice. Need idempotency (nonce-based dedup on our side, or rely on facilitator's nonce enforcement).
+3. **Double-payment protection: Known risk, not a blocker.** If an agent's first request settles but the 200 response is lost (network timeout), the agent retries with a new EIP-712 nonce and gets charged again ($0.001). The x402 protocol prevents replay of the SAME signature, but not retries with NEW signatures. At $0.001/query this is not catastrophic. Mitigation for later: accept an optional `X-Idempotency-Key` header and cache results for 60s.
 
-4. **Free tier coexistence.** Today, requests without auth get 401. With x402, they'd get 402. This changes the error contract for existing integrations. Need a migration path or feature flag.
+4. **401 vs 402: Not applicable.** This was a bug from another project (dengrow-x402) where a protected route returned 401 instead of 402. DenScope's x402 endpoints will return 402 from the start. Existing API key integrations continue using `Authorization: Bearer ds_...` and never see the 402 flow.
 
-5. **Revenue tracking.** Where do we log x402 payments? New table `x402_payments` or extend `api_usage_log`? Need to track: payer wallet, amount, tx hash, endpoint, timestamp.
+5. **Revenue tracking: New `x402_payments` table.** Segregated from `api_usage_log` because the access patterns are fundamentally different:
+   - `api_usage_log`: UPDATE-heavy (upsert daily counter per key), query "how many requests today?"
+   - `x402_payments`: INSERT-only (append log), query "how much revenue this month?", "who paid?", "tx hash?"
+   - No FK — payer is an anonymous wallet, not an API key holder
+   - Immutable audit trail — never delete or update rows
 
-6. **USDC on Celo availability.** Verify that UltravioletaDAO's facilitator is live and tested on Celo mainnet (not just listed as supported).
+6. **UltravioletaDAO on Celo: Confirmed live.** Facilitator supports 14 EVM chains including Celo mainnet and Celo Sepolia. Expansion to more ecosystems is future work (M8+).
+
+---
+
+## Database: `x402_payments` table
+
+```sql
+CREATE TABLE x402_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chain_id INT NOT NULL,
+  agent_id INT NOT NULL,
+  endpoint TEXT NOT NULL,        -- '/v1/agent/.../score'
+  payer_address TEXT NOT NULL,   -- wallet of the agent that paid
+  amount_micro INT NOT NULL,     -- micro-USDC (1000 = $0.001)
+  tx_hash TEXT,                  -- on-chain settlement hash
+  facilitator TEXT NOT NULL,     -- 'ultravioletadao'
+  settled_at TIMESTAMPTZ DEFAULT NOW(),
+  network TEXT NOT NULL,         -- 'eip155:42220'
+  stablecoin TEXT DEFAULT 'USDC'
+);
+
+-- Indexes for revenue analytics and audit queries
+CREATE INDEX idx_x402_payments_settled ON x402_payments (settled_at DESC);
+CREATE INDEX idx_x402_payments_payer ON x402_payments (payer_address);
+CREATE INDEX idx_x402_payments_agent ON x402_payments (chain_id, agent_id);
+```
+
+- **RLS:** service_role write, console owners read (filtered by their claimed agents)
+- **Append-only:** no UPDATEs, no DELETEs
+- **Retention:** indefinite (audit trail)
 
 ---
 
@@ -243,9 +276,9 @@ If the `uvd-x402-sdk` drops the Node 24 requirement or `@x402/core` adds Ultravi
 
 ### Dependencies
 
-- UltravioletaDAO facilitator operational on Celo mainnet
-- Celo USDC contract supports EIP-3009
-- Vercel deployment env vars for x402 config
+- ~~UltravioletaDAO facilitator operational on Celo mainnet~~ Confirmed live
+- ~~Celo USDC contract supports EIP-3009~~ Confirmed
+- Vercel deployment env vars for x402 config (`X402_PAY_TO`, `X402_NETWORK`, `X402_ASSET_ADDRESS`, `X402_FACILITATOR_URL`)
 
 ---
 
