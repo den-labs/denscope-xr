@@ -80,7 +80,7 @@ function parseIdentityLog(log: Log, chainId: number): ParsedEvent | null {
     block_number: Number(log.blockNumber),
     tx_hash: log.transactionHash!,
     log_index: log.logIndex!,
-    event_timestamp: null,
+    event_timestamp: new Date().toISOString(),
   }
   switch (eventName) {
     case 'Registered':
@@ -101,7 +101,7 @@ function parseReputationLog(log: Log, chainId: number): ParsedEvent | null {
     block_number: Number(log.blockNumber),
     tx_hash: log.transactionHash!,
     log_index: log.logIndex!,
-    event_timestamp: null,
+    event_timestamp: new Date().toISOString(),
   }
   switch (eventName) {
     case 'NewFeedback':
