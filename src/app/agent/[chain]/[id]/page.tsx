@@ -6,7 +6,11 @@ import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
 import { AddressChip } from '@/components/shared/AddressChip'
 import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
 import { AgentClaimSection } from '@/components/agent/AgentClaimSection'
-import { TrustScoreBadge } from '@/components/agent/TrustScoreBadge'
+import { StatusPill } from '@/components/agent/StatusPill'
+import { TrustSnapshot } from '@/components/agent/TrustSnapshot'
+import { WhatChanged } from '@/components/agent/WhatChanged'
+import { fetchDossierData } from '@/lib/dossier/fetch'
+import { getAgentStatus, getSybilRisk, formatRelativeTime } from '@/lib/dossier/helpers'
 import { toTrustScore } from '@/types/trust-score'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
@@ -97,6 +101,21 @@ function AgentUriDisplay({ uri }: { uri: string }) {
   }
 }
 
+function scoreColor(score: number): string {
+  if (score >= 80) return 'text-success'
+  if (score >= 50) return 'text-accent'
+  if (score >= 25) return 'text-warning'
+  return 'text-critical'
+}
+
+function confidencePill(confidence: string): string {
+  switch (confidence) {
+    case 'high': return 'status-pill-success'
+    case 'medium': return 'status-pill-accent'
+    default: return 'status-pill-neutral'
+  }
+}
+
 export default async function AgentPage({ params }: Props) {
   const { chain, id } = await params
   const chainConfig = getChain(Number(chain))
@@ -142,40 +161,88 @@ export default async function AgentPage({ params }: Props) {
     ? toTrustScore(trustScoreRes[0])
     : null
 
+  const dossier = await fetchDossierData(chainConfig.id, agentId)
+
+  const agentStatus = getAgentStatus(trustScore?.score ?? null)
+  const sybilRisk = getSybilRisk({ openSybil: dossier.openSybilCount, resolvedSybil: dossier.resolvedSybilCount })
+  const ageDays = dossier.firstSeen
+    ? Math.floor((Date.now() - new Date(dossier.firstSeen).getTime()) / (24 * 60 * 60 * 1000))
+    : null
+  const storageType = (uri && isUrl(uri)) ? 'Off-chain' as const : 'On-chain' as const
+
   const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
   const serviceTypes = new Set(services)
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="bg-grid mx-auto max-w-6xl px-6 py-10">
-        {/* Breadcrumb */}
-        <nav className="font-mono text-xs text-text-muted uppercase tracking-wider">
-          System / DenScope / Dossier
-        </nav>
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="font-display text-2xl font-bold text-text-primary">
+                {metadata?.name ?? `Agent #${agentId}`}
+              </h1>
+              <span className="status-pill status-pill-accent">{chainConfig.name}</span>
+              <StatusPill status={agentStatus} />
+              {isClaimed && <span className="status-pill status-pill-success">CLAIMED</span>}
+            </div>
 
-        {/* Title */}
-        <h1 className="font-display text-3xl font-bold uppercase tracking-wider mt-4 text-text-primary">
-          AGENT X-RAY
-        </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          {metadata?.name ?? `Agent #${agentId}`} &mdash; {chainConfig.name}
-        </p>
+            {metadata?.description && (
+              <p className="text-sm text-text-secondary max-w-2xl mb-3">
+                {metadata.description}
+              </p>
+            )}
 
-        {metadata?.description && (
-          <p className="mt-3 text-sm text-text-secondary max-w-2xl">
-            {metadata.description}
-          </p>
-        )}
+            <div className="flex items-center gap-6 text-xs font-mono text-text-muted">
+              <span>Agent #{agentId}</span>
+              <span>Last seen: {formatRelativeTime(dossier.lastSeen)}</span>
+              <span>{dossier.totalEvents} events</span>
+              {owner && <AddressChip address={owner} chainId={chainConfig.id} />}
+            </div>
+          </div>
+
+          {/* Trust Score — right side */}
+          <div className="text-right shrink-0">
+            {trustScore ? (
+              <div>
+                <span className={`font-display text-5xl font-bold ${scoreColor(trustScore.score)}`}>
+                  {trustScore.score}
+                </span>
+                <span className="text-xs text-text-muted font-mono block mt-1">/ 100</span>
+                <span className={`status-pill ${confidencePill(trustScore.confidence)} text-[10px] mt-1`}>
+                  {trustScore.confidence.toUpperCase()}
+                </span>
+              </div>
+            ) : (
+              <div className="text-xs text-text-muted font-mono">
+                Awaiting<br />first poll
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Actions */}
-        <div className="mt-6 flex items-center gap-4">
+        <div className="mt-6 flex items-center gap-3">
+          {/* Watch Agent — placeholder, disabled */}
+          <button
+            disabled
+            className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-muted cursor-not-allowed opacity-50"
+            title="Coming soon"
+          >
+            Watch Agent
+          </button>
+
+          <span className="border-l border-border h-5 mx-1" />
+
+          {/* Secondary CTAs */}
           <a
             href={`https://x.com/intent/post?text=${encodeURIComponent(
               `${metadata?.name ?? `Agent #${agentId}`}${services.length > 0 ? ` [${services.join(' / ')}]` : ''} on ${chainConfig.name}\n\nhttps://denscope.vercel.app/agent/${chainConfig.id}/${agentId}\n\nExplored with @denlabs_app`
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
           >
             Post on X
           </a>
@@ -184,10 +251,21 @@ export default async function AgentPage({ params }: Props) {
             href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
           >
-            View on Explorer
+            Explorer
           </a>
+        </div>
+
+        {/* Trust Snapshot — full width */}
+        <div className="mt-8">
+          <TrustSnapshot
+            trustScore={trustScore}
+            sybilRisk={sybilRisk}
+            uniqueInteractors={dossier.uniqueInteractors}
+            storageType={storageType}
+            ageDays={ageDays}
+          />
         </div>
 
         {/* 12-column grid */}
@@ -195,12 +273,8 @@ export default async function AgentPage({ params }: Props) {
           {/* Left column: Identity Card */}
           <div className="col-span-4">
             <div className="bg-surface border border-border p-6 space-y-5">
-              {/* Status badge */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="status-pill status-pill-success">ACTIVE</span>
-                  {isClaimed && <span className="status-pill status-pill-success">CLAIMED</span>}
-                </div>
+              {/* ERC-8004 label */}
+              <div className="flex items-center justify-end">
                 <span className="font-mono text-xs text-text-muted">
                   ERC-8004
                 </span>
@@ -260,7 +334,7 @@ export default async function AgentPage({ params }: Props) {
                   Storage
                 </p>
                 <span className="status-pill status-pill-accent">
-                  {uri && isUrl(uri) ? 'Off-chain' : 'On-chain'}
+                  {storageType}
                 </span>
               </div>
             </div>
@@ -268,70 +342,65 @@ export default async function AgentPage({ params }: Props) {
 
           {/* Right column */}
           <div className="col-span-8 space-y-6">
-            {/* Top row: two cards side by side */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Connected Protocols */}
-              <div className="bg-surface border border-border p-5">
-                <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
-                  Connected Protocols
-                </h2>
-                <div className="space-y-2">
-                  {KNOWN_PROTOCOLS.map((protocol) => {
-                    const isConnected = serviceTypes.has(protocol)
-                    return (
-                      <div
-                        key={protocol}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="font-mono text-sm text-text-primary">
-                          {protocol}
-                        </span>
-                        <span
-                          className={`status-pill ${
-                            isConnected
-                              ? 'status-pill-success'
-                              : 'status-pill-neutral'
-                          }`}
-                        >
-                          {isConnected ? 'CONNECTED' : 'INACTIVE'}
-                        </span>
-                      </div>
-                    )
-                  })}
-                  {/* Additional services not in KNOWN_PROTOCOLS */}
-                  {metadata?.services
-                    ?.filter(
-                      (s) =>
-                        !KNOWN_PROTOCOLS.includes(
-                          s.type.toUpperCase() as (typeof KNOWN_PROTOCOLS)[number]
-                        )
-                    )
-                    .map((s, i) => (
-                      <div key={`extra-${i}`} className="flex items-center justify-between">
-                        <span className="font-mono text-sm text-text-primary">
-                          {s.type}
-                          {s.version ? ` v${s.version}` : ''}
-                        </span>
-                        <span className="status-pill status-pill-success">
-                          CONNECTED
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
+            {/* What Changed */}
+            <WhatChanged
+              activity={{
+                firstSeen: dossier.firstSeen,
+                uriUpdateCount: dossier.uriUpdateCount,
+                feedbackCount: dossier.feedbackCount,
+                avgFeedback: dossier.avgFeedbackValue,
+                totalEvents: dossier.totalEvents,
+              }}
+              lastSeen={dossier.lastSeen}
+            />
 
-              {/* Trust Score */}
-              <div className="bg-surface border border-border p-5">
-                <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
-                  Trust Score
-                </h2>
-                {trustScore ? (
-                  <TrustScoreBadge score={trustScore} />
-                ) : (
-                  <p className="text-xs text-text-muted font-mono">
-                    No trust score yet — waiting for on-chain activity.
-                  </p>
-                )}
+            {/* Connected Protocols */}
+            <div className="bg-surface border border-border p-5">
+              <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
+                Connected Protocols
+              </h2>
+              <div className="space-y-2">
+                {KNOWN_PROTOCOLS.map((protocol) => {
+                  const isConnected = serviceTypes.has(protocol)
+                  return (
+                    <div
+                      key={protocol}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="font-mono text-sm text-text-primary">
+                        {protocol}
+                      </span>
+                      <span
+                        className={`status-pill ${
+                          isConnected
+                            ? 'status-pill-success'
+                            : 'status-pill-neutral'
+                        }`}
+                      >
+                        {isConnected ? 'CONNECTED' : 'INACTIVE'}
+                      </span>
+                    </div>
+                  )
+                })}
+                {/* Additional services not in KNOWN_PROTOCOLS */}
+                {metadata?.services
+                  ?.filter(
+                    (s) =>
+                      !KNOWN_PROTOCOLS.includes(
+                        s.type.toUpperCase() as (typeof KNOWN_PROTOCOLS)[number]
+                      )
+                  )
+                  .map((s, i) => (
+                    <div key={`extra-${i}`} className="flex items-center justify-between">
+                      <span className="font-mono text-sm text-text-primary">
+                        {s.type}
+                        {s.version ? ` v${s.version}` : ''}
+                      </span>
+                      <span className="status-pill status-pill-success">
+                        CONNECTED
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
 

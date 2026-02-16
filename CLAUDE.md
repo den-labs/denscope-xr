@@ -50,8 +50,9 @@ pnpm run indexer:backfill     # One-shot backfill only
 - `src/lib/signals/` — Server-side signal detection rules (5 detectors: first_interaction, validation_complete, feedback_spike, reputation_drop, sybil_cluster)
 - `src/lib/reputation/` — Trust score computation (v1 formula: positiveRatio + age + activity - incidents - sybil)
 - `src/lib/api-keys/` — API key generation, hashing, validation, authentication middleware, rate limiting
+- `src/lib/dossier/` — Agent dossier helpers (status, relative time, sybil risk, activity summary) + SSR data fetcher
 - `src/stores/` — Zustand stores (events, agents, graph, discovery, auth, incidents, alerts)
-- `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers, auth, console)
+- `src/components/` — React components (feed, graph, xray, discovery, shared, layout, providers, auth, console, agent dossier)
 - `src/app/` — Next.js pages + API routes
 - `supabase/functions/erc8004-poller/` — Edge Function: polls Forno RPCs, writes events to DB
 - `supabase/migrations/` — Database schema + pg_cron schedule
@@ -172,7 +173,7 @@ Pre-computed trust scores exposed via authenticated REST API.
 - Serverless sync: pg_cron every 1 min, Edge Function processes 500 blocks/chain
 - Alchemy free tier: 10-block max for `eth_getLogs` — all indexing uses Forno instead
 - Supabase free tier: 500K Edge Function invocations/month (~86K used by cron)
-- Timestamps: `Date.now()` for realtime, `getBlock()` batch for backfill
+- Timestamps: Edge Function sets `event_timestamp` at ingestion time; realtime overrides with `Date.now()`
 - IndexedDB client-only; SSR routes use `readContract()` directly
 - Reorg detection via `lastBlockHash` in cursor state
 - ERC-8004 contracts: Identity Registry + Reputation Registry per chain
@@ -181,7 +182,7 @@ Pre-computed trust scores exposed via authenticated REST API.
 ## Testing
 
 ```bash
-pnpm test                    # All tests (104 tests, 24 files)
+pnpm test                    # All tests (122 tests, 25 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
@@ -189,6 +190,7 @@ pnpm test src/config/        # Chain config tests
 
 - Signal detection tests: pure functions in `src/lib/signals/__tests__/detect.test.ts` (13 tests)
 - Store tests: `src/stores/__tests__/incidents.test.ts` (4 tests)
+- Dossier tests: `src/lib/dossier/__tests__/helpers.test.ts` (18 tests — status, relative time, sybil risk, activity summary)
 - Reputation tests: `src/lib/reputation/__tests__/compute.test.ts` (9 tests)
 - API key tests: `src/lib/api-keys/__tests__/` (generate 7 + rate-limit 4 + authenticate 5 = 16 tests)
 - Type + helper tests: `src/types/__tests__/`, `src/lib/supabase/__tests__/`
