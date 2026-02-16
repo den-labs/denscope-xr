@@ -361,6 +361,127 @@ async function dispatchWebhooks(db: DB, signals: SignalResult[]) {
   }
 }
 
+// --- Trust Score Computation (M6) ---
+
+function computeTrustScoreInline(
+  feedbackCount: number,
+  positiveCount: number,
+  negativeCount: number,
+  firstSeen: string | null,
+  lastSeen: string | null,
+  openCritical: number,
+  openWarning: number,
+  hasSybil: boolean,
+): { score: number; positiveRatio: number; activityScore: number; ageScore: number; incidentPenalty: number; confidence: string } {
+  if (feedbackCount === 0) {
+    return { score: 0, positiveRatio: 0, activityScore: 0, ageScore: 0, incidentPenalty: 0, confidence: 'low' }
+  }
+
+  const positiveRatio = positiveCount / feedbackCount
+
+  let ageScore = 0
+  if (firstSeen) {
+    const ageDays = (Date.now() - new Date(firstSeen).getTime()) / (24 * 60 * 60 * 1000)
+    ageScore = Math.min(ageDays / 90, 1.0)
+  }
+
+  let activityScore = 0
+  if (firstSeen && lastSeen) {
+    const activeDays = Math.max(
+      (new Date(lastSeen).getTime() - new Date(firstSeen).getTime()) / (24 * 60 * 60 * 1000),
+      1
+    )
+    activityScore = Math.min(feedbackCount / (activeDays * 2), 1.0)
+  }
+
+  const incidentPenalty = Math.min(openCritical * 0.15 + openWarning * 0.05, 1.0)
+  const sybilPenalty = hasSybil ? 1.0 : 0.0
+
+  const rawScore =
+    0.40 * positiveRatio +
+    0.20 * ageScore +
+    0.20 * activityScore -
+    0.10 * incidentPenalty -
+    0.10 * sybilPenalty
+
+  const score = Math.round(Math.max(0, Math.min(100, rawScore * 100)))
+  const confidence = feedbackCount >= 10 ? 'high' : feedbackCount >= 3 ? 'medium' : 'low'
+
+  return {
+    score,
+    positiveRatio: Math.round(positiveRatio * 10000) / 10000,
+    activityScore: Math.round(activityScore * 10000) / 10000,
+    ageScore: Math.round(ageScore * 10000) / 10000,
+    incidentPenalty: Math.round(incidentPenalty * 10000) / 10000,
+    confidence,
+  }
+}
+
+async function updateTrustScore(db: DB, event: ParsedEvent) {
+  const agentKey = `${event.chain_id}:${event.agent_id}`
+
+  const { data: agent } = await db
+    .from('agents')
+    .select('feedback_count, positive_count, negative_count, first_seen, last_seen')
+    .eq('id', agentKey)
+    .single()
+  if (!agent) return
+
+  const { count: openCritical } = await db
+    .from('incidents')
+    .select('id', { count: 'exact', head: true })
+    .eq('chain_id', event.chain_id)
+    .eq('agent_id', event.agent_id)
+    .eq('severity', 'critical')
+    .is('resolved_at', null)
+
+  const { count: openWarning } = await db
+    .from('incidents')
+    .select('id', { count: 'exact', head: true })
+    .eq('chain_id', event.chain_id)
+    .eq('agent_id', event.agent_id)
+    .eq('severity', 'warning')
+    .is('resolved_at', null)
+
+  const { count: sybilCount } = await db
+    .from('incidents')
+    .select('id', { count: 'exact', head: true })
+    .eq('chain_id', event.chain_id)
+    .eq('agent_id', event.agent_id)
+    .eq('signal_kind', 'sybil_cluster')
+    .is('resolved_at', null)
+
+  const computed = computeTrustScoreInline(
+    agent.feedback_count,
+    agent.positive_count,
+    agent.negative_count,
+    agent.first_seen,
+    agent.last_seen,
+    openCritical ?? 0,
+    openWarning ?? 0,
+    (sybilCount ?? 0) > 0,
+  )
+
+  const openIncidents = (openCritical ?? 0) + (openWarning ?? 0)
+
+  await db.from('trust_scores').upsert({
+    id: agentKey,
+    chain_id: event.chain_id,
+    agent_id: event.agent_id,
+    score: computed.score,
+    positive_ratio: computed.positiveRatio,
+    activity_score: computed.activityScore,
+    age_score: computed.ageScore,
+    incident_penalty: computed.incidentPenalty,
+    feedback_count: agent.feedback_count,
+    positive_count: agent.positive_count,
+    negative_count: agent.negative_count,
+    open_incidents: openIncidents,
+    confidence: computed.confidence,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'chain_id,agent_id' })
+}
+
 // --- Poll one chain ---
 
 async function pollChain(db: DB, chain: typeof CHAINS[number]) {
@@ -397,6 +518,11 @@ async function pollChain(db: DB, chain: typeof CHAINS[number]) {
       const signals = await detectSignals(db, e)
       await insertIncidents(db, signals)
       await dispatchWebhooks(db, signals)
+    }
+
+    // M6: Update trust score
+    for (const e of events) {
+      await updateTrustScore(db, e)
     }
   }
 
