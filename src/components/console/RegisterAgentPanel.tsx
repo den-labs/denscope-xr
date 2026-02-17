@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
   useAccount,
   useChainId,
@@ -26,10 +26,50 @@ export function RegisterAgentPanel() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState('')
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedChainId, setSelectedChainId] = useState(chains[0].id)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [agentId, setAgentId] = useState<string | null>(null)
+
+  const handleImageFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('File must be an image (PNG, JPG, WebP, GIF, SVG)')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Image must be under 5 MB')
+      return
+    }
+
+    setErrorMsg('')
+    setImagePreview(URL.createObjectURL(file))
+    setImageUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/ipfs/upload-file', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Upload failed' }))
+        throw new Error(data.error ?? 'Image upload failed')
+      }
+      const { uri } = await res.json()
+      setImage(uri)
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Image upload failed')
+      setImagePreview(null)
+      setImage('')
+    } finally {
+      setImageUploading(false)
+    }
+  }, [])
 
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -135,6 +175,7 @@ export function RegisterAgentPanel() {
                 setName('')
                 setDescription('')
                 setImage('')
+                setImagePreview(null)
                 setAgentId(null)
                 setTxHash(undefined)
               }}
@@ -175,16 +216,76 @@ export function RegisterAgentPanel() {
             </div>
             <div>
               <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider block mb-1">
-                Image URL
+                Image
               </label>
               <input
-                type="text"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="https://..."
-                disabled={isWorking}
-                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary disabled:opacity-50"
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleImageFile(file)
+                }}
               />
+              {imagePreview ? (
+                <div className="flex items-center gap-3 bg-background border border-border p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-12 w-12 border border-border object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    {imageUploading ? (
+                      <p className="text-xs font-mono text-text-muted">Uploading to IPFS...</p>
+                    ) : (
+                      <p className="text-xs font-mono text-accent truncate">{image}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImage('')
+                      setImagePreview(null)
+                      if (fileInputRef.current) fileInputRef.current.value = ''
+                    }}
+                    disabled={isWorking}
+                    className="text-[10px] font-mono text-critical hover:underline disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click() }}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setDragOver(false)
+                    const file = e.dataTransfer.files[0]
+                    if (file) handleImageFile(file)
+                  }}
+                  onPaste={(e) => {
+                    const file = e.clipboardData.files[0]
+                    if (file) handleImageFile(file)
+                  }}
+                  className={`w-full bg-background border border-dashed px-3 py-4 text-center cursor-pointer transition-colors ${
+                    dragOver ? 'border-accent text-accent' : 'border-border text-text-muted'
+                  } ${isWorking ? 'opacity-50 pointer-events-none' : 'hover:border-accent hover:text-accent'}`}
+                >
+                  <p className="text-xs font-mono">
+                    Drop image, paste, or click to browse
+                  </p>
+                  <p className="text-[10px] font-mono mt-1">
+                    PNG, JPG, WebP, GIF, SVG &middot; Max 5 MB
+                  </p>
+                </div>
+              )}
             </div>
             <div>
               <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider block mb-1">
