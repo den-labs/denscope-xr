@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SearchModal } from '@/components/search/SearchModal'
@@ -38,11 +39,13 @@ export function Header() {
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <span
-              className="flex h-7 w-8 items-center justify-center border border-border-bright text-[10px] font-bold tracking-tight text-text-primary"
-            >
-              DS
-            </span>
+            <Image
+              src="/denscope-logo.png"
+              alt="DenScope"
+              width={28}
+              height={28}
+              className="invert"
+            />
             <span className="font-display text-sm font-bold uppercase tracking-widest text-text-primary">
               Denscope
             </span>

@@ -13,7 +13,7 @@ export function AgentIdentity({ agent }: { agent: AgentSummary }) {
           <ChainBadge chainId={agent.chainId} />
         </div>
         {agent.metadata?.description && (
-          <p className="text-sm text-text-secondary">{agent.metadata.description}</p>
+          <p className="text-sm text-text-secondary line-clamp-6">{agent.metadata.description}</p>
         )}
       </div>
 
