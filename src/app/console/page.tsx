@@ -1,4 +1,5 @@
 import { ConsoleGuard } from '@/components/console/ConsoleGuard'
+import { RegisterAgentPanel } from '@/components/console/RegisterAgentPanel'
 import { ClaimedAgentsList } from '@/components/console/ClaimedAgentsList'
 import { IncidentTimeline } from '@/components/console/IncidentTimeline'
 import { AlertsPanel } from '@/components/console/AlertsPanel'
@@ -24,6 +25,16 @@ export default function ConsolePage() {
           <p className="mt-1 text-sm text-text-secondary">
             Your claimed agents and dashboard.
           </p>
+
+          <div className="mt-8">
+            <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-1">
+              Register Agent
+            </h2>
+            <p className="text-xs text-text-muted mb-4">
+              Deploy a new ERC-8004 agent on-chain with metadata stored on IPFS.
+            </p>
+            <RegisterAgentPanel />
+          </div>
 
           <div className="mt-8">
             <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-1">
