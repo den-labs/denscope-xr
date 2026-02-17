@@ -1,6 +1,7 @@
 'use client'
 
 import type { ScopeEvent } from '@/types/events'
+import { buildXIntentUrl, buildCertificateShareText } from '@/lib/share'
 
 const kindPillClass: Record<string, string> = {
   register: 'status-pill status-pill-success',
@@ -51,11 +52,44 @@ function formatTxHash(txHash?: string): string {
   return `${txHash.slice(0, 8)}...${txHash.slice(-4)}`
 }
 
-export function FeedLine({ event, onClick }: { event: ScopeEvent; onClick?: () => void }) {
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1="12" y1="2" x2="12" y2="15" />
+    </svg>
+  )
+}
+
+type FeedLineProps = {
+  event: ScopeEvent
+  onClick?: () => void
+  onHoverEnter?: (agentKey: string, rect: DOMRect) => void
+  onHoverLeave?: () => void
+}
+
+export function FeedLine({ event, onClick, onHoverEnter, onHoverLeave }: FeedLineProps) {
+  const agentKey = `${event.chainId}:${event.agentId}`
+
+  function handleShare(e: React.MouseEvent) {
+    e.stopPropagation()
+    const url = buildXIntentUrl(
+      buildCertificateShareText({ chainId: event.chainId, agentId: event.agentId })
+    )
+    window.open(url, '_blank')
+  }
+
+  function handleMouseEnter(e: React.MouseEvent<HTMLButtonElement>) {
+    onHoverEnter?.(agentKey, e.currentTarget.getBoundingClientRect())
+  }
+
   return (
     <button
       onClick={onClick}
-      className="grid w-full grid-cols-[120px_100px_100px_1fr_120px_40px] items-center gap-0 border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={onHoverLeave}
+      className="group grid w-full grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0 border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover hover:border-l-2 hover:border-l-accent cursor-pointer"
     >
       {/* Timestamp */}
       <span className="shrink-0 text-text-muted text-xs">
@@ -75,7 +109,7 @@ export function FeedLine({ event, onClick }: { event: ScopeEvent; onClick?: () =
       </span>
 
       {/* Agent Identity */}
-      <span className="truncate text-text-primary text-xs">
+      <span className="truncate text-text-primary text-xs group-hover:text-accent group-hover:underline transition-colors">
         {formatSummary(event)}
       </span>
 
@@ -84,9 +118,19 @@ export function FeedLine({ event, onClick }: { event: ScopeEvent; onClick?: () =
         {formatTxHash(event.txHash)}
       </span>
 
-      {/* Arrow button */}
-      <span className="text-text-muted text-xs text-right hover:text-text-primary transition-colors">
-        &rarr;
+      {/* Share Icon */}
+      <span
+        role="button"
+        tabIndex={-1}
+        onClick={handleShare}
+        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent px-2"
+      >
+        <ShareIcon />
+      </span>
+
+      {/* Inspect CTA */}
+      <span className="text-[10px] tracking-wider uppercase border border-border px-2 py-0.5 text-text-muted group-hover:border-accent group-hover:text-accent transition-colors whitespace-nowrap">
+        INSPECT
       </span>
     </button>
   )

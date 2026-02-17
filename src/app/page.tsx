@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { LiveFeed } from '@/components/feed/LiveFeed'
 import { FeedFiltersBar } from '@/components/feed/FeedFilters'
+import { FeedHint } from '@/components/feed/FeedHint'
 import { XRayPanel } from '@/components/xray/XRayPanel'
 import { useEventStore } from '@/stores/events'
 import { useAgentStore } from '@/stores/agents'
@@ -10,6 +11,7 @@ import { useFeedFilters } from '@/hooks/useFeedFilters'
 
 export default function FeedPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
+  const [hintDismissed, setHintDismissed] = useState(false)
   const events = useEventStore((s) => s.events)
   const agentCount = useAgentStore((s) => s.agents.size)
   const headBlock = events.length > 0 ? events[0].block : 0
@@ -59,10 +61,13 @@ export default function FeedPage() {
       {/* Filter Bar */}
       <FeedFiltersBar filters={filters} onChange={setFilters} />
 
+      {/* Feed Hint */}
+      <FeedHint dismissed={hintDismissed} />
+
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
-          <LiveFeed onAgentClick={setSelectedAgent} filters={filters} />
+          <LiveFeed onAgentClick={setSelectedAgent} onFirstHover={() => setHintDismissed(true)} filters={filters} />
         </div>
         <XRayPanel agentKey={selectedAgent} onClose={() => setSelectedAgent(null)} />
       </div>

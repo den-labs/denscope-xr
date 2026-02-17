@@ -3,6 +3,7 @@ import { getChain } from '@/config/chains'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
+import { buildXIntentUrl, buildCertificateShareText } from '@/lib/share'
 import { AddressChip } from '@/components/shared/AddressChip'
 import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
 import { AgentClaimSection } from '@/components/agent/AgentClaimSection'
@@ -25,13 +26,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
 
+  const ogImage = `/api/og/agent/${chain}/${id}`
+
   return {
     title: `${name} — DenScope`,
     description: `ERC-8004 agent on ${chainConfig.name}`,
     openGraph: {
       title: `${name} — DenScope`,
       description: `ERC-8004 agent on ${chainConfig.name}`,
-      images: [`/api/og/agent/${chain}/${id}`],
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${name} — DenScope`,
+      description: `ERC-8004 agent on ${chainConfig.name}`,
+      images: [ogImage],
     },
   }
 }
@@ -237,14 +246,12 @@ export default async function AgentPage({ params }: Props) {
 
           {/* Secondary CTAs */}
           <a
-            href={`https://x.com/intent/post?text=${encodeURIComponent(
-              `${metadata?.name ?? `Agent #${agentId}`}${services.length > 0 ? ` [${services.join(' / ')}]` : ''} on ${chainConfig.name}\n\nhttps://denscope.vercel.app/agent/${chainConfig.id}/${agentId}\n\nExplored with @denlabs_app`
-            )}`}
+            href={buildXIntentUrl(buildCertificateShareText({ chainId: chainConfig.id, agentId, name: metadata?.name }))}
             target="_blank"
             rel="noopener noreferrer"
             className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
           >
-            Post on X
+            Share Certificate
           </a>
           <EmbedSnippet chainId={chainConfig.id} agentId={agentId} />
           <a

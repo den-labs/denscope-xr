@@ -3,13 +3,15 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 async function loadAssets() {
-  const [interRegular, interBlack, wolfcilloRaw] = await Promise.all([
+  const [interRegular, interBlack, wolfcilloRaw, logoRaw] = await Promise.all([
     readFile(join(process.cwd(), 'assets/fonts/Inter-Regular.ttf')),
     readFile(join(process.cwd(), 'assets/fonts/Inter-Black.ttf')),
     readFile(join(process.cwd(), 'design/wolfcillo.png')),
+    readFile(join(process.cwd(), 'design/denscope-log.png')),
   ])
   const wolfcilloSrc = `data:image/png;base64,${Buffer.from(wolfcilloRaw).toString('base64')}`
-  return { interRegular, interBlack, wolfcilloSrc }
+  const logoSrc = `data:image/png;base64,${Buffer.from(logoRaw).toString('base64')}`
+  return { interRegular, interBlack, wolfcilloSrc, logoSrc }
 }
 
 export async function GET() {
@@ -72,12 +74,20 @@ export async function GET() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <span style={{
-                  fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em',
-                  lineHeight: 1,
-                }}>
-                  DENSCOPE
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img
+                    src={assets.logoSrc}
+                    width={24}
+                    height={24}
+                    style={{ filter: 'invert(1)' }}
+                  />
+                  <span style={{
+                    fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em',
+                    lineHeight: 1,
+                  }}>
+                    DENSCOPE
+                  </span>
+                </div>
                 <span style={{
                   fontSize: 10, color: '#6b7280',
                   letterSpacing: '0.2em', marginTop: 4,
@@ -101,13 +111,12 @@ export async function GET() {
             alignItems: 'center', justifyContent: 'center',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 56, height: 56, border: '2px solid #F0F0F0',
-                fontSize: 20, fontWeight: 700, letterSpacing: '0.05em',
-              }}>
-                DS
-              </div>
+              <img
+                src={assets.logoSrc}
+                width={56}
+                height={56}
+                style={{ filter: 'invert(1)' }}
+              />
               <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-0.025em' }}>
                 DENSCOPE
               </span>
