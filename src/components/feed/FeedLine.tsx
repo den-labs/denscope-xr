@@ -64,12 +64,13 @@ function ShareIcon() {
 
 type FeedLineProps = {
   event: ScopeEvent
+  isSelected?: boolean
   onClick?: () => void
   onHoverEnter?: (agentKey: string, rect: DOMRect) => void
   onHoverLeave?: () => void
 }
 
-export function FeedLine({ event, onClick, onHoverEnter, onHoverLeave }: FeedLineProps) {
+export function FeedLine({ event, isSelected, onClick, onHoverEnter, onHoverLeave }: FeedLineProps) {
   const agentKey = `${event.chainId}:${event.agentId}`
 
   function handleShare(e: React.MouseEvent) {
@@ -89,7 +90,11 @@ export function FeedLine({ event, onClick, onHoverEnter, onHoverLeave }: FeedLin
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={onHoverLeave}
-      className="group grid w-full grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0 border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover hover:border-l-2 hover:border-l-accent cursor-pointer"
+      className={`group grid w-full grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0 border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover cursor-pointer ${
+        isSelected
+          ? 'bg-surface-hover border-l-2 border-l-accent'
+          : 'hover:border-l-2 hover:border-l-accent'
+      }`}
     >
       {/* Timestamp */}
       <span className="shrink-0 text-text-muted text-xs">
