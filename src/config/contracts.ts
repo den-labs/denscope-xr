@@ -41,6 +41,13 @@ export const identityRegistryAbi = [
     inputs: [{ name: 'tokenId', type: 'uint256' }],
     outputs: [{ name: '', type: 'address' }],
   },
+  {
+    type: 'function',
+    name: 'register',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'agentURI', type: 'string' }],
+    outputs: [{ name: 'tokenId', type: 'uint256' }],
+  },
 ] as const
 
 export const reputationRegistryAbi = [
