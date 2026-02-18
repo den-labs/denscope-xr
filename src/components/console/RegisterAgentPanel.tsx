@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from 'react'
 import {
   useAccount,
-  useChainId,
   useSwitchChain,
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -17,8 +16,7 @@ import { uploadAgentMetadata } from '@/lib/ipfs/upload'
 type Status = 'idle' | 'uploading' | 'signing' | 'confirming' | 'success' | 'error'
 
 export function RegisterAgentPanel() {
-  const { address } = useAccount()
-  const currentChainId = useChainId()
+  const { address, chainId: walletChainId } = useAccount()
   const { switchChainAsync } = useSwitchChain()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
@@ -118,8 +116,8 @@ export function RegisterAgentPanel() {
         chainId: selectedChainId,
       })
 
-      // Switch chain if needed
-      if (currentChainId !== selectedChainId) {
+      // Switch wallet to target chain if needed
+      if (walletChainId !== selectedChainId) {
         await switchChainAsync({ chainId: selectedChainId })
       }
 
