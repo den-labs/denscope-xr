@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import type { EventKind } from '@/types/events'
 import type { FeedFilters } from '@/hooks/useFeedFilters'
 import { chains } from '@/config/chains'
@@ -38,6 +39,14 @@ type FeedFiltersBarProps = {
 }
 
 export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
+  const [agentInput, setAgentInput] = useState(filters.agentId)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Sync external filter changes back to local input
+  useEffect(() => {
+    setAgentInput(filters.agentId)
+  }, [filters.agentId])
+
   function toggleKind(kind: EventKind) {
     const next = new Set(filters.kinds)
     if (next.has(kind)) {
@@ -53,7 +62,12 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
   }
 
   function setAgent(value: string) {
-    onChange({ ...filters, agentId: value })
+    const cleaned = value.replace(/[^0-9]/g, '')
+    setAgentInput(cleaned)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onChange({ ...filters, agentId: cleaned })
+    }, 300)
   }
 
   const hasActiveFilters = filters.kinds.size > 0 || filters.chainId !== null || filters.agentId !== ''
@@ -103,8 +117,8 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
           type="text"
           inputMode="numeric"
           placeholder="#"
-          value={filters.agentId}
-          onChange={(e) => setAgent(e.target.value.replace(/[^0-9]/g, ''))}
+          value={agentInput}
+          onChange={(e) => setAgent(e.target.value)}
           className="bg-surface border border-border text-text-primary text-xs font-mono px-2 py-1 w-16 rounded-sm focus:outline-none focus:ring-1 focus:ring-text-primary placeholder:text-text-muted"
         />
       </div>

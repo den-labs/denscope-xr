@@ -13,7 +13,7 @@ export default function ApiDocsPage() {
           System / DenScope / API
         </nav>
 
-        <h1 className="font-display text-3xl font-bold uppercase tracking-wider mt-4 text-text-primary">
+        <h1 className="font-display text-2xl font-bold uppercase tracking-wider mt-4 text-text-primary">
           REPUTATION API
         </h1>
         <p className="mt-2 text-sm text-text-secondary max-w-2xl">
