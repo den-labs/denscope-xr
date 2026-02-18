@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { LiveFeed } from '@/components/feed/LiveFeed'
 import { FeedFiltersBar } from '@/components/feed/FeedFilters'
 import { FeedHint } from '@/components/feed/FeedHint'
@@ -33,6 +33,7 @@ function useLayout(): Layout {
 export default function FeedPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   const [hintDismissed, setHintDismissed] = useState(false)
+  const dismissedRef = useRef(false)
   const events = useEventStore((s) => s.events)
   const agents = useAgentStore((s) => s.agents)
   const agentCount = agents.size
@@ -43,10 +44,21 @@ export default function FeedPage() {
   // Auto-select first agent when events arrive and no selection yet
   useEffect(() => {
     if (selectedAgent) return
+    if (dismissedRef.current) return
     if (events.length === 0) return
     const first = events[0]
     setSelectedAgent(`${first.chainId}:${first.agentId}`)
   }, [events, selectedAgent])
+
+  const handleAgentClick = useCallback((key: string) => {
+    dismissedRef.current = false
+    setSelectedAgent(key)
+  }, [])
+
+  const handleStationClose = useCallback(() => {
+    dismissedRef.current = true
+    setSelectedAgent(null)
+  }, [])
 
   const filteredCount = useMemo(() => {
     const hasFilter = filters.kinds.size > 0 || filters.chainId !== null || filters.agentId !== ''
@@ -99,7 +111,7 @@ export default function FeedPage() {
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
           <LiveFeed
-            onAgentClick={setSelectedAgent}
+            onAgentClick={handleAgentClick}
             onFirstHover={() => setHintDismissed(true)}
             filters={filters}
             selectedAgentKey={selectedAgent}
@@ -108,7 +120,7 @@ export default function FeedPage() {
         <CertificateStation
           agentKey={selectedAgent}
           layout={layout}
-          onClose={() => setSelectedAgent(null)}
+          onClose={handleStationClose}
         />
       </div>
 
