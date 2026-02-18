@@ -186,9 +186,9 @@ export default async function AgentPage({ params }: Props) {
     <div className="h-full overflow-y-auto">
       <div className="bg-grid mx-auto max-w-6xl px-6 py-10">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
               <h1 className="font-display text-2xl font-bold text-text-primary">
                 {metadata?.name ?? `Agent #${agentId}`}
               </h1>
@@ -203,7 +203,7 @@ export default async function AgentPage({ params }: Props) {
               </p>
             )}
 
-            <div className="flex items-center gap-6 text-xs font-mono text-text-muted">
+            <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs font-mono text-text-muted">
               <span>Agent #{agentId}</span>
               <span>Last seen: {formatRelativeTime(dossier.lastSeen)}</span>
               <span>{dossier.totalEvents} events</span>
@@ -211,38 +211,40 @@ export default async function AgentPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Trust Score — right side */}
-          <div className="text-right shrink-0">
+          {/* Trust Score */}
+          <div className="text-left md:text-right shrink-0">
             {trustScore ? (
-              <div>
+              <div className="flex md:block items-center gap-3">
                 <span className={`font-display text-5xl font-bold ${scoreColor(trustScore.score)}`}>
                   {trustScore.score}
                 </span>
-                <span className="text-xs text-text-muted font-mono block mt-1">/ 100</span>
-                <span className={`status-pill ${confidencePill(trustScore.confidence)} text-[10px] mt-1`}>
-                  {trustScore.confidence.toUpperCase()}
-                </span>
+                <div className="md:mt-1">
+                  <span className="text-xs text-text-muted font-mono block">/ 100</span>
+                  <span className={`status-pill ${confidencePill(trustScore.confidence)} text-[10px] mt-1`}>
+                    {trustScore.confidence.toUpperCase()}
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="text-xs text-text-muted font-mono">
-                Awaiting<br />first poll
+                Awaiting first poll
               </div>
             )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           {/* Watch Agent — placeholder, disabled */}
           <button
             disabled
-            className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-muted cursor-not-allowed opacity-50"
+            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-muted cursor-not-allowed opacity-50"
             title="Coming soon"
           >
             Watch Agent
           </button>
 
-          <span className="border-l border-border h-5 mx-1" />
+          <span className="hidden md:inline-block border-l border-border h-5 mx-1" />
 
           {/* Secondary CTAs */}
           <a
@@ -276,9 +278,9 @@ export default async function AgentPage({ params }: Props) {
         </div>
 
         {/* 12-column grid */}
-        <div className="grid grid-cols-12 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-8">
           {/* Left column: Identity Card */}
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <div className="bg-surface border border-border p-6 space-y-5">
               {/* ERC-8004 label */}
               <div className="flex items-center justify-end">
@@ -348,7 +350,7 @@ export default async function AgentPage({ params }: Props) {
           </div>
 
           {/* Right column */}
-          <div className="col-span-8 space-y-6">
+          <div className="md:col-span-8 space-y-6">
             {/* What Changed */}
             <WhatChanged
               activity={{
