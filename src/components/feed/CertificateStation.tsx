@@ -149,14 +149,20 @@ function RailHandle({ onClick }: { onClick: () => void }) {
 
 // ─── Main component ──────────────────────────────────────────────
 export function CertificateStation({ agentKey, layout, onClose }: CertificateStationProps) {
-  const [isOpen, setIsOpen] = useState(readStationOpen)
+  const [isOpen, setIsOpen] = useState(true) // SSR-safe default; sync from localStorage in effect
   const agent = useAgentStore((s) => (agentKey ? s.agents.get(agentKey) : undefined))
   const cacheMetadata = useAgentStore((s) => s.cacheMetadata)
   const [metadata, setMetadata] = useState<AgentMetadata | null>(agent?.metadata ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  // Persist open/closed
+  // Sync open/closed with localStorage
+  useEffect(() => {
+    // Read persisted value on mount
+    const stored = localStorage.getItem(LS_KEY)
+    if (stored !== null) setIsOpen(stored === 'true')
+  }, [])
+
   useEffect(() => {
     localStorage.setItem(LS_KEY, String(isOpen))
   }, [isOpen])

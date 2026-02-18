@@ -11,9 +11,7 @@ import { useFeedFilters } from '@/hooks/useFeedFilters'
 import type { Layout } from '@/components/feed/CertificateStation'
 
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : false
-  )
+  const [matches, setMatches] = useState(false)
   useEffect(() => {
     const mql = window.matchMedia(query)
     setMatches(mql.matches)
