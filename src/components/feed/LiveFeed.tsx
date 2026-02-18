@@ -1,54 +1,20 @@
 'use client'
 
-import { useState, useMemo, useRef, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEventStore } from '@/stores/events'
 import type { FeedFilters } from '@/hooks/useFeedFilters'
 import { FeedLine } from './FeedLine'
 import { PulseEffect } from './PulseEffect'
-import { CertificatePreview } from './CertificatePreview'
 
-export function LiveFeed({ onAgentClick, onFirstHover, filters }: { onAgentClick?: (key: string) => void; onFirstHover?: () => void; filters?: FeedFilters }) {
+export function LiveFeed({ onAgentClick, onFirstHover, filters, selectedAgentKey }: {
+  onAgentClick?: (key: string) => void
+  onFirstHover?: () => void
+  filters?: FeedFilters
+  selectedAgentKey?: string | null
+}) {
   const events = useEventStore((s) => s.events)
   const [paused, setPaused] = useState(false)
-
-  // Hover preview state
-  const [hoveredAgent, setHoveredAgent] = useState<string | null>(null)
-  const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const leaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const firstHoverFired = useRef(false)
-
-  const handleHoverEnter = useCallback((agentKey: string, rect: DOMRect) => {
-    clearTimeout(leaveTimerRef.current)
-    hoverTimerRef.current = setTimeout(() => {
-      setHoveredAgent(agentKey)
-      setHoverRect(rect)
-      if (!firstHoverFired.current) {
-        firstHoverFired.current = true
-        onFirstHover?.()
-      }
-    }, 300)
-  }, [onFirstHover])
-
-  const handleHoverLeave = useCallback(() => {
-    clearTimeout(hoverTimerRef.current)
-    leaveTimerRef.current = setTimeout(() => {
-      setHoveredAgent(null)
-      setHoverRect(null)
-    }, 50)
-  }, [])
-
-  const handleTooltipEnter = useCallback(() => {
-    clearTimeout(leaveTimerRef.current)
-  }, [])
-
-  const handleTooltipLeave = useCallback(() => {
-    leaveTimerRef.current = setTimeout(() => {
-      setHoveredAgent(null)
-      setHoverRect(null)
-    }, 50)
-  }, [])
 
   const filteredEvents = useMemo(() => {
     if (!filters) return events
@@ -105,25 +71,14 @@ export function LiveFeed({ onAgentClick, onFirstHover, filters }: { onAgentClick
                 <PulseEffect>
                   <FeedLine
                     event={event}
+                    isSelected={selectedAgentKey === `${event.chainId}:${event.agentId}`}
                     onClick={() => onAgentClick?.(`${event.chainId}:${event.agentId}`)}
-                    onHoverEnter={handleHoverEnter}
-                    onHoverLeave={handleHoverLeave}
                   />
                 </PulseEffect>
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
-      )}
-
-      {/* Hover preview tooltip (desktop only) */}
-      {hoveredAgent && hoverRect && (
-        <CertificatePreview
-          agentKey={hoveredAgent}
-          rect={hoverRect}
-          onMouseEnter={handleTooltipEnter}
-          onMouseLeave={handleTooltipLeave}
-        />
       )}
 
       {paused && (

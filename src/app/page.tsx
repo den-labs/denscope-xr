@@ -1,21 +1,52 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { LiveFeed } from '@/components/feed/LiveFeed'
 import { FeedFiltersBar } from '@/components/feed/FeedFilters'
 import { FeedHint } from '@/components/feed/FeedHint'
-import { XRayPanel } from '@/components/xray/XRayPanel'
+import { CertificateStation } from '@/components/feed/CertificateStation'
 import { useEventStore } from '@/stores/events'
 import { useAgentStore } from '@/stores/agents'
 import { useFeedFilters } from '@/hooks/useFeedFilters'
+import type { Layout } from '@/components/feed/CertificateStation'
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false)
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    setMatches(mql.matches)
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [query])
+  return matches
+}
+
+function useLayout(): Layout {
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const isMedium = useMediaQuery('(min-width: 768px)')
+  if (isDesktop) return 'docked'
+  if (isMedium) return 'collapsible'
+  return 'sheet'
+}
 
 export default function FeedPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   const [hintDismissed, setHintDismissed] = useState(false)
   const events = useEventStore((s) => s.events)
-  const agentCount = useAgentStore((s) => s.agents.size)
+  const agents = useAgentStore((s) => s.agents)
+  const agentCount = agents.size
   const headBlock = events.length > 0 ? events[0].block : 0
   const { filters, setFilters } = useFeedFilters()
+  const layout = useLayout()
+
+  // Auto-select first agent when events arrive and no selection yet
+  useEffect(() => {
+    if (selectedAgent) return
+    if (events.length === 0) return
+    const first = events[0]
+    setSelectedAgent(`${first.chainId}:${first.agentId}`)
+  }, [events, selectedAgent])
 
   const filteredCount = useMemo(() => {
     const hasFilter = filters.kinds.size > 0 || filters.chainId !== null || filters.agentId !== ''
@@ -64,12 +95,21 @@ export default function FeedPage() {
       {/* Feed Hint */}
       <FeedHint dismissed={hintDismissed} />
 
-      {/* Main Content */}
+      {/* Main Content — 2-column: [Feed] [Station] */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
-          <LiveFeed onAgentClick={setSelectedAgent} onFirstHover={() => setHintDismissed(true)} filters={filters} />
+          <LiveFeed
+            onAgentClick={setSelectedAgent}
+            onFirstHover={() => setHintDismissed(true)}
+            filters={filters}
+            selectedAgentKey={selectedAgent}
+          />
         </div>
-        <XRayPanel agentKey={selectedAgent} onClose={() => setSelectedAgent(null)} />
+        <CertificateStation
+          agentKey={selectedAgent}
+          layout={layout}
+          onClose={() => setSelectedAgent(null)}
+        />
       </div>
 
       {/* Bottom gradient fade overlay */}
