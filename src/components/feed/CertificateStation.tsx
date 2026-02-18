@@ -167,6 +167,11 @@ export function CertificateStation({ agentKey, layout, onClose }: CertificateSta
     localStorage.setItem(LS_KEY, String(isOpen))
   }, [isOpen])
 
+  // Reopen station when user selects a new agent (click row / inspect)
+  useEffect(() => {
+    if (agentKey) setIsOpen(true)
+  }, [agentKey])
+
   // Fetch metadata
   useEffect(() => {
     if (!agent?.agentURI) return
