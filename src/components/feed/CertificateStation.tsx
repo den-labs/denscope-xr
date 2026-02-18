@@ -98,9 +98,9 @@ function StationContent({
             {/* 4) Secondary CTA */}
             <a
               href={reportUrl}
-              className="block text-center font-mono text-xs text-text-muted hover:text-accent transition-colors"
+              className="text-xs text-accent font-mono hover:underline"
             >
-              View Full Report &rarr;
+              Open Full Report &rarr;
             </a>
 
             {/* 5) Micro-data (1 line) */}
