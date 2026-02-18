@@ -91,7 +91,12 @@ export function ApiKeysPanel() {
             {newKey}
           </code>
           <button
-            onClick={() => { navigator.clipboard.writeText(newKey); setNewKey(null) }}
+            onClick={() => {
+              navigator.clipboard.writeText(newKey)
+              const btn = document.activeElement as HTMLButtonElement
+              if (btn) btn.textContent = 'Copied!'
+              setTimeout(() => setNewKey(null), 800)
+            }}
             className="text-[10px] font-mono text-accent hover:underline"
           >
             Copy &amp; Dismiss

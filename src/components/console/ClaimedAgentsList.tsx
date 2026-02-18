@@ -21,7 +21,17 @@ export function ClaimedAgentsList() {
 
   if (loading) {
     return (
-      <p className="text-xs text-text-muted font-mono">Loading your agents...</p>
+      <div className="space-y-2">
+        {[1, 2].map((i) => (
+          <div key={i} className="animate-pulse bg-surface border border-border p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-5 w-10 bg-border rounded" />
+              <div className="h-3 w-20 bg-border rounded" />
+            </div>
+            <div className="h-4 w-16 bg-border rounded" />
+          </div>
+        ))}
+      </div>
     )
   }
 
