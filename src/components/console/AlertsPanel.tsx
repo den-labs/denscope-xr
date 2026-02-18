@@ -180,14 +180,14 @@ export function AlertsPanel() {
           <button
             onClick={handleSaveWebhook}
             disabled={saving}
-            className="border border-accent/30 bg-accent/5 px-3 py-1 text-xs font-mono text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
+            className="border border-accent/30 bg-accent/5 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>
           <button
             onClick={handleTestWebhook}
             disabled={testing || !webhookUrl}
-            className="border border-border bg-surface px-3 py-1 text-xs font-mono text-text-secondary hover:border-border-bright transition-colors disabled:opacity-50"
+            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors disabled:opacity-50"
           >
             {testing ? 'Sending...' : 'Test'}
           </button>

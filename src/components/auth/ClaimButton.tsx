@@ -95,7 +95,7 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
       <button
         onClick={handleClaim}
         disabled={state === 'signing' || state === 'verifying'}
-        className="border border-accent/30 bg-accent/5 px-4 py-1.5 text-xs font-mono text-accent hover:bg-accent/10 hover:border-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="border border-accent/30 bg-accent/5 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/10 hover:border-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {state === 'signing' && 'Sign message...'}
         {state === 'verifying' && 'Verifying...'}

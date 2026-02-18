@@ -314,7 +314,7 @@ export function RegisterAgentPanel() {
             <button
               onClick={handleRegister}
               disabled={isWorking || !name.trim() || !description.trim()}
-              className="bg-accent text-background px-4 py-1.5 text-xs font-mono font-bold hover:opacity-90 disabled:opacity-50"
+              className="bg-accent text-bg px-4 py-1.5 text-xs font-mono font-bold hover:bg-accent/90 transition-colors disabled:opacity-50"
             >
               {status === 'uploading'
                 ? 'Uploading to IPFS...'
