@@ -27,7 +27,7 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
   const [metadata, setMetadata] = useState<AgentMetadata | null>(agent?.metadata ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
-  const [shareOpen, setShareOpen] = useState(false)
+  const [shareMenuOpen, setShareMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!agent?.agentURI) return
@@ -68,7 +68,11 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
 
   function handleShare() {
     if (!shareInput) return
-    setShareOpen(!shareOpen)
+    window.open(buildXIntentUrl(buildCertificateShareText(shareInput)), '_blank')
+  }
+
+  function toggleShareMenu() {
+    setShareMenuOpen(!shareMenuOpen)
   }
 
   // Empty state content
@@ -125,31 +129,30 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
               </div>
             </div>
 
-            {/* Primary CTA — Share Certificate */}
+            {/* Primary CTA — Share Certificate (direct X intent) */}
+            <button
+              onClick={handleShare}
+              className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors"
+            >
+              Share Certificate
+            </button>
+
+            {/* Owner share option */}
             <div className="relative">
               <button
-                onClick={handleShare}
-                className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors"
+                onClick={toggleShareMenu}
+                className="w-full text-center font-mono text-[11px] text-text-muted hover:text-text-secondary transition-colors"
               >
-                Share Certificate
+                More share options...
               </button>
-              {shareOpen && (
+              {shareMenuOpen && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-50 flex flex-col border border-border-bright bg-surface shadow-lg">
-                  <a
-                    href={buildXIntentUrl(buildCertificateShareText(shareInput))}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setShareOpen(false)}
-                    className="px-4 py-2.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors text-left"
-                  >
-                    Share Certificate
-                  </a>
                   <a
                     href={buildXIntentUrl(buildOwnerShareText(shareInput))}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => setShareOpen(false)}
-                    className="px-4 py-2.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors text-left border-t border-border"
+                    onClick={() => setShareMenuOpen(false)}
+                    className="px-4 py-2.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors text-left"
                   >
                     I Own This Agent
                   </a>

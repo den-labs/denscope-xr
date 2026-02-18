@@ -66,13 +66,9 @@ type FeedLineProps = {
   event: ScopeEvent
   isSelected?: boolean
   onClick?: () => void
-  onHoverEnter?: (agentKey: string, rect: DOMRect) => void
-  onHoverLeave?: () => void
 }
 
-export function FeedLine({ event, isSelected, onClick, onHoverEnter, onHoverLeave }: FeedLineProps) {
-  const agentKey = `${event.chainId}:${event.agentId}`
-
+export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
   function handleShare(e: React.MouseEvent) {
     e.stopPropagation()
     const url = buildXIntentUrl(
@@ -81,15 +77,9 @@ export function FeedLine({ event, isSelected, onClick, onHoverEnter, onHoverLeav
     window.open(url, '_blank')
   }
 
-  function handleMouseEnter(e: React.MouseEvent<HTMLButtonElement>) {
-    onHoverEnter?.(agentKey, e.currentTarget.getBoundingClientRect())
-  }
-
   return (
     <button
       onClick={onClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={onHoverLeave}
       className={`group grid w-full grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0 border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover cursor-pointer ${
         isSelected
           ? 'bg-surface-hover border-l-2 border-l-accent'
