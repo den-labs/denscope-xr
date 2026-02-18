@@ -33,7 +33,7 @@ export function LiveFeed({ onAgentClick, onFirstHover, filters, selectedAgentKey
       onMouseLeave={() => setPaused(false)}
     >
       {/* Column Headers */}
-      <div className="sticky top-0 z-10 grid grid-cols-[120px_100px_100px_1fr_120px_auto_auto] gap-0 border-b border-border bg-surface px-4 py-2">
+      <div className="sticky top-0 z-10 hidden md:grid grid-cols-[120px_100px_100px_1fr_120px_auto_auto] gap-0 border-b border-border bg-surface px-4 py-2">
         <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Timestamp</span>
         <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Event Type</span>
         <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Protocol</span>

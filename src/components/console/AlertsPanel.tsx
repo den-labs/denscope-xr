@@ -127,7 +127,20 @@ export function AlertsPanel() {
   }
 
   if (loading) {
-    return <p className="text-xs text-text-muted font-mono">Loading alerts...</p>
+    return (
+      <div className="bg-surface border border-border p-5 space-y-4">
+        <div className="h-3 w-24 bg-border rounded animate-pulse" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center justify-between py-2 animate-pulse">
+            <div className="space-y-1.5">
+              <div className="h-3 w-28 bg-border rounded" />
+              <div className="h-2.5 w-44 bg-border rounded" />
+            </div>
+            <div className="h-5 w-10 bg-border rounded-full" />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   if (rules.length === 0) {
