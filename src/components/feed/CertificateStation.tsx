@@ -206,7 +206,11 @@ export function CertificateStation({ agentKey, layout, onClose }: CertificateSta
   }, [agent, agentKey, cacheMetadata])
 
   function handleClose() {
-    setIsOpen(false)
+    if (layout === 'sheet') {
+      onClose?.()
+    } else {
+      setIsOpen(false)
+    }
   }
 
   function handleOpen() {
