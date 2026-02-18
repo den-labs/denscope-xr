@@ -27,6 +27,7 @@ export function RegisterAgentPanel() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageUploading, setImageUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedChainId, setSelectedChainId] = useState(chains[0].id)
   const [status, setStatus] = useState<Status>('idle')
@@ -213,9 +214,36 @@ export function RegisterAgentPanel() {
               />
             </div>
             <div>
-              <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider block mb-1">
-                Image
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider">
+                  Image <span className="normal-case">(optional)</span>
+                </label>
+                {!imagePreview && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setImageMode('upload'); setErrorMsg(''); setImage('') }}
+                      disabled={isWorking}
+                      className={`text-[10px] font-mono transition-colors ${
+                        imageMode === 'upload' ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
+                      }`}
+                    >
+                      Upload
+                    </button>
+                    <span className="text-[10px] text-text-muted">/</span>
+                    <button
+                      type="button"
+                      onClick={() => { setImageMode('url'); setErrorMsg('') }}
+                      disabled={isWorking}
+                      className={`text-[10px] font-mono transition-colors ${
+                        imageMode === 'url' ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
+                      }`}
+                    >
+                      Paste URL
+                    </button>
+                  </div>
+                )}
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -246,6 +274,7 @@ export function RegisterAgentPanel() {
                     onClick={() => {
                       setImage('')
                       setImagePreview(null)
+                      setErrorMsg('')
                       if (fileInputRef.current) fileInputRef.current.value = ''
                     }}
                     disabled={isWorking}
@@ -254,6 +283,15 @@ export function RegisterAgentPanel() {
                     Remove
                   </button>
                 </div>
+              ) : imageMode === 'url' ? (
+                <input
+                  type="text"
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  placeholder="ipfs://... or https://..."
+                  disabled={isWorking}
+                  className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary disabled:opacity-50"
+                />
               ) : (
                 <div
                   role="button"
@@ -283,6 +321,9 @@ export function RegisterAgentPanel() {
                     PNG, JPG, WebP, GIF, SVG &middot; Max 5 MB
                   </p>
                 </div>
+              )}
+              {errorMsg && status !== 'error' && (
+                <p className="text-xs font-mono text-critical mt-1">{errorMsg}</p>
               )}
             </div>
             <div>
