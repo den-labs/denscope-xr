@@ -83,7 +83,7 @@ export function TrustSnapshot({
       <h3 className="text-sm font-mono font-bold text-text-primary mb-4">
         Trust Snapshot
       </h3>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <MetricCard
           label="Reputation"
           value={reputationValue}

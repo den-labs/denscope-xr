@@ -19,7 +19,7 @@ export default function ConsolePage() {
             System / DenScope / Console
           </nav>
 
-          <h1 className="font-display text-3xl font-bold uppercase tracking-wider mt-4 text-text-primary">
+          <h1 className="font-display text-2xl font-bold uppercase tracking-wider mt-4 text-text-primary">
             Owner Console
           </h1>
           <p className="mt-1 text-sm text-text-secondary">

@@ -80,53 +80,65 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
   return (
     <button
       onClick={onClick}
-      className={`group grid w-full grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0 border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover cursor-pointer ${
+      className={`group w-full border-b border-border px-4 py-1.5 text-left font-mono text-sm transition-colors hover:bg-surface-hover cursor-pointer ${
         isSelected
           ? 'bg-surface-hover border-l-2 border-l-accent'
           : 'hover:border-l-2 hover:border-l-accent'
       }`}
     >
-      {/* Timestamp */}
-      <span className="shrink-0 text-text-muted text-xs">
-        {formatTime(event.timestamp)}
-      </span>
-
-      {/* Event Type Pill */}
-      <span>
-        <span className={kindPillClass[event.kind] ?? 'status-pill status-pill-neutral'}>
-          {kindLabels[event.kind] ?? event.kind.toUpperCase()}
+      {/* Desktop: full grid */}
+      <div className="hidden md:grid grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0">
+        <span className="shrink-0 text-text-muted text-xs">
+          {formatTime(event.timestamp)}
         </span>
-      </span>
+        <span>
+          <span className={kindPillClass[event.kind] ?? 'status-pill status-pill-neutral'}>
+            {kindLabels[event.kind] ?? event.kind.toUpperCase()}
+          </span>
+        </span>
+        <span className="text-text-secondary text-xs">ERC-8004</span>
+        <span className="truncate text-text-primary text-xs group-hover:text-accent group-hover:underline transition-colors">
+          {formatSummary(event)}
+        </span>
+        <span className="font-mono text-text-muted text-xs">
+          {formatTxHash(event.txHash)}
+        </span>
+        <span
+          role="button"
+          tabIndex={-1}
+          onClick={handleShare}
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent px-2"
+        >
+          <ShareIcon />
+        </span>
+        <span className="text-[10px] tracking-wider uppercase border border-border px-2 py-0.5 text-text-muted group-hover:border-accent group-hover:text-accent transition-colors whitespace-nowrap">
+          INSPECT
+        </span>
+      </div>
 
-      {/* Protocol */}
-      <span className="text-text-secondary text-xs">
-        ERC-8004
-      </span>
-
-      {/* Agent Identity */}
-      <span className="truncate text-text-primary text-xs group-hover:text-accent group-hover:underline transition-colors">
-        {formatSummary(event)}
-      </span>
-
-      {/* Tx Hash */}
-      <span className="font-mono text-text-muted text-xs">
-        {formatTxHash(event.txHash)}
-      </span>
-
-      {/* Share Icon */}
-      <span
-        role="button"
-        tabIndex={-1}
-        onClick={handleShare}
-        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent px-2"
-      >
-        <ShareIcon />
-      </span>
-
-      {/* Inspect CTA */}
-      <span className="text-[10px] tracking-wider uppercase border border-border px-2 py-0.5 text-text-muted group-hover:border-accent group-hover:text-accent transition-colors whitespace-nowrap">
-        INSPECT
-      </span>
+      {/* Mobile: compact 2-row layout */}
+      <div className="md:hidden flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className={kindPillClass[event.kind] ?? 'status-pill status-pill-neutral'}>
+            {kindLabels[event.kind] ?? event.kind.toUpperCase()}
+          </span>
+          <span className="truncate flex-1 text-text-primary text-xs group-hover:text-accent transition-colors">
+            {formatSummary(event)}
+          </span>
+          <span
+            role="button"
+            tabIndex={-1}
+            onClick={handleShare}
+            className="text-text-muted hover:text-accent shrink-0"
+          >
+            <ShareIcon />
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-text-muted text-[10px]">
+          <span>{formatTime(event.timestamp)}</span>
+          <span>{formatTxHash(event.txHash)}</span>
+        </div>
+      </div>
     </button>
   )
 }
