@@ -4,10 +4,11 @@ import { useState, useMemo, useEffect } from 'react'
 import { LiveFeed } from '@/components/feed/LiveFeed'
 import { FeedFiltersBar } from '@/components/feed/FeedFilters'
 import { FeedHint } from '@/components/feed/FeedHint'
-import { XRayPanel } from '@/components/xray/XRayPanel'
+import { CertificateStation } from '@/components/feed/CertificateStation'
 import { useEventStore } from '@/stores/events'
 import { useAgentStore } from '@/stores/agents'
 import { useFeedFilters } from '@/hooks/useFeedFilters'
+import type { Layout } from '@/components/feed/CertificateStation'
 
 function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() =>
@@ -23,6 +24,14 @@ function useMediaQuery(query: string): boolean {
   return matches
 }
 
+function useLayout(): Layout {
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const isMedium = useMediaQuery('(min-width: 768px)')
+  if (isDesktop) return 'docked'
+  if (isMedium) return 'collapsible'
+  return 'sheet'
+}
+
 export default function FeedPage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   const [hintDismissed, setHintDismissed] = useState(false)
@@ -31,7 +40,7 @@ export default function FeedPage() {
   const agentCount = agents.size
   const headBlock = events.length > 0 ? events[0].block : 0
   const { filters, setFilters } = useFeedFilters()
-  const isDesktop = useMediaQuery('(min-width: 1280px)')
+  const layout = useLayout()
 
   // Auto-select first agent when events arrive and no selection yet
   useEffect(() => {
@@ -88,7 +97,7 @@ export default function FeedPage() {
       {/* Feed Hint */}
       <FeedHint dismissed={hintDismissed} />
 
-      {/* Main Content */}
+      {/* Main Content — 2-column: [Feed] [Station] */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-hidden">
           <LiveFeed
@@ -98,10 +107,10 @@ export default function FeedPage() {
             selectedAgentKey={selectedAgent}
           />
         </div>
-        <XRayPanel
+        <CertificateStation
           agentKey={selectedAgent}
+          layout={layout}
           onClose={() => setSelectedAgent(null)}
-          isDocked={isDesktop}
         />
       </div>
 
