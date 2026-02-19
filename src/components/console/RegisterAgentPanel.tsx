@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import {
   useAccount,
   useSwitchChain,
@@ -70,33 +70,32 @@ export function RegisterAgentPanel() {
     }
   }, [])
 
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
+  const { data: receipt, isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash: txHash,
-    query: {
-      enabled: !!txHash,
-      select(receipt) {
-        for (const log of receipt.logs) {
-          try {
-            const decoded = decodeEventLog({
-              abi: identityRegistryAbi,
-              data: log.data,
-              topics: log.topics,
-            })
-            if (decoded.eventName === 'Registered') {
-              const id = (decoded.args as { agentId: bigint }).agentId.toString()
-              setAgentId(id)
-              setStatus('success')
-              return receipt
-            }
-          } catch {
-            // not our event, skip
-          }
-        }
-        setStatus('success')
-        return receipt
-      },
-    },
+    query: { enabled: !!txHash },
   })
+
+  useEffect(() => {
+    if (!receipt) return
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({
+          abi: identityRegistryAbi,
+          data: log.data,
+          topics: log.topics,
+        })
+        if (decoded.eventName === 'Registered') {
+          const id = (decoded.args as { agentId: bigint }).agentId.toString()
+          setAgentId(id)
+          setStatus('success')
+          return
+        }
+      } catch {
+        // not our event, skip
+      }
+    }
+    setStatus('success')
+  }, [receipt])
 
   const selectedChain = chains.find((c) => c.id === selectedChainId)!
 
