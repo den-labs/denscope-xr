@@ -36,6 +36,10 @@ export async function startPipeline(chain: ChainConfig): Promise<PipelineHandle>
         kind: 'feedback',
         value: Number(data.value),
         timestamp: event.timestamp,
+        ts: event.timestamp,
+        txHash: event.txHash,
+        logIndex: event.logIndex,
+        eventId: `${event.txHash}:${event.logIndex}:feedback`,
       })
     }
 

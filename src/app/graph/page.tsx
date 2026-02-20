@@ -14,7 +14,7 @@ export default function GraphPage() {
     <div className="relative h-full bg-grid">
       {/* Canvas layer */}
       <div className="absolute inset-0">
-        <TrustGraph onNodeClick={setSelectedAgent} />
+        <TrustGraph onNodeClick={setSelectedAgent} focusAgentKey={selectedAgent} />
       </div>
 
       {/* Top-left: Title */}
@@ -56,7 +56,11 @@ export default function GraphPage() {
       <div className="absolute bottom-0 right-0 z-0 h-4 w-4 border-b border-r border-accent/20" />
 
       {/* XRay Panel */}
-      <XRayPanel agentKey={selectedAgent} onClose={() => setSelectedAgent(null)} />
+      <XRayPanel
+        agentKey={selectedAgent}
+        onClose={() => setSelectedAgent(null)}
+        onSelectAgent={setSelectedAgent}
+      />
     </div>
   )
 }

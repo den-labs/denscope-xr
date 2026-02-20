@@ -147,6 +147,34 @@ describe('useAgentStore', () => {
     expect(agent!.owner).toBe('')
   })
 
+  it('accepts feedback values from Supabase as strings', () => {
+    useAgentStore.getState().upsertFromEvent({
+      chainId: 44787,
+      block: 200,
+      txHash: '0x3',
+      logIndex: 0,
+      kind: 'feedback',
+      agentId: 7,
+      data: {
+        clientAddress: '0xbeef',
+        feedbackIndex: 0n,
+        value: '12' as unknown as bigint,
+        valueDecimals: 0,
+        tag1: '',
+        tag2: '',
+        endpoint: '',
+        feedbackURI: '',
+        feedbackHash: '0x0',
+      },
+    })
+
+    const agent = useAgentStore.getState().agents.get('44787:7')
+    expect(agent).toBeDefined()
+    expect(agent!.feedbackCount).toBe(1)
+    expect(agent!.positiveFeedback).toBe(1)
+    expect(agent!.negativeFeedback).toBe(0)
+  })
+
   it('clear resets agents map', () => {
     useAgentStore.getState().upsertFromEvent({
       chainId: 44787,

@@ -17,15 +17,63 @@ type DbEvent = {
   event_timestamp: string | null
 }
 
+function parseBigInt(value: unknown): bigint | undefined {
+  if (typeof value === 'bigint') return value
+  if (typeof value === 'number' && Number.isFinite(value) && Number.isInteger(value)) {
+    return BigInt(value)
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed.length === 0) return undefined
+    try {
+      return BigInt(trimmed)
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
+function parseNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
+function normalizeData(kind: EventKind, data: Record<string, unknown>): ScopeEvent['data'] {
+  if (kind === 'feedback') {
+    return {
+      ...data,
+      clientAddress: typeof data.clientAddress === 'string' ? data.clientAddress : '',
+      feedbackIndex: parseBigInt(data.feedbackIndex) ?? BigInt(0),
+      value: parseBigInt(data.value) ?? BigInt(0),
+      valueDecimals: parseNumber(data.valueDecimals) ?? 0,
+    } as ScopeEvent['data']
+  }
+
+  if (kind === 'feedback_revoked' || kind === 'response') {
+    return {
+      ...data,
+      feedbackIndex: parseBigInt(data.feedbackIndex) ?? BigInt(0),
+    } as ScopeEvent['data']
+  }
+
+  return data as ScopeEvent['data']
+}
+
 function toScopeEvent(row: DbEvent): ScopeEvent {
+  const kind = row.kind as EventKind
   return {
     chainId: row.chain_id,
     agentId: row.agent_id,
-    kind: row.kind as EventKind,
+    kind,
     block: row.block_number,
     txHash: row.tx_hash,
     logIndex: row.log_index,
-    data: row.data as ScopeEvent['data'],
+    data: normalizeData(kind, row.data),
     timestamp: row.event_timestamp ? new Date(row.event_timestamp).getTime() : undefined,
   }
 }
@@ -42,6 +90,10 @@ function processEvent(event: ScopeEvent) {
       kind: 'feedback',
       value: Number(data.value),
       timestamp: event.timestamp,
+      ts: event.timestamp,
+      txHash: event.txHash,
+      logIndex: event.logIndex,
+      eventId: `${event.txHash}:${event.logIndex}:feedback`,
     })
   }
 

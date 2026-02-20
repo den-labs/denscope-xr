@@ -51,6 +51,8 @@ export function eventsFromEdges(
       sourceId: edge.source,
       targetId: edge.target,
       value: edge.value,
+      txHash: edge.txHash,
+      logIndex: edge.logIndex,
     })
   }
 

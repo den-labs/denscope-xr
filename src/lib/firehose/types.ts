@@ -10,4 +10,6 @@ export type DenEvent = {
   sourceId: string
   targetId: string
   value: number
+  txHash?: string
+  logIndex?: number
 }

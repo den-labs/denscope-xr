@@ -27,7 +27,13 @@ function getNodeRadius(feedbackCount: number): number {
   return Math.max(4, Math.min(16, 4 + feedbackCount * 2))
 }
 
-export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) => void }) {
+export function TrustGraph({
+  onNodeClick,
+  focusAgentKey,
+}: {
+  onNodeClick?: (agentKey: string) => void
+  focusAgentKey?: string | null
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fxCanvasRef = useRef<HTMLCanvasElement>(null)
   const baseCtxRef = useRef<CanvasRenderingContext2D | null>(null)
@@ -40,6 +46,7 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
   const nodesRef = useRef<SimNode[]>([])
   const transformRef = useRef<ZoomTransform>(zoomIdentity)
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
+  const mouseDownRef = useRef<{ x: number; y: number } | null>(null)
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
@@ -98,7 +105,20 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     }
   }, [hitTest, agents])
 
-  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    mouseDownRef.current = { x: e.clientX, y: e.clientY }
+  }, [])
+
+  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const down = mouseDownRef.current
+    mouseDownRef.current = null
+    if (!down) return
+
+    const dx = e.clientX - down.x
+    const dy = e.clientY - down.y
+    const dragDistance = Math.hypot(dx, dy)
+    if (dragDistance > 6) return
+
     const node = hitTest(e.clientX, e.clientY)
     if (node && onNodeClick) {
       onNodeClick(`${node.chainId}:${node.agentId}`)
@@ -338,6 +358,24 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
   }, [edges.length])
 
   useEffect(() => {
+    if (!focusAgentKey || !zoomRef.current || !canvasRef.current) return
+    const node = nodeByIdRef.current.get(focusAgentKey)
+    if (!node || node.x == null || node.y == null) return
+
+    const canvas = canvasRef.current
+    const { width, height } = canvas.getBoundingClientRect()
+    const current = transformRef.current
+    const scale = Math.max(current.k, 1)
+
+    const next = zoomIdentity
+      .translate(width / 2, height / 2)
+      .scale(scale)
+      .translate(-node.x, -node.y)
+
+    select(canvas).call(zoomRef.current.transform, next)
+  }, [focusAgentKey])
+
+  useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return
     const devTargetId = '__dev_target__'
 
@@ -392,7 +430,8 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
         className="absolute inset-0 h-full w-full cursor-grab active:cursor-grabbing"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
-        onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
       />
       <canvas
         ref={fxCanvasRef}

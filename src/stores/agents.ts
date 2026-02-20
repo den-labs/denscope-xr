@@ -2,6 +2,23 @@ import { create } from 'zustand'
 import type { AgentSummary, AgentMetadata } from '@/types/agents'
 import type { ScopeEvent, FeedbackData } from '@/types/events'
 
+function toBigIntSafe(value: unknown): bigint | null {
+  if (typeof value === 'bigint') return value
+  if (typeof value === 'number' && Number.isFinite(value) && Number.isInteger(value)) {
+    return BigInt(value)
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed.length === 0) return null
+    try {
+      return BigInt(trimmed)
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
 type AgentStoreState = {
   agents: Map<string, AgentSummary>
   upsertFromEvent: (event: ScopeEvent) => void
@@ -44,9 +61,10 @@ export const useAgentStore = create<AgentStoreState>()((set, get) => ({
       }
       case 'feedback': {
         const d = event.data as FeedbackData
+        const feedbackValue = toBigIntSafe((d as { value?: unknown }).value)
         existing.feedbackCount++
-        if (d.value > BigInt(0)) existing.positiveFeedback++
-        else if (d.value < BigInt(0)) existing.negativeFeedback++
+        if (feedbackValue != null && feedbackValue > BigInt(0)) existing.positiveFeedback++
+        else if (feedbackValue != null && feedbackValue < BigInt(0)) existing.negativeFeedback++
         break
       }
     }

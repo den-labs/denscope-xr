@@ -1,12 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAgentStore } from '@/stores/agents'
+import { useGraphStore } from '@/stores/graph'
 import { fetchAgentMetadata } from '@/lib/agent/metadata'
 import { ChainBadge } from '@/components/shared/ChainBadge'
 import { AgentIdentity } from './AgentIdentity'
 import { AgentServices } from './AgentServices'
+import { TapePanel } from './TapePanel'
+import { LeadersPanel } from './LeadersPanel'
+import { feedbackStatsForTarget } from '@/lib/firehose/feedbackStats'
 import {
   buildXIntentUrl,
   buildCertificateShareText,
@@ -14,20 +18,27 @@ import {
 } from '@/lib/share'
 import type { AgentMetadata } from '@/types/agents'
 
-type XRayPanelProps = { agentKey: string | null; onClose: () => void; isDocked?: boolean }
+type XRayPanelProps = {
+  agentKey: string | null
+  onClose: () => void
+  isDocked?: boolean
+  onSelectAgent?: (agentKey: string) => void
+}
 
 function truncateAddress(addr: string): string {
   if (addr.length <= 10) return addr
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }
 
-export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
+export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPanelProps) {
   const agent = useAgentStore((s) => (agentKey ? s.agents.get(agentKey) : undefined))
+  const edges = useGraphStore((s) => s.edges)
   const cacheMetadata = useAgentStore((s) => s.cacheMetadata)
   const [metadata, setMetadata] = useState<AgentMetadata | null>(agent?.metadata ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const [shareMenuOpen, setShareMenuOpen] = useState(false)
+  const [tab, setTab] = useState<'inspector' | 'tape' | 'leaders'>('inspector')
 
   useEffect(() => {
     if (!agent?.agentURI) return
@@ -47,6 +58,16 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
   }, [agent?.agentURI, agent?.metadata, agentKey, cacheMetadata])
 
   const enriched = agent ? { ...agent, metadata: metadata ?? agent.metadata } : null
+  const feedbackStats = useMemo(
+    () => (agentKey ? feedbackStatsForTarget(edges, agentKey) : {
+      total: 0,
+      posCount: 0,
+      negCount: 0,
+      neutralCount: 0,
+      positivePct: 0,
+    }),
+    [edges, agentKey],
+  )
 
   function retry() {
     if (!agent?.agentURI) return
@@ -118,10 +139,10 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
                 </p>
               )}
               <div className="font-mono text-xs text-text-secondary">
-                {enriched.feedbackCount > 0 ? (
+                {feedbackStats.total > 0 ? (
                   <span>
-                    Positive: <span className="text-success">{Math.round((enriched.positiveFeedback / enriched.feedbackCount) * 100)}%</span>
-                    {' '}({enriched.feedbackCount} total)
+                    Positive: <span className="text-success">{feedbackStats.positivePct}%</span>
+                    {' '}({feedbackStats.total} total)
                   </span>
                 ) : (
                   <span className="text-text-muted">Awaiting feedback</span>
@@ -170,7 +191,7 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
 
             {/* Micro-data (1 line) */}
             <p className="font-mono text-[10px] text-text-muted truncate">
-              Owner {truncateAddress(enriched.owner)} | +{enriched.positiveFeedback} / -{enriched.negativeFeedback} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
+              Owner {truncateAddress(enriched.owner)} | +{feedbackStats.posCount} / -{feedbackStats.negCount} / ={feedbackStats.neutralCount} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
             </p>
 
             {error && (
@@ -192,6 +213,12 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
     </>
   )
 
+  const panelContent = tab === 'inspector'
+    ? (enriched ? certificateContent : emptyContent)
+    : tab === 'tape'
+      ? <TapePanel onSelectAgent={(key) => onSelectAgent?.(key)} />
+      : <LeadersPanel onSelectAgent={(key) => onSelectAgent?.(key)} />
+
   // Docked mode: always render panel (no AnimatePresence wrapper for show/hide)
   if (isDocked) {
     return (
@@ -205,7 +232,39 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
             ✕
           </button>
         </div>
-        {enriched ? certificateContent : emptyContent}
+        <div className="border-b border-border px-6 py-2 flex items-center gap-2">
+          <button
+            onClick={() => setTab('inspector')}
+            className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+              tab === 'inspector'
+                ? 'border-text-primary bg-text-primary text-bg'
+                : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+            }`}
+          >
+            Inspector
+          </button>
+          <button
+            onClick={() => setTab('tape')}
+            className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+              tab === 'tape'
+                ? 'border-text-primary bg-text-primary text-bg'
+                : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+            }`}
+          >
+            Tape
+          </button>
+          <button
+            onClick={() => setTab('leaders')}
+            className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+              tab === 'leaders'
+                ? 'border-text-primary bg-text-primary text-bg'
+                : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+            }`}
+          >
+            Leaders
+          </button>
+        </div>
+        {panelContent}
       </div>
     )
   }
@@ -230,7 +289,39 @@ export function XRayPanel({ agentKey, onClose, isDocked }: XRayPanelProps) {
               ✕
             </button>
           </div>
-          {enriched ? certificateContent : emptyContent}
+          <div className="border-b border-border px-6 py-2 flex items-center gap-2">
+            <button
+              onClick={() => setTab('inspector')}
+              className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+                tab === 'inspector'
+                  ? 'border-text-primary bg-text-primary text-bg'
+                  : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+              }`}
+            >
+              Inspector
+            </button>
+            <button
+              onClick={() => setTab('tape')}
+              className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+                tab === 'tape'
+                  ? 'border-text-primary bg-text-primary text-bg'
+                  : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+              }`}
+            >
+              Tape
+            </button>
+            <button
+              onClick={() => setTab('leaders')}
+              className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+                tab === 'leaders'
+                  ? 'border-text-primary bg-text-primary text-bg'
+                  : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+              }`}
+            >
+              Leaders
+            </button>
+          </div>
+          {panelContent}
         </motion.div>
       )}
     </AnimatePresence>

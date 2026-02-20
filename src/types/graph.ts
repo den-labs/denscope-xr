@@ -4,5 +4,5 @@ export type GraphNode = {
 }
 export type TrustEdge = {
   source: string; target: string; kind: 'feedback' | 'validation';
-  value: number; timestamp?: number
+  value: number; timestamp?: number; txHash?: string; logIndex?: number; eventId?: string; id?: string; ts?: number
 }
