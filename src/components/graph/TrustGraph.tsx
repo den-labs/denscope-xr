@@ -26,6 +26,9 @@ function getNodeRadius(feedbackCount: number): number {
 
 export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fxCanvasRef = useRef<HTMLCanvasElement>(null)
+  const baseCtxRef = useRef<CanvasRenderingContext2D | null>(null)
+  const fxCtxRef = useRef<CanvasRenderingContext2D | null>(null)
   const nodesRef = useRef<SimNode[]>([])
   const transformRef = useRef<ZoomTransform>(zoomIdentity)
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
@@ -128,15 +131,23 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
-    const maybeCtx = canvas.getContext('2d')
-    if (!maybeCtx) return
-    const ctx: CanvasRenderingContext2D = maybeCtx
+    const fxCanvas = fxCanvasRef.current
+    if (!canvas || !fxCanvas) return
+
+    const baseCtx = canvas.getContext('2d')
+    const fxCtx = fxCanvas.getContext('2d')
+    if (!baseCtx || !fxCtx) return
+    baseCtxRef.current = baseCtx
+    fxCtxRef.current = fxCtx
 
     const { width, height } = canvas.getBoundingClientRect()
-    canvas.width = width * window.devicePixelRatio
-    canvas.height = height * window.devicePixelRatio
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = width * dpr
+    canvas.height = height * dpr
+    fxCanvas.width = width * dpr
+    fxCanvas.height = height * dpr
+    baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => ({ ...n }))
     nodesRef.current = nodes
@@ -154,11 +165,12 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       }))
 
     if (nodes.length === 0) {
-      ctx.clearRect(0, 0, width, height)
-      ctx.fillStyle = '#555555'
-      ctx.textAlign = 'center'
-      ctx.font = '14px monospace'
-      ctx.fillText('No agents in graph yet', width / 2, height / 2)
+      baseCtx.clearRect(0, 0, width, height)
+      baseCtx.fillStyle = '#555555'
+      baseCtx.textAlign = 'center'
+      baseCtx.font = '14px monospace'
+      baseCtx.fillText('No agents in graph yet', width / 2, height / 2)
+      drawFx()
       return
     }
 
@@ -182,46 +194,61 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       return '#34c759'
     }
 
+    function drawFx() {
+      fxCtx.clearRect(0, 0, width, height)
+      const cx = width / 2
+      const cy = height / 2
+      fxCtx.strokeStyle = 'rgba(255, 255, 255, 0.35)'
+      fxCtx.lineWidth = 1
+      fxCtx.beginPath()
+      fxCtx.moveTo(cx - 6, cy)
+      fxCtx.lineTo(cx + 6, cy)
+      fxCtx.moveTo(cx, cy - 6)
+      fxCtx.lineTo(cx, cy + 6)
+      fxCtx.stroke()
+    }
+
     function draw() {
       const t = transformRef.current
-      ctx.save()
-      ctx.clearRect(0, 0, width, height)
-      ctx.translate(t.x, t.y)
-      ctx.scale(t.k, t.k)
+      baseCtx.save()
+      baseCtx.clearRect(0, 0, width, height)
+      baseCtx.translate(t.x, t.y)
+      baseCtx.scale(t.k, t.k)
 
       // Draw edges
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)'
-      ctx.lineWidth = 1 / t.k
+      baseCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)'
+      baseCtx.lineWidth = 1 / t.k
       for (const link of links) {
         const s = link.source as SimNode
         const tgt = link.target as SimNode
         if (s.x == null || tgt.x == null) continue
-        ctx.beginPath()
-        ctx.moveTo(s.x, s.y!)
-        ctx.lineTo(tgt.x, tgt.y!)
-        ctx.stroke()
+        baseCtx.beginPath()
+        baseCtx.moveTo(s.x, s.y!)
+        baseCtx.lineTo(tgt.x, tgt.y!)
+        baseCtx.stroke()
       }
 
       // Draw nodes
       for (const node of nodes) {
         if (node.x == null) continue
         const radius = getNodeRadius(node.feedbackCount)
-        ctx.beginPath()
-        ctx.arc(node.x, node.y!, radius, 0, Math.PI * 2)
-        ctx.fillStyle = getNodeColor(node.id)
-        ctx.fill()
-        ctx.strokeStyle = '#222222'
-        ctx.lineWidth = 1.5 / t.k
-        ctx.stroke()
+        baseCtx.beginPath()
+        baseCtx.arc(node.x, node.y!, radius, 0, Math.PI * 2)
+        baseCtx.fillStyle = getNodeColor(node.id)
+        baseCtx.fill()
+        baseCtx.strokeStyle = '#222222'
+        baseCtx.lineWidth = 1.5 / t.k
+        baseCtx.stroke()
 
         // Label
-        ctx.fillStyle = '#888888'
-        ctx.font = `${10 / t.k}px monospace`
-        ctx.textAlign = 'center'
-        ctx.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
+        baseCtx.fillStyle = '#888888'
+        baseCtx.font = `${10 / t.k}px monospace`
+        baseCtx.textAlign = 'center'
+        baseCtx.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
       }
 
-      ctx.restore()
+      baseCtx.restore()
+      drawFx()
     }
 
     // Setup d3-zoom
@@ -249,6 +276,8 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     return () => {
       sim.stop()
       select(canvas).on('.zoom', null)
+      baseCtxRef.current = null
+      fxCtxRef.current = null
     }
   }, [nodesMap, edges, fitToView])
 
@@ -256,10 +285,14 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     <div className="relative h-full w-full">
       <canvas
         ref={canvasRef}
-        className="h-full w-full cursor-grab active:cursor-grabbing"
+        className="absolute inset-0 h-full w-full cursor-grab active:cursor-grabbing"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
         onClick={handleClick}
+      />
+      <canvas
+        ref={fxCanvasRef}
+        className="pointer-events-none absolute inset-0 h-full w-full"
       />
       <button
         onClick={fitToView}
