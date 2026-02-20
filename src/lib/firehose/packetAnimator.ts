@@ -12,12 +12,23 @@ export type Packet = {
   sourceSeed: string
   targetId: string
   value: number
+  arrived?: boolean
 }
 
 const MAX_PACKETS = 200
+const MAX_PULSES = 300
+
+type Pulse = {
+  targetId: string
+  t0: number
+  dur: number
+  intensity: number
+  value: number
+}
 
 export class PacketAnimator {
   private packets: Packet[] = []
+  private pulses: Pulse[] = []
 
   spawn(event: DenEvent, now = performance.now()): void {
     const mag = Math.min(Math.abs(event.value), 3)
@@ -38,10 +49,25 @@ export class PacketAnimator {
 
   tick(now: number): void {
     this.packets = this.packets.filter((p) => now - p.t0 <= p.dur)
+    this.pulses = this.pulses.filter((p) => now - p.t0 <= p.dur)
   }
 
   hasActive(): boolean {
-    return this.packets.length > 0
+    return this.packets.length > 0 || this.pulses.length > 0
+  }
+
+  private enqueuePulse(targetId: string, value: number, now: number): void {
+    const intensity = Math.min(Math.abs(value), 3)
+    this.pulses.push({
+      targetId,
+      value,
+      t0: now,
+      dur: 520 + intensity * 120,
+      intensity,
+    })
+    if (this.pulses.length > MAX_PULSES) {
+      this.pulses.splice(0, this.pulses.length - MAX_PULSES)
+    }
   }
 
   render(
@@ -51,6 +77,25 @@ export class PacketAnimator {
     now: number,
   ): void {
     ctx.setTransform(transform.k, 0, 0, transform.k, transform.x, transform.y)
+
+    for (const pulse of this.pulses) {
+      const target = nodeById.get(pulse.targetId)
+      if (!target || target.x == null || target.y == null) continue
+      const p = clamp((now - pulse.t0) / pulse.dur, 0, 1)
+      const color =
+        pulse.value > 0 ? '80, 220, 140'
+        : pulse.value < 0 ? '255, 80, 80'
+        : '170, 170, 170'
+      const r = 6 + pulse.intensity * 2 + 22 * p
+      const alpha = (1 - p) * (0.42 + pulse.intensity * 0.08)
+
+      ctx.strokeStyle = `rgba(${color}, ${alpha})`
+      ctx.lineWidth = 1.2 + pulse.intensity * 0.45
+      ctx.beginPath()
+      ctx.arc(target.x, target.y, r, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
     for (const packet of this.packets) {
       const target = nodeById.get(packet.targetId)
       if (!target || target.x == null || target.y == null) continue
@@ -59,6 +104,10 @@ export class PacketAnimator {
       const p = clamp((now - packet.t0) / packet.dur, 0, 1)
       const e = easeOutCubic(p)
       const ePrev = easeOutCubic(Math.max(0, p - 0.12))
+      if (p >= 1 && !packet.arrived) {
+        packet.arrived = true
+        this.enqueuePulse(packet.targetId, packet.value, now)
+      }
 
       const source = ghostPos(target.x, target.y, packet.sourceSeed, mag)
       const x = source.x + (target.x - source.x) * e
