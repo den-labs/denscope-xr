@@ -137,8 +137,10 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     const baseCtx = canvas.getContext('2d')
     const fxCtx = fxCanvas.getContext('2d')
     if (!baseCtx || !fxCtx) return
-    baseCtxRef.current = baseCtx
-    fxCtxRef.current = fxCtx
+    const baseCtx2: CanvasRenderingContext2D = baseCtx
+    const fxCtx2: CanvasRenderingContext2D = fxCtx
+    baseCtxRef.current = baseCtx2
+    fxCtxRef.current = fxCtx2
 
     const { width, height } = canvas.getBoundingClientRect()
     const dpr = window.devicePixelRatio || 1
@@ -146,8 +148,8 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     canvas.height = height * dpr
     fxCanvas.width = width * dpr
     fxCanvas.height = height * dpr
-    baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    baseCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
+    fxCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => ({ ...n }))
     nodesRef.current = nodes
@@ -165,11 +167,11 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       }))
 
     if (nodes.length === 0) {
-      baseCtx.clearRect(0, 0, width, height)
-      baseCtx.fillStyle = '#555555'
-      baseCtx.textAlign = 'center'
-      baseCtx.font = '14px monospace'
-      baseCtx.fillText('No agents in graph yet', width / 2, height / 2)
+      baseCtx2.clearRect(0, 0, width, height)
+      baseCtx2.fillStyle = '#555555'
+      baseCtx2.textAlign = 'center'
+      baseCtx2.font = '14px monospace'
+      baseCtx2.fillText('No agents in graph yet', width / 2, height / 2)
       drawFx()
       return
     }
@@ -195,59 +197,59 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     }
 
     function drawFx() {
-      fxCtx.clearRect(0, 0, width, height)
+      fxCtx2.clearRect(0, 0, width, height)
       const cx = width / 2
       const cy = height / 2
-      fxCtx.strokeStyle = 'rgba(255, 255, 255, 0.35)'
-      fxCtx.lineWidth = 1
-      fxCtx.beginPath()
-      fxCtx.moveTo(cx - 6, cy)
-      fxCtx.lineTo(cx + 6, cy)
-      fxCtx.moveTo(cx, cy - 6)
-      fxCtx.lineTo(cx, cy + 6)
-      fxCtx.stroke()
+      fxCtx2.strokeStyle = 'rgba(255, 255, 255, 0.35)'
+      fxCtx2.lineWidth = 1
+      fxCtx2.beginPath()
+      fxCtx2.moveTo(cx - 6, cy)
+      fxCtx2.lineTo(cx + 6, cy)
+      fxCtx2.moveTo(cx, cy - 6)
+      fxCtx2.lineTo(cx, cy + 6)
+      fxCtx2.stroke()
     }
 
     function draw() {
       const t = transformRef.current
-      baseCtx.save()
-      baseCtx.clearRect(0, 0, width, height)
-      baseCtx.translate(t.x, t.y)
-      baseCtx.scale(t.k, t.k)
+      baseCtx2.save()
+      baseCtx2.clearRect(0, 0, width, height)
+      baseCtx2.translate(t.x, t.y)
+      baseCtx2.scale(t.k, t.k)
 
       // Draw edges
-      baseCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)'
-      baseCtx.lineWidth = 1 / t.k
+      baseCtx2.strokeStyle = 'rgba(255, 255, 255, 0.06)'
+      baseCtx2.lineWidth = 1 / t.k
       for (const link of links) {
         const s = link.source as SimNode
         const tgt = link.target as SimNode
         if (s.x == null || tgt.x == null) continue
-        baseCtx.beginPath()
-        baseCtx.moveTo(s.x, s.y!)
-        baseCtx.lineTo(tgt.x, tgt.y!)
-        baseCtx.stroke()
+        baseCtx2.beginPath()
+        baseCtx2.moveTo(s.x, s.y!)
+        baseCtx2.lineTo(tgt.x, tgt.y!)
+        baseCtx2.stroke()
       }
 
       // Draw nodes
       for (const node of nodes) {
         if (node.x == null) continue
         const radius = getNodeRadius(node.feedbackCount)
-        baseCtx.beginPath()
-        baseCtx.arc(node.x, node.y!, radius, 0, Math.PI * 2)
-        baseCtx.fillStyle = getNodeColor(node.id)
-        baseCtx.fill()
-        baseCtx.strokeStyle = '#222222'
-        baseCtx.lineWidth = 1.5 / t.k
-        baseCtx.stroke()
+        baseCtx2.beginPath()
+        baseCtx2.arc(node.x, node.y!, radius, 0, Math.PI * 2)
+        baseCtx2.fillStyle = getNodeColor(node.id)
+        baseCtx2.fill()
+        baseCtx2.strokeStyle = '#222222'
+        baseCtx2.lineWidth = 1.5 / t.k
+        baseCtx2.stroke()
 
         // Label
-        baseCtx.fillStyle = '#888888'
-        baseCtx.font = `${10 / t.k}px monospace`
-        baseCtx.textAlign = 'center'
-        baseCtx.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
+        baseCtx2.fillStyle = '#888888'
+        baseCtx2.font = `${10 / t.k}px monospace`
+        baseCtx2.textAlign = 'center'
+        baseCtx2.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
       }
 
-      baseCtx.restore()
+      baseCtx2.restore()
       drawFx()
     }
 
