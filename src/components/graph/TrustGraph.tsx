@@ -7,6 +7,7 @@ import { getChain } from '@/config/chains'
 import { createSimulation, type SimNode, type SimLink } from '@/lib/graph/layout'
 import { eventsFromEdges } from '@/lib/firehose/fromEdges'
 import { PacketAnimator } from '@/lib/firehose/packetAnimator'
+import type { DenEvent } from '@/lib/firehose/types'
 import { GraphTooltip } from './GraphTooltip'
 import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom'
 import { select } from 'd3-selection'
@@ -34,6 +35,7 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
   const nodeByIdRef = useRef<Map<string, SimNode>>(new Map())
   const animatorRef = useRef(new PacketAnimator())
   const seenDenEventIdsRef = useRef<Set<string>>(new Set())
+  const sampleSeqRef = useRef(0)
   const rafRef = useRef<number | null>(null)
   const nodesRef = useRef<SimNode[]>([])
   const transformRef = useRef<ZoomTransform>(zoomIdentity)
@@ -334,6 +336,37 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       seenDenEventIdsRef.current.clear()
     }
   }, [edges.length])
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return
+
+    const intervalId = window.setInterval(() => {
+      const nodes = nodesRef.current
+      if (nodes.length === 0) return
+
+      const node = nodes[Math.floor(Math.random() * nodes.length)]
+      const values = [1, 0.6, 0, -0.6, -1]
+      const value = values[sampleSeqRef.current % values.length]
+      const seed = `dev:client:${sampleSeqRef.current % 17}`
+      const now = Date.now()
+      const event: DenEvent = {
+        id: `dev:${node.id}:${seed}:${sampleSeqRef.current}`,
+        ts: now,
+        chainId: node.chainId,
+        kind: 'feedback',
+        sourceId: `${node.chainId}:${seed}`,
+        targetId: node.id,
+        value,
+      }
+      sampleSeqRef.current++
+      animatorRef.current.spawn(event)
+      startFxLoop()
+    }, 450)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [startFxLoop])
 
   return (
     <div className="relative h-full w-full">
