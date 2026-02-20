@@ -32,7 +32,7 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
   const fxCanvasRef = useRef<HTMLCanvasElement>(null)
   const baseCtxRef = useRef<CanvasRenderingContext2D | null>(null)
   const fxCtxRef = useRef<CanvasRenderingContext2D | null>(null)
-  const nodeByIdRef = useRef<Map<string, SimNode>>(new Map())
+  const nodeByIdRef = useRef<Map<string, { x?: number; y?: number }>>(new Map())
   const animatorRef = useRef(new PacketAnimator())
   const seenDenEventIdsRef = useRef<Set<string>>(new Set())
   const sampleSeqRef = useRef(0)
@@ -339,23 +339,40 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return
+    const devTargetId = '__dev_target__'
 
     const intervalId = window.setInterval(() => {
       const nodes = nodesRef.current
-      if (nodes.length === 0) return
-
-      const node = nodes[Math.floor(Math.random() * nodes.length)]
       const values = [1, 0.6, 0, -0.6, -1]
       const value = values[sampleSeqRef.current % values.length]
       const seed = `dev:client:${sampleSeqRef.current % 17}`
       const now = Date.now()
+      let targetId: string
+      let chainId: number
+
+      if (nodes.length > 0) {
+        const node = nodes[Math.floor(Math.random() * nodes.length)]
+        targetId = node.id
+        chainId = node.chainId
+      } else {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const rect = canvas.getBoundingClientRect()
+        const t = transformRef.current
+        const x = (rect.width / 2 - t.x) / t.k
+        const y = (rect.height / 2 - t.y) / t.k
+        nodeByIdRef.current.set(devTargetId, { x, y })
+        targetId = devTargetId
+        chainId = 0
+      }
+
       const event: DenEvent = {
-        id: `dev:${node.id}:${seed}:${sampleSeqRef.current}`,
+        id: `dev:${targetId}:${seed}:${sampleSeqRef.current}`,
         ts: now,
-        chainId: node.chainId,
+        chainId,
         kind: 'feedback',
-        sourceId: `${node.chainId}:${seed}`,
-        targetId: node.id,
+        sourceId: `${chainId}:${seed}`,
+        targetId,
         value,
       }
       sampleSeqRef.current++
