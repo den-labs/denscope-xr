@@ -36,6 +36,7 @@ yarn-error.log*
 
 # design assets (visual reference only)
 /design
+/docs/hackathon/
 
 # worktrees
 .worktrees/
