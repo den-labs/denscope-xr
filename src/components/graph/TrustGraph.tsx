@@ -5,6 +5,8 @@ import { useGraphStore } from '@/stores/graph'
 import { useAgentStore } from '@/stores/agents'
 import { getChain } from '@/config/chains'
 import { createSimulation, type SimNode, type SimLink } from '@/lib/graph/layout'
+import { eventsFromEdges } from '@/lib/firehose/fromEdges'
+import { PacketAnimator } from '@/lib/firehose/packetAnimator'
 import { GraphTooltip } from './GraphTooltip'
 import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom'
 import { select } from 'd3-selection'
@@ -29,6 +31,10 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
   const fxCanvasRef = useRef<HTMLCanvasElement>(null)
   const baseCtxRef = useRef<CanvasRenderingContext2D | null>(null)
   const fxCtxRef = useRef<CanvasRenderingContext2D | null>(null)
+  const nodeByIdRef = useRef<Map<string, SimNode>>(new Map())
+  const animatorRef = useRef(new PacketAnimator())
+  const seenDenEventIdsRef = useRef<Set<string>>(new Set())
+  const rafRef = useRef<number | null>(null)
   const nodesRef = useRef<SimNode[]>([])
   const transformRef = useRef<ZoomTransform>(zoomIdentity)
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
@@ -97,6 +103,47 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
     }
   }, [hitTest, onNodeClick])
 
+  const stopFxLoop = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+  }, [])
+
+  const startFxLoop = useCallback(() => {
+    if (rafRef.current != null) return
+
+    const frame = (now: number) => {
+      const fxCanvas = fxCanvasRef.current
+      const fxCtx = fxCtxRef.current
+      if (!fxCanvas || !fxCtx) {
+        rafRef.current = null
+        return
+      }
+
+      animatorRef.current.tick(now)
+
+      fxCtx.setTransform(1, 0, 0, 1, 0, 0)
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height)
+
+      if (animatorRef.current.hasActive()) {
+        const dpr = window.devicePixelRatio || 1
+        const t = transformRef.current
+        animatorRef.current.render(
+          fxCtx,
+          { k: t.k * dpr, x: t.x * dpr, y: t.y * dpr },
+          nodeByIdRef.current,
+          now,
+        )
+        rafRef.current = requestAnimationFrame(frame)
+      } else {
+        rafRef.current = null
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(frame)
+  }, [])
+
   // Fit all nodes in viewport
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current
@@ -153,6 +200,7 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
 
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => ({ ...n }))
     nodesRef.current = nodes
+    nodeByIdRef.current = new Map(nodes.map((n) => [n.id, n]))
 
     const links: SimLink[] = edges
       .filter(
@@ -172,7 +220,8 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       baseCtx2.textAlign = 'center'
       baseCtx2.font = '14px monospace'
       baseCtx2.fillText('No agents in graph yet', width / 2, height / 2)
-      drawFx()
+      fxCtx2.setTransform(1, 0, 0, 1, 0, 0)
+      fxCtx2.clearRect(0, 0, fxCanvas.width, fxCanvas.height)
       return
     }
 
@@ -194,20 +243,6 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       if (neg > 0 && neg > pos) return '#ff3b30'
       if (neg > 0) return '#ffcc00'
       return '#34c759'
-    }
-
-    function drawFx() {
-      fxCtx2.clearRect(0, 0, width, height)
-      const cx = width / 2
-      const cy = height / 2
-      fxCtx2.strokeStyle = 'rgba(255, 255, 255, 0.35)'
-      fxCtx2.lineWidth = 1
-      fxCtx2.beginPath()
-      fxCtx2.moveTo(cx - 6, cy)
-      fxCtx2.lineTo(cx + 6, cy)
-      fxCtx2.moveTo(cx, cy - 6)
-      fxCtx2.lineTo(cx, cy + 6)
-      fxCtx2.stroke()
     }
 
     function draw() {
@@ -250,7 +285,6 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       }
 
       baseCtx2.restore()
-      drawFx()
     }
 
     // Setup d3-zoom
@@ -275,13 +309,31 @@ export function TrustGraph({ onNodeClick }: { onNodeClick?: (agentKey: string) =
       fitToView()
     })
 
+    // Spawn packets from newly observed feedback events.
+    const denEvents = eventsFromEdges(edges, 0, Date.now())
+    let spawned = 0
+    for (const ev of denEvents) {
+      if (seenDenEventIdsRef.current.has(ev.id)) continue
+      seenDenEventIdsRef.current.add(ev.id)
+      animatorRef.current.spawn(ev)
+      spawned++
+    }
+    if (spawned > 0) startFxLoop()
+
     return () => {
       sim.stop()
       select(canvas).on('.zoom', null)
+      stopFxLoop()
       baseCtxRef.current = null
       fxCtxRef.current = null
     }
-  }, [nodesMap, edges, fitToView])
+  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop])
+
+  useEffect(() => {
+    if (edges.length === 0) {
+      seenDenEventIdsRef.current.clear()
+    }
+  }, [edges.length])
 
   return (
     <div className="relative h-full w-full">
