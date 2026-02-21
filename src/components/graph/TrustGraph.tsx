@@ -43,10 +43,12 @@ export function TrustGraph({
   const seenDenEventIdsRef = useRef<Set<string>>(new Set())
   const sampleSeqRef = useRef(0)
   const rafRef = useRef<number | null>(null)
+  const selectionRafRef = useRef<number | null>(null)
   const nodesRef = useRef<SimNode[]>([])
   const transformRef = useRef<ZoomTransform>(zoomIdentity)
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
-  const mouseDownRef = useRef<{ x: number; y: number } | null>(null)
+  const selectedAgentKeyRef = useRef<string | null>(null)
+  const drawRef = useRef<(() => void) | null>(null)
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
@@ -105,20 +107,7 @@ export function TrustGraph({
     }
   }, [hitTest, agents])
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    mouseDownRef.current = { x: e.clientX, y: e.clientY }
-  }, [])
-
-  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const down = mouseDownRef.current
-    mouseDownRef.current = null
-    if (!down) return
-
-    const dx = e.clientX - down.x
-    const dy = e.clientY - down.y
-    const dragDistance = Math.hypot(dx, dy)
-    if (dragDistance > 6) return
-
+  const handleClickCapture = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const node = hitTest(e.clientX, e.clientY)
     if (node && onNodeClick) {
       onNodeClick(`${node.chainId}:${node.agentId}`)
@@ -164,6 +153,22 @@ export function TrustGraph({
     }
 
     rafRef.current = requestAnimationFrame(frame)
+  }, [])
+
+  const stopSelectionLoop = useCallback(() => {
+    if (selectionRafRef.current != null) {
+      cancelAnimationFrame(selectionRafRef.current)
+      selectionRafRef.current = null
+    }
+  }, [])
+
+  const startSelectionLoop = useCallback(() => {
+    if (selectionRafRef.current != null) return
+    const frame = () => {
+      drawRef.current?.()
+      selectionRafRef.current = requestAnimationFrame(frame)
+    }
+    selectionRafRef.current = requestAnimationFrame(frame)
   }, [])
 
   // Fit all nodes in viewport
@@ -269,6 +274,7 @@ export function TrustGraph({
 
     function draw() {
       const t = transformRef.current
+      const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 220)
       baseCtx2.save()
       baseCtx2.clearRect(0, 0, width, height)
       baseCtx2.translate(t.x, t.y)
@@ -291,6 +297,7 @@ export function TrustGraph({
       for (const node of nodes) {
         if (node.x == null) continue
         const radius = getNodeRadius(node.feedbackCount)
+        const isSelected = node.id === selectedAgentKeyRef.current
         baseCtx2.beginPath()
         baseCtx2.arc(node.x, node.y!, radius, 0, Math.PI * 2)
         baseCtx2.fillStyle = getNodeColor(node.id)
@@ -299,8 +306,17 @@ export function TrustGraph({
         baseCtx2.lineWidth = 1.5 / t.k
         baseCtx2.stroke()
 
+        if (isSelected) {
+          const halo = 4 + pulse * 4
+          baseCtx2.beginPath()
+          baseCtx2.arc(node.x, node.y!, radius + halo / t.k, 0, Math.PI * 2)
+          baseCtx2.strokeStyle = '#ffffff'
+          baseCtx2.lineWidth = 2 / t.k
+          baseCtx2.stroke()
+        }
+
         // Label
-        baseCtx2.fillStyle = '#888888'
+        baseCtx2.fillStyle = isSelected ? '#f5f5f5' : '#888888'
         baseCtx2.font = `${10 / t.k}px monospace`
         baseCtx2.textAlign = 'center'
         baseCtx2.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
@@ -310,6 +326,7 @@ export function TrustGraph({
     }
 
     // Setup d3-zoom
+    drawRef.current = draw
     const zoomBehavior = zoom<HTMLCanvasElement, unknown>()
       .scaleExtent([0.2, 5])
       .on('zoom', (event) => {
@@ -346,16 +363,25 @@ export function TrustGraph({
       sim.stop()
       select(canvas).on('.zoom', null)
       stopFxLoop()
+      stopSelectionLoop()
+      drawRef.current = null
       baseCtxRef.current = null
       fxCtxRef.current = null
     }
-  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop])
+  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop, stopSelectionLoop])
 
   useEffect(() => {
     if (edges.length === 0) {
       seenDenEventIdsRef.current.clear()
     }
   }, [edges.length])
+
+  useEffect(() => {
+    selectedAgentKeyRef.current = focusAgentKey ?? null
+    if (focusAgentKey) startSelectionLoop()
+    else stopSelectionLoop()
+    drawRef.current?.()
+  }, [focusAgentKey, startSelectionLoop, stopSelectionLoop])
 
   useEffect(() => {
     if (!focusAgentKey || !zoomRef.current || !canvasRef.current) return
@@ -428,10 +454,9 @@ export function TrustGraph({
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full cursor-grab active:cursor-grabbing"
+        onClickCapture={handleClickCapture}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
       />
       <canvas
         ref={fxCanvasRef}
