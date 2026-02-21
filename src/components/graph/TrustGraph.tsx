@@ -27,6 +27,10 @@ function getNodeRadius(feedbackCount: number): number {
   return Math.max(4, Math.min(16, 4 + feedbackCount * 2))
 }
 
+function getCanvasDpr(): number {
+  return Math.min(window.devicePixelRatio || 1, 1.5)
+}
+
 export function TrustGraph({
   onNodeClick,
   focusAgentKey,
@@ -49,6 +53,7 @@ export function TrustGraph({
   const zoomRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
   const selectedAgentKeyRef = useRef<string | null>(null)
   const drawRef = useRef<(() => void) | null>(null)
+  const selectionLastFrameAtRef = useRef(0)
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
@@ -138,7 +143,7 @@ export function TrustGraph({
       fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height)
 
       if (animatorRef.current.hasActive()) {
-        const dpr = window.devicePixelRatio || 1
+        const dpr = getCanvasDpr()
         const t = transformRef.current
         animatorRef.current.render(
           fxCtx,
@@ -164,8 +169,12 @@ export function TrustGraph({
 
   const startSelectionLoop = useCallback(() => {
     if (selectionRafRef.current != null) return
-    const frame = () => {
-      drawRef.current?.()
+    const frame = (now: number) => {
+      // Cap pulse redraw to ~24 FPS to reduce idle GPU/CPU load.
+      if (now - selectionLastFrameAtRef.current >= 42) {
+        selectionLastFrameAtRef.current = now
+        drawRef.current?.()
+      }
       selectionRafRef.current = requestAnimationFrame(frame)
     }
     selectionRafRef.current = requestAnimationFrame(frame)
@@ -217,7 +226,7 @@ export function TrustGraph({
     fxCtxRef.current = fxCtx2
 
     const { width, height } = canvas.getBoundingClientRect()
-    const dpr = window.devicePixelRatio || 1
+    const dpr = getCanvasDpr()
     canvas.width = width * dpr
     canvas.height = height * dpr
     fxCanvas.width = width * dpr
@@ -403,6 +412,7 @@ export function TrustGraph({
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return
+    if (process.env.NEXT_PUBLIC_GRAPH_DEBUG_TRAFFIC !== '1') return
     const devTargetId = '__dev_target__'
 
     const intervalId = window.setInterval(() => {
@@ -442,7 +452,7 @@ export function TrustGraph({
       sampleSeqRef.current++
       animatorRef.current.spawn(event)
       startFxLoop()
-    }, 450)
+    }, 1000)
 
     return () => {
       window.clearInterval(intervalId)
