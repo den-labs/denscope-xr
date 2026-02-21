@@ -234,7 +234,15 @@ export function TrustGraph({
     baseCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
     fxCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => ({ ...n }))
+    const prevPositions = nodeByIdRef.current
+    const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => {
+      const prev = prevPositions.get(n.id)
+      return {
+        ...n,
+        x: prev?.x ?? n.x,
+        y: prev?.y ?? n.y,
+      }
+    })
     nodesRef.current = nodes
     nodeByIdRef.current = new Map(nodes.map((n) => [n.id, n]))
 
