@@ -7,7 +7,11 @@ import type { FeedFilters } from '@/hooks/useFeedFilters'
 import { FeedLine } from './FeedLine'
 import { PulseEffect } from './PulseEffect'
 
-export function LiveFeed({ onAgentClick, onFirstHover, filters, selectedAgentKey }: {
+const MAX_VISIBLE_FEED_ROWS = 150
+const MAX_ANIMATED_FEED_ROWS = 24
+const DISABLE_ANIMATIONS_AFTER_ROWS = 80
+
+export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
   onAgentClick?: (key: string) => void
   onFirstHover?: () => void
   filters?: FeedFilters
@@ -25,6 +29,12 @@ export function LiveFeed({ onAgentClick, onFirstHover, filters, selectedAgentKey
       return true
     })
   }, [events, filters])
+
+  const visibleEvents = useMemo(
+    () => filteredEvents.slice(0, MAX_VISIBLE_FEED_ROWS),
+    [filteredEvents],
+  )
+  const shouldAnimateRows = visibleEvents.length <= DISABLE_ANIMATIONS_AFTER_ROWS
 
   return (
     <div
@@ -60,24 +70,40 @@ export function LiveFeed({ onAgentClick, onFirstHover, filters, selectedAgentKey
       ) : (
         <div className="py-0">
           <AnimatePresence initial={false}>
-            {filteredEvents.map((event) => (
-              <motion.div
-                key={`${event.txHash}:${event.logIndex}`}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <PulseEffect>
-                  <FeedLine
-                    event={event}
-                    isSelected={selectedAgentKey === `${event.chainId}:${event.agentId}`}
-                    onClick={() => onAgentClick?.(`${event.chainId}:${event.agentId}`)}
-                  />
-                </PulseEffect>
-              </motion.div>
-            ))}
+            {visibleEvents.map((event, index) => {
+              const row = (
+                <FeedLine
+                  event={event}
+                  isSelected={selectedAgentKey === `${event.chainId}:${event.agentId}`}
+                  onClick={() => onAgentClick?.(`${event.chainId}:${event.agentId}`)}
+                />
+              )
+
+              // Perf budget: disable expensive per-row motion on large feeds.
+              if (!shouldAnimateRows) {
+                return <div key={`${event.txHash}:${event.logIndex}`}>{row}</div>
+              }
+
+              const animatedRow = index < MAX_ANIMATED_FEED_ROWS ? <PulseEffect>{row}</PulseEffect> : row
+
+              return (
+                <motion.div
+                  key={`${event.txHash}:${event.logIndex}`}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {animatedRow}
+                </motion.div>
+              )
+            })}
           </AnimatePresence>
+          {filteredEvents.length > visibleEvents.length && (
+            <div className="border-t border-border px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-text-muted">
+              Showing {visibleEvents.length} most recent events ({filteredEvents.length} total after filters)
+            </div>
+          )}
         </div>
       )}
 
