@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { fetchHistoricalEvents, subscribeToEvents } from '@/lib/supabase/fetch-events'
@@ -15,9 +15,21 @@ function shouldRunPipelineForPath(pathname: string | null): boolean {
 export function PipelineProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const bootstrappedHistory = useRef(false)
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof document === 'undefined') return true
+    return document.visibilityState !== 'hidden'
+  })
 
   useEffect(() => {
-    if (!shouldRunPipelineForPath(pathname)) return
+    function handleVisibilityChange() {
+      setIsVisible(document.visibilityState !== 'hidden')
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    if (!shouldRunPipelineForPath(pathname) || !isVisible) return
 
     let cancelled = false
 
@@ -69,7 +81,7 @@ export function PipelineProvider({ children }: { children: React.ReactNode }) {
         for (const h of handles) h.stop()
       }
     }
-  }, [pathname])
+  }, [pathname, isVisible])
 
   return <>{children}</>
 }
