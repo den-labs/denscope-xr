@@ -22,12 +22,12 @@ export function buildCertificateShareText(agent: AgentShareInput): string {
   const name = agent.name ?? `Agent #${agent.agentId}`
   const chainName = getChain(agent.chainId)?.name ?? `Chain ${agent.chainId}`
   const url = buildAgentPageUrl(agent.chainId, agent.agentId)
-  return `${name} @${chainName} — Trust Certificate\n${url}\n\nPowered by @denlabs_app`
+  return `${name} @${chainName} — Community Trust Snapshot\nSeñal basada en feedback ERC-8004\n${url}\n\nPowered by @denlabs_app`
 }
 
 export function buildOwnerShareText(agent: AgentShareInput): string {
   const name = agent.name ?? `Agent #${agent.agentId}`
   const chainName = getChain(agent.chainId)?.name ?? `Chain ${agent.chainId}`
   const url = buildAgentPageUrl(agent.chainId, agent.agentId)
-  return `I shipped my ERC-8004 agent on @${chainName}: ${name}\nTrust Certificate + trust signals\n${url}\n\nPowered by @denlabs_app`
+  return `I shipped my ERC-8004 agent on @${chainName}: ${name}\nCommunity Trust Snapshot + feedback signals\n${url}\n\nPowered by @denlabs_app`
 }
