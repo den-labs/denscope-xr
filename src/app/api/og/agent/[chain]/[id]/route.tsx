@@ -4,6 +4,9 @@ import { join } from 'node:path'
 import { getChain } from '@/config/chains'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { toTrustScore, type TrustScore } from '@/types/trust-score'
+import { getShareCardState } from '@/lib/trust/share-card-state'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -19,9 +22,30 @@ async function loadAssets() {
   return { interRegular, interBlack, wolfcilloSrc, logoSrc }
 }
 
+function clampScore(score: number | null): number {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return 0
+  return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+async function fetchTrustScoreForOg(chainId: number, agentId: number): Promise<TrustScore | null> {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+    const { data } = await supabaseAdmin
+      .from('trust_scores')
+      .select('*')
+      .eq('chain_id', chainId)
+      .eq('agent_id', agentId)
+      .maybeSingle()
+    return data ? toTrustScore(data) : null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(_req: Request, { params }: Props) {
   const { chain, id } = await params
-  const chainConfig = getChain(Number(chain))
+  const chainId = Number(chain)
+  const chainConfig = getChain(chainId)
   const agentId = Number(id)
 
   if (!chainConfig) {
@@ -47,10 +71,11 @@ export async function GET(_req: Request, { params }: Props) {
     )
   }
 
-  const [assets, owner, uri] = await Promise.all([
+  const [assets, owner, uri, trustScore] = await Promise.all([
     loadAssets(),
     readAgentOwner(chainConfig, agentId),
     readAgentURI(chainConfig, agentId),
+    fetchTrustScoreForOg(chainId, agentId),
   ])
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
@@ -65,6 +90,12 @@ export async function GET(_req: Request, { params }: Props) {
       ? `${metadata.description.slice(0, 80)}...`
       : metadata.description
     : null
+  const cardState = getShareCardState(trustScore)
+  const scoreValue = clampScore(trustScore?.score ?? null)
+  const confidenceLabel = trustScore ? `${trustScore.confidence.toUpperCase()} CONF.` : 'NO SCORE'
+  const scoreBarWidth = Math.max(8, scoreValue)
+  const evidenceLine = cardState.evidenceLine
+  const statusDotColor = cardState.accentColor
 
   return new ImageResponse(
     (
@@ -112,7 +143,7 @@ export async function GET(_req: Request, { params }: Props) {
             {/* Left: status + protocol */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 4, background: '#22C55E', display: 'flex' }} />
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: statusDotColor, display: 'flex' }} />
                 <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.1em', fontWeight: 400 }}>
                   ERC-8004
                 </span>
@@ -176,6 +207,64 @@ export async function GET(_req: Request, { params }: Props) {
               {name}
             </span>
 
+            {/* Trust / risk signal (v1 focus) */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                marginTop: 20,
+                width: 440,
+                maxWidth: '100%',
+                padding: '16px 20px',
+                border: `1px solid ${cardState.accentSoft}`,
+                background: 'rgba(0,0,0,0.45)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <span style={{ fontSize: 64, fontWeight: 900, letterSpacing: '-0.03em', color: cardState.accentColor }}>
+                  {scoreValue}
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11, color: '#9CA3AF', letterSpacing: '0.15em' }}>
+                    COMMUNITY TRUST SNAPSHOT
+                  </span>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: cardState.accentColor }}>
+                    {cardState.label}
+                  </span>
+                  <span style={{ fontSize: 10, color: '#9CA3AF', letterSpacing: '0.14em' }}>
+                    {confidenceLabel}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  width: '100%',
+                  marginTop: 14,
+                  height: 10,
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'rgba(255,255,255,0.04)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '1px',
+                }}
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${scoreBarWidth}%`,
+                    background: cardState.accentColor,
+                    display: 'flex',
+                  }}
+                />
+              </div>
+
+              <span style={{ fontSize: 12, color: '#D1D5DB', marginTop: 10 }}>
+                {evidenceLine}
+              </span>
+            </div>
+
             {/* Description (if available) */}
             {description && (
               <span style={{
@@ -199,7 +288,7 @@ export async function GET(_req: Request, { params }: Props) {
               }}>
                 REGISTERED BY
               </span>
-              <span style={{ fontSize: 30, fontWeight: 700 }}>
+              <span style={{ fontSize: 22, fontWeight: 700 }}>
                 {ownerTruncated}
               </span>
             </div>
@@ -218,39 +307,34 @@ export async function GET(_req: Request, { params }: Props) {
               </span>
             </div>
 
-            {/* Right column: PROTOCOLS */}
+            {/* Right column: FEEDBACK EVIDENCE */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
               <span style={{
                 fontSize: 10, color: '#6b7280', letterSpacing: '0.1em', fontWeight: 400,
                 borderBottom: '1px solid #1f2937', paddingBottom: 4, marginBottom: 4,
               }}>
-                PROTOCOLS
+                FEEDBACK SIGNAL
               </span>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 280 }}>
-                {services.length > 0 ? (
-                  services.map((s, i) => (
-                    <span
-                      key={i}
-                      style={i === 0 ? {
-                        fontSize: 12, fontWeight: 700,
-                        color: '#000000', background: '#F0F0F0',
-                        padding: '4px 12px',
-                      } : {
-                        fontSize: 12, fontWeight: 400,
-                        color: '#9ca3af',
-                        border: '1px solid #374151',
-                        padding: '4px 12px',
-                      }}
-                    >
-                      {s}
-                    </span>
-                  ))
-                ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                <span style={{
+                  fontSize: 12,
+                  color: '#D1D5DB',
+                  border: '1px solid #374151',
+                  padding: '4px 10px',
+                }}>
+                  {trustScore ? `${trustScore.feedbackCount} feedbacks` : 'No score yet'}
+                </span>
+                {trustScore && (
                   <span style={{
-                    fontSize: 12, color: '#374151', fontWeight: 400,
-                    border: '1px solid #1f2937', padding: '4px 12px',
+                    fontSize: 12,
+                    color: '#9CA3AF',
                   }}>
-                    —
+                    {Math.round(trustScore.positiveRatio * 100)}% positive
+                  </span>
+                )}
+                {!trustScore && services.length > 0 && (
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>
+                    {services.slice(0, 2).join(' • ')}
                   </span>
                 )}
               </div>
