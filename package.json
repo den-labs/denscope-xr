@@ -10,7 +10,9 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "indexer": "tsx scripts/indexer.ts",
-    "indexer:backfill": "tsx scripts/indexer.ts --backfill-only"
+    "indexer:backfill": "tsx scripts/indexer.ts --backfill-only",
+    "og:candidates": "tsx scripts/og-review-candidates.ts",
+    "og:fetch": "tsx scripts/fetch-og-cards.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
