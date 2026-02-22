@@ -616,3 +616,148 @@ Avoid:
 - implying manual certification/review when none occurred
 - absolute accusations in MVP (`scam`) without policy + evidence thresholds
 - dense explanatory text on the card itself
+
+## Share Card v1 State Threshold Policy (Draft, Product Semantics)
+
+Purpose:
+- Define when the card is allowed to show each semantic state.
+- Prevent overconfident labels when signal quality is weak.
+
+Important:
+- These are product-facing semantics for v1.
+- Exact numerical thresholds should be tuned with observed data.
+- Start conservative to protect credibility.
+
+### Design principles for thresholds
+
+1. Evidence before confidence
+- Do not show strong positive/negative labels with tiny sample sizes.
+
+2. Community signal, not absolute truth
+- Labels communicate signal direction and confidence, not final judgment.
+
+3. Low-data states must be explicit
+- "Sin suficiente señal" is a feature, not a failure.
+
+4. Strong red labels require stronger evidence than green/amber
+- Avoid false alarms and reputational overclaiming.
+
+5. Thresholds should be explainable
+- Internal team should always be able to answer "why did this card become red/green?"
+
+### Inputs considered for state mapping (v1)
+
+Minimum recommended inputs:
+- `feedback_total`
+- `positive_pct` (or equivalent sentiment ratio)
+- `confidence` (low/medium/high if available)
+
+Nice-to-have inputs (v1.1+):
+- unique interactors
+- recent trend / velocity
+- anomaly or sybil-risk flags
+
+### Proposed state gating (conservative starter policy)
+
+#### State: `Sin suficiente señal`
+
+Default when any of these are true:
+- `feedback_total` is below minimum evidence threshold
+- trust signal cannot be computed reliably
+- metadata/score pipeline is incomplete
+
+Suggested starter threshold:
+- `feedback_total < 5`
+
+Optional stricter variant (if confidence exists):
+- `feedback_total < 5` OR `confidence = low` with very sparse data
+
+Why:
+- Prevents false certainty in early-stage agents.
+
+#### State: `En observación`
+
+Use when:
+- there is some evidence, but not enough confidence for strong trust/risk claim
+- signal is mixed or borderline
+
+Suggested starter policy:
+- `feedback_total >= 5` and `< 15`, OR
+- confidence is `low/medium`, OR
+- sentiment is mixed / near center
+
+Example interpretation:
+- "There is signal, but not enough to confidently call it trustworthy or high risk."
+
+#### State: `Confiable`
+
+Use only when:
+- evidence volume is sufficient
+- signal direction is clearly positive
+- confidence is at least medium (preferably high)
+
+Suggested starter policy (tune later):
+- `feedback_total >= 15`
+- `positive_pct >= 70`
+- confidence is `medium` or `high`
+- no severe risk override flag
+
+Notes:
+- Keep this conservative in v1 to protect trust in the label.
+
+#### State: `Alto riesgo`
+
+Use only when:
+- evidence volume is sufficient
+- signal direction is clearly negative
+- confidence is at least medium (preferably high)
+
+Suggested starter policy (tune later):
+- `feedback_total >= 15`
+- `positive_pct <= 35` (or strong negative dominance equivalent)
+- confidence is `medium` or `high`
+
+Optional stricter rule for v1:
+- require `high` confidence before showing red state publicly
+
+Why stricter:
+- Red labels create stronger reputational implications and should be harder to trigger.
+
+### Reserved label policy: `Scam`
+
+MVP recommendation:
+- Do **not** use `Scam` as a card label in v1
+
+Reason:
+- It implies a stronger accusation than "community risk signal"
+- Requires explicit policy, evidence thresholds, and likely review/dispute handling
+
+Possible future path:
+- Use only with documented policy + confidence/risk criteria + appeal/disclaimer design
+
+### Fallback behavior when thresholds are uncertain
+
+If inputs disagree or confidence is unavailable:
+- prefer `En observación` over strong labels
+- prefer `Sin suficiente señal` when evidence is too sparse
+
+This bias reduces overclaiming risk.
+
+### Instrumentation required before threshold tuning
+
+Track for each rendered card:
+- chosen state label
+- feedback_total at render
+- positive_pct at render
+- confidence at render (if available)
+- clickthrough rate by state
+- bounce rate by state
+
+Why:
+- lets the team validate whether states are understandable and useful, not just mathematically assigned
+
+### Review cadence (recommended)
+
+- Week 1-2 after launch: monitor distribution of states and obvious misclassifications
+- After first meaningful dataset: tune thresholds
+- Revisit before introducing stronger labels or owner-centric promotional flows
