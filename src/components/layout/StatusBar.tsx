@@ -20,24 +20,47 @@ export function StatusBar() {
   const lastCountRef = useRef(eventCount)
   const [feedActive, setFeedActive] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof document === 'undefined') return true
+    return document.visibilityState !== 'hidden'
+  })
 
   useEffect(() => {
+    function onVisibilityChange() {
+      setIsVisible(document.visibilityState !== 'hidden')
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    if (!isVisible) return
     const interval = setInterval(() => {
       setUptime((prev) => prev + 1)
     }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [isVisible])
 
   // Track whether new events arrived recently (within 90s)
   useEffect(() => {
+    if (!isVisible) {
+      lastCountRef.current = eventCount
+      clearTimeout(timerRef.current)
+      return
+    }
+
+    let rafId: number | null = null
     if (eventCount > lastCountRef.current) {
-      setFeedActive(true)
+      rafId = window.requestAnimationFrame(() => setFeedActive(true))
       clearTimeout(timerRef.current)
       timerRef.current = setTimeout(() => setFeedActive(false), 90_000)
     }
     lastCountRef.current = eventCount
-    return () => clearTimeout(timerRef.current)
-  }, [eventCount])
+    return () => {
+      if (rafId != null) window.cancelAnimationFrame(rafId)
+      clearTimeout(timerRef.current)
+    }
+  }, [eventCount, isVisible])
 
   return (
     <footer className="border-t border-border bg-bg px-6 py-2 font-mono text-xs uppercase tracking-wider text-text-secondary">
