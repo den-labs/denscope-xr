@@ -11,7 +11,6 @@ import { IncidentBadge } from '@/components/console/IncidentBadge'
 
 const navItems = [
   { href: '/', label: 'Live Feed' },
-  { href: '/graph', label: 'Trust Graph' },
   { href: '/discovery', label: 'Discovery' },
   { href: '/console', label: 'Console' },
 ]
@@ -23,7 +22,8 @@ export function Header() {
 
   // Close mobile menu on route change
   useEffect(() => {
-    setMenuOpen(false)
+    const raf = window.requestAnimationFrame(() => setMenuOpen(false))
+    return () => window.cancelAnimationFrame(raf)
   }, [pathname])
 
   useEffect(() => {
