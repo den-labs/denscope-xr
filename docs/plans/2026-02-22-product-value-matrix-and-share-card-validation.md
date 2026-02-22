@@ -427,3 +427,192 @@ Design implication:
 3. When is it acceptable to use strong labels like "scam"?
    - likely requires very conservative thresholding and explicit evidence framing
    - avoid premature or unsupported accusation semantics in MVP
+
+## Share Card v1 Content Spec (Draft)
+
+Purpose:
+- Define the minimum content and hierarchy for a fast, trustworthy, shareable card that routes users to the full agent report.
+
+Design goal:
+- The card should communicate a useful signal in 3-5 seconds, with minimal text.
+- Detailed evidence and interpretation belong in the agent report page.
+
+### Core content hierarchy (top priority -> lower)
+
+1. Agent identity (name or fallback ID)
+2. Trust/risk signal (visual + short label)
+3. Evidence anchor (ERC-8004 feedback count)
+4. Denscope branding
+5. Secondary context (chain / confidence / snapshot if space allows)
+
+### Must-have fields (v1)
+
+#### 1) Agent identity
+
+- Preferred: `metadata.name`
+- Fallback: `Agent #<agentId>`
+- Optional support line: chain label (small)
+
+Rationale:
+- Gives the card a recognizable anchor even when metadata quality is inconsistent.
+
+#### 2) Signal state (primary visual)
+
+Visual:
+- gauge / tachometer / arc / radial bar (implementation choice)
+- strong color coding tied to state
+
+Text label (short, non-verbose):
+- `Confiable`
+- `En observación`
+- `Alto riesgo`
+- `Sin suficiente señal`
+
+Rationale:
+- Enables instant comprehension without long reading.
+
+#### 3) Evidence anchor (required microtext)
+
+Required line:
+- `Basado en X feedbacks ERC-8004`
+
+Fallback when unavailable:
+- `Sin feedback ERC-8004 suficiente`
+
+Rationale:
+- Prevents score/gauge from feeling arbitrary or unsupported.
+- Reinforces product narrative: evidence-based, community-derived signal.
+
+#### 4) Branding
+
+- `Denscope` (visible but not dominant)
+- Optional small descriptor:
+  - `Trust Snapshot`
+  - `Community Trust Snapshot`
+
+Rationale:
+- Makes the card attributable and builds recognition in social sharing contexts.
+
+### Nice-to-have fields (include only if they do not reduce scan speed)
+
+#### A) Chain context
+
+- `Chain: <label>` or a compact chain badge
+
+When to include:
+- If space remains after signal and evidence are clear
+
+#### B) Confidence / signal strength indicator
+
+Examples:
+- `Señal alta`
+- `Señal media`
+- `Señal baja`
+
+When to include:
+- If confidence semantics are well-defined and avoid false precision
+
+#### C) Snapshot timestamp (micro)
+
+Example:
+- `Snapshot 2026-02-22 UTC`
+
+When to include:
+- If freshness matters and can be shown unobtrusively
+
+#### D) Avatar / image
+
+Use only if:
+- It materially improves recognition
+- It does not compete with the trust/risk signal
+
+### Move to full report (not for card v1)
+
+- Owner address
+- Long description
+- Protocol/services list (multiple badges)
+- Detailed breakdown (`+/-/=` counts, formulas, raw metrics)
+- Methodology explanation longer than one short evidence line
+
+### State system (semantic + color direction)
+
+#### State 0: `Sin suficiente señal`
+
+- Meaning:
+  - Not enough feedback to form a reliable signal
+- Visual direction:
+  - neutral dark / black / charcoal
+- Copy:
+  - Main label: `Sin suficiente señal`
+  - Evidence line: `Aún no hay suficiente feedback ERC-8004`
+
+#### State 1: `En observación`
+
+- Meaning:
+  - Early or mixed signal; insufficient confidence for strong claims
+- Visual direction:
+  - amber / copper accent
+- Copy:
+  - Main label: `En observación`
+  - Evidence line: `Basado en X feedbacks ERC-8004`
+
+#### State 2: `Confiable`
+
+- Meaning:
+  - Community signal is sufficiently positive
+- Visual direction:
+  - green accent (background may remain dark)
+- Copy:
+  - Main label: `Confiable`
+  - Evidence line: `Basado en X feedbacks ERC-8004`
+
+#### State 3: `Alto riesgo`
+
+- Meaning:
+  - Community signal is sufficiently negative
+- Visual direction:
+  - red accent
+- Copy:
+  - Main label: `Alto riesgo`
+  - Evidence line: `Basado en X feedbacks ERC-8004`
+
+Guardrail:
+- Avoid using `scam` in MVP unless evidence thresholds and policy language are explicitly defined.
+
+### Fallback rules (v1)
+
+#### Missing name
+- Show `Agent #<agentId>`
+
+#### Missing metadata image/avatar
+- Omit avatar entirely (do not block render)
+
+#### No feedback / low feedback
+- Force `Sin suficiente señal`
+- Use neutral color palette
+- Do not show strong positive/negative claim
+
+#### Missing derived score but feedback exists
+- Prefer state + evidence line over fake precision
+- Show a qualitative label if score computation is unavailable
+
+### Card-to-report handoff rule
+
+- Card = signal
+- Report page = evidence + interpretation + history + actions
+
+Implication:
+- The card should avoid trying to explain everything.
+- The share flow must always route to the full agent report URL.
+
+### Copy guidance (tone and claims)
+
+Do:
+- Frame as a community/evidence-based signal
+- Use clear labels and concise microtext
+- Be honest about insufficient data
+
+Avoid:
+- implying manual certification/review when none occurred
+- absolute accusations in MVP (`scam`) without policy + evidence thresholds
+- dense explanatory text on the card itself
