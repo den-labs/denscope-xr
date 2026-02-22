@@ -314,6 +314,9 @@ Only after trust model credibility and retention improve:
 
 Use this as a practical handoff map during product strategy work:
 
+Related collaboration policy (persistent session preference):
+- See `docs/process/collaboration-protocol.md` for the agreed rule that the assistant can manage agent switches proactively but must notify Wolfcito before switching and explain why.
+
 ### Stay with `brainstorming-coach` (Carson) when:
 - exploring hypotheses
 - generating alternative product directions
@@ -345,4 +348,3 @@ Use this as a practical handoff map during product strategy work:
 2. Define the share card MVP around ERC-8004 feedback evidence (not only score aesthetics)
 3. Add a measurement plan before expanding card prominence
 4. Establish a per-tab ownership + success metric table for quarterly prioritization
-
