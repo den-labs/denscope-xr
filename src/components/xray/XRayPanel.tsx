@@ -11,12 +11,15 @@ import { AgentServices } from './AgentServices'
 import { TapePanel } from './TapePanel'
 import { LeadersPanel } from './LeadersPanel'
 import { feedbackStatsForTarget } from '@/lib/firehose/feedbackStats'
+import { fetchTrustScore } from '@/lib/supabase/trust-scores'
+import { getShareCardState } from '@/lib/trust/share-card-state'
 import {
   buildXIntentUrl,
   buildCertificateShareText,
   buildOwnerShareText,
 } from '@/lib/share'
 import type { AgentMetadata } from '@/types/agents'
+import type { TrustScore } from '@/types/trust-score'
 
 type XRayPanelProps = {
   agentKey: string | null
@@ -34,30 +37,59 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
   const agent = useAgentStore((s) => (agentKey ? s.agents.get(agentKey) : undefined))
   const edges = useGraphStore((s) => s.edges)
   const cacheMetadata = useAgentStore((s) => s.cacheMetadata)
-  const [metadata, setMetadata] = useState<AgentMetadata | null>(agent?.metadata ?? null)
+  const [metadataCache, setMetadataCache] = useState<{ key: string; value: AgentMetadata | null } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const [shareMenuOpen, setShareMenuOpen] = useState(false)
   const [tab, setTab] = useState<'inspector' | 'tape' | 'leaders'>('inspector')
+  const [trustScoreCache, setTrustScoreCache] = useState<{ key: string; value: TrustScore | null } | null>(null)
 
   useEffect(() => {
-    if (!agent?.agentURI) return
-    if (agent.metadata) {
-      setMetadata(agent.metadata)
-      return
-    }
-    setLoading(true)
-    setError(false)
-    fetchAgentMetadata(agent.agentURI)
-      .then((result) => {
-        if (!result && agent.agentURI) setError(true)
-        setMetadata(result)
+    const agentURI = agent?.agentURI
+    const hasMetadata = Boolean(agent?.metadata)
+    if (!agentURI || hasMetadata) return
+
+    let cancelled = false
+    const run = async () => {
+      setLoading(true)
+      setError(false)
+      try {
+        const result = await fetchAgentMetadata(agentURI)
+        if (cancelled) return
+        if (!result) setError(true)
+        if (agentKey) setMetadataCache({ key: agentKey, value: result })
         if (result && agentKey) cacheMetadata(agentKey, result)
-      })
-      .finally(() => setLoading(false))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void run()
+    return () => {
+      cancelled = true
+    }
   }, [agent?.agentURI, agent?.metadata, agentKey, cacheMetadata])
 
-  const enriched = agent ? { ...agent, metadata: metadata ?? agent.metadata } : null
+  useEffect(() => {
+    const chainId = agent?.chainId
+    const selectedAgentId = agent?.agentId
+    if (chainId == null || selectedAgentId == null || !agentKey) return
+    let cancelled = false
+    fetchTrustScore(chainId, selectedAgentId)
+      .then((score) => {
+        if (!cancelled) setTrustScoreCache({ key: agentKey, value: score })
+      })
+      .catch(() => {
+        if (!cancelled) setTrustScoreCache({ key: agentKey, value: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [agent?.chainId, agent?.agentId, agentKey])
+
+  const trustScore = trustScoreCache?.key === agentKey ? trustScoreCache.value : null
+  const metadata = agent?.metadata ?? (metadataCache?.key === agentKey ? metadataCache.value : null)
+  const enriched = agent ? { ...agent, metadata } : null
   const feedbackStats = useMemo(
     () => (agentKey ? feedbackStatsForTarget(edges, agentKey) : {
       total: 0,
@@ -76,13 +108,14 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
     fetchAgentMetadata(agent.agentURI)
       .then((result) => {
         if (!result && agent.agentURI) setError(true)
-        setMetadata(result)
+        if (agentKey) setMetadataCache({ key: agentKey, value: result })
         if (result && agentKey) cacheMetadata(agentKey, result)
       })
       .finally(() => setLoading(false))
   }
 
   const name = enriched?.metadata?.name ?? (enriched ? `Agent #${enriched.agentId}` : '')
+  const shareCardState = useMemo(() => getShareCardState(trustScore), [trustScore])
   const shareInput = enriched
     ? { chainId: enriched.chainId, agentId: enriched.agentId, name: enriched.metadata?.name }
     : null
@@ -132,6 +165,31 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
                   {name}
                 </span>
                 <ChainBadge chainId={enriched.chainId} />
+              </div>
+              <div
+                className="border p-3 space-y-2"
+                style={{
+                  borderColor: shareCardState.accentSoft,
+                  backgroundColor: 'rgba(0,0,0,0.18)',
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span
+                    className="font-mono text-[11px] uppercase tracking-widest"
+                    style={{ color: shareCardState.accentColor }}
+                  >
+                    {shareCardState.label}
+                  </span>
+                  <span
+                    className="font-display text-2xl font-bold leading-none"
+                    style={{ color: shareCardState.accentColor }}
+                  >
+                    {trustScore ? Math.round(trustScore.score) : '\u2014'}
+                  </span>
+                </div>
+                <p className="font-mono text-[10px] text-text-secondary">
+                  {shareCardState.evidenceLine}
+                </p>
               </div>
               {enriched.metadata?.description && (
                 <p className="text-sm text-text-secondary line-clamp-2">
