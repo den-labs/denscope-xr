@@ -27,6 +27,19 @@ function clampScore(score: number | null): number {
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
+function confidenceLabelEs(confidence: TrustScore['confidence'] | null): string {
+  switch (confidence) {
+    case 'high':
+      return 'CONF. ALTA'
+    case 'medium':
+      return 'CONF. MEDIA'
+    case 'low':
+      return 'CONF. BAJA'
+    default:
+      return 'SIN SCORE'
+  }
+}
+
 async function fetchTrustScoreForOg(chainId: number, agentId: number): Promise<TrustScore | null> {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
@@ -92,10 +105,17 @@ export async function GET(_req: Request, { params }: Props) {
     : null
   const cardState = getShareCardState(trustScore)
   const scoreValue = clampScore(trustScore?.score ?? null)
-  const confidenceLabel = trustScore ? `${trustScore.confidence.toUpperCase()} CONF.` : 'NO SCORE'
+  const confidenceLabel = confidenceLabelEs(trustScore?.confidence ?? null)
   const scoreBarWidth = Math.max(8, scoreValue)
   const evidenceLine = cardState.evidenceLine
   const statusDotColor = cardState.accentColor
+  const monitoringHint = cardState.key === 'monitoring' && trustScore
+    ? trustScore.positiveRatio >= 0.7
+      ? 'Señal positiva, aún temprana'
+      : trustScore.positiveRatio <= 0.35
+        ? 'Señal negativa, aún temprana'
+        : 'Señal mixta, aún temprana'
+    : null
 
   return new ImageResponse(
     (
@@ -197,7 +217,7 @@ export async function GET(_req: Request, { params }: Props) {
               <span style={{ fontSize: 24, color: '#6b7280', fontWeight: 400 }}>
                 ID
               </span>
-              <span style={{ fontSize: 96, fontWeight: 900, letterSpacing: '-0.025em' }}>
+              <span style={{ fontSize: 82, fontWeight: 900, letterSpacing: '-0.025em' }}>
                 #{agentId}
               </span>
             </div>
@@ -216,20 +236,20 @@ export async function GET(_req: Request, { params }: Props) {
                 marginTop: 20,
                 width: 440,
                 maxWidth: '100%',
-                padding: '16px 20px',
+                padding: '18px 22px',
                 border: `1px solid ${cardState.accentSoft}`,
                 background: 'rgba(0,0,0,0.45)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: 64, fontWeight: 900, letterSpacing: '-0.03em', color: cardState.accentColor }}>
+                <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-0.03em', color: cardState.accentColor }}>
                   {scoreValue}
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontSize: 11, color: '#9CA3AF', letterSpacing: '0.15em' }}>
-                    COMMUNITY TRUST SNAPSHOT
+                    SNAPSHOT DE CONFIANZA
                   </span>
-                  <span style={{ fontSize: 22, fontWeight: 700, color: cardState.accentColor }}>
+                  <span style={{ fontSize: 24, fontWeight: 700, color: cardState.accentColor }}>
                     {cardState.label}
                   </span>
                   <span style={{ fontSize: 10, color: '#9CA3AF', letterSpacing: '0.14em' }}>
@@ -263,6 +283,11 @@ export async function GET(_req: Request, { params }: Props) {
               <span style={{ fontSize: 12, color: '#D1D5DB', marginTop: 10 }}>
                 {evidenceLine}
               </span>
+              {monitoringHint && (
+                <span style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
+                  {monitoringHint}
+                </span>
+              )}
             </div>
 
             {/* Description (if available) */}
@@ -325,12 +350,21 @@ export async function GET(_req: Request, { params }: Props) {
                   {trustScore ? `${trustScore.feedbackCount} feedbacks` : 'No score yet'}
                 </span>
                 {trustScore && (
-                  <span style={{
-                    fontSize: 12,
-                    color: '#9CA3AF',
-                  }}>
-                    {Math.round(trustScore.positiveRatio * 100)}% positive
-                  </span>
+                  cardState.key !== 'insufficient_signal' ? (
+                    <span style={{
+                      fontSize: 12,
+                      color: '#9CA3AF',
+                    }}>
+                      {Math.round(trustScore.positiveRatio * 100)}% positive
+                    </span>
+                  ) : (
+                    <span style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}>
+                      evidencia insuficiente
+                    </span>
+                  )
                 )}
                 {!trustScore && services.length > 0 && (
                   <span style={{ fontSize: 11, color: '#6b7280' }}>
