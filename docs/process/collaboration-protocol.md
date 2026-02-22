@@ -32,6 +32,7 @@ Wolfcito prefers that the assistant proactively manages agent switching when it 
 ## Continuity Notes
 
 - This file captures collaboration preferences, not product requirements.
+- Performance guardrails live separately in `docs/process/performance-policy.md` and should be consulted when proposing UI-heavy or realtime-heavy changes.
 - For future sessions, these preferences are most reliable when:
   - this file remains in the repo, and
   - the session loads repo instructions/docs before deep work
@@ -42,4 +43,3 @@ Revisit this protocol when:
 - new BMAD agents are introduced
 - collaboration style changes
 - the project shifts from product strategy to mostly execution work
-

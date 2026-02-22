@@ -310,6 +310,9 @@ Only after trust model credibility and retention improve:
 4. Build shareable card as a measurable growth + trust feature
 5. Tie card semantics tightly to ERC-8004 feedback evidence
 
+Performance implementation guardrails:
+- See `docs/process/performance-policy.md` to keep new UI/realtime investments aligned with route-aware, background-aware, and volume-aware performance constraints.
+
 ## Agent Switching Guidance (BMAD / Strategy Work)
 
 Use this as a practical handoff map during product strategy work:
