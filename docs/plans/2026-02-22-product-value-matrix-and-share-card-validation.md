@@ -348,3 +348,82 @@ Related collaboration policy (persistent session preference):
 2. Define the share card MVP around ERC-8004 feedback evidence (not only score aesthetics)
 3. Add a measurement plan before expanding card prominence
 4. Establish a per-tab ownership + success metric table for quarterly prioritization
+
+## Design Conversation Notes (2026-02-22) - Share Card v1 Direction
+
+These notes capture user-centered design decisions gathered in conversation (Maya / design-thinking mode).
+
+### Primary sharer for MVP (revised)
+
+Initial thought:
+- Agent owners would be ideal sharers
+
+Reality check (current product state):
+- Agent registration flow is still too weak / high-friction
+- Owners would need to:
+  - register via smart contract
+  - provide metadata/info (form not ready yet)
+  - then come to Denscope to share
+
+Decision for MVP:
+- Prioritize shareability for `users/observers` first
+- Let owner-focused sharing become a stronger path later after registration and metadata UX are mature
+
+### Desired emotional outcome for receiver
+
+Target feeling:
+- `trust`, but grounded in Denscope's framing
+
+Critical product principle:
+- Avoid heavy manual verification/certification claims that require labor-intensive processes and opaque judgments
+- Prefer exposing evidence already present in the system:
+  - community-derived feedback
+  - ERC-8004 feedback signals
+  - trust/risk interpretation layers tied to evidence
+
+Implication for messaging:
+- The card should communicate that this is a community/evidence-based trust signal, not an arbitrary centralized verdict
+
+### Share card v1 content preference (fast visual comprehension)
+
+User preference:
+- Minimal text
+- Fast recognition over dense reading
+- Strong visual language (color / gauge / signal)
+- Clickthrough to full agent page for details
+
+Candidate data elements discussed:
+
+1. Agent name (important identifier, but sometimes missing)
+2. Trust rating / score (visualized, e.g. gauge/tachometer)
+3. Visual trust state (color of card or key accent changes by trust/risk level)
+
+Optional third element considered:
+- Agent image/avatar (if available)
+
+Design implication:
+- If text budget is limited, the "third element" may be better used for evidence strength (e.g. feedback count / confidence indicator) rather than decorative imagery, unless image materially improves recognition.
+
+### UX principle for card -> portal handoff
+
+- Card should transmit value faster than reading
+- The detailed explanation belongs in the agent page/report
+- Card = signal
+- Agent page = evidence and interpretation
+
+### Open design questions (next iteration)
+
+1. What exact label avoids overclaiming?
+   - "Trust Score"
+   - "Community Trust"
+   - "Community Signal"
+   - "Risk / Trust Snapshot"
+
+2. How to represent low-data states without false confidence?
+   - "Insufficient signal"
+   - muted/neutral visual state
+   - no strong green/red until evidence threshold is met
+
+3. When is it acceptable to use strong labels like "scam"?
+   - likely requires very conservative thresholding and explicit evidence framing
+   - avoid premature or unsupported accusation semantics in MVP
