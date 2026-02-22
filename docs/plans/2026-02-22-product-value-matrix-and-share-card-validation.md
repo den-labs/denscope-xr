@@ -764,3 +764,53 @@ Why:
 - Week 1-2 after launch: monitor distribution of states and obvious misclassifications
 - After first meaningful dataset: tune thresholds
 - Revisit before introducing stronger labels or owner-centric promotional flows
+
+## Visual Validation Review (OG Card v1) - 2026-02-22
+
+Validation method:
+- Local OG generation using helper scripts:
+  - `pnpm og:candidates`
+  - `pnpm og:fetch low:42220:124 high:42220:125 mix:42220:45`
+
+Reviewed cases:
+- `low` -> `42220:124` (low evidence / insufficient signal)
+- `high` -> `42220:125` (strong positive evidence / trustworthy)
+- `mix` -> `42220:45` (early positive signal / monitoring)
+
+### Observed outcomes (post-refinement)
+
+What worked well:
+- State semantics are readable in 3-5 seconds (`Sin suficiente señal`, `En observación`, `Confiable`)
+- Color mapping reinforces semantics correctly (gray / amber / green)
+- Evidence line is visible and supports credibility (`feedbacks ERC-8004`)
+- Denscope branding is present without overpowering the signal
+- "Insufficient signal" no longer over-communicates positivity in the side panel
+- Monitoring state gains clarity with microcopy (`Señal positiva, aún temprana`)
+
+What improved after OG refinement pass:
+- Trust block became the visual focal point
+- ID no longer dominates the composition as much
+- Language inside the trust block is now consistent in Spanish
+- Low-signal state presentation feels more honest / less contradictory
+
+### Remaining optional polish (not blocking v1)
+
+1. Slightly reduce opacity of the large `AGENT` watermark if it competes with the trust block on compressed social previews
+2. Slightly increase contrast for small supporting labels (`SNAPSHOT DE CONFIANZA`, `CONF. ...`) for better readability on downscaled images
+3. Future A/B test: state-label-first hierarchy vs score-number-first hierarchy
+
+### v1 Decision
+
+Status:
+- `OG Card v1 approved` for rollout/usage and instrumentation
+
+Reasoning:
+- The card now communicates a defendable trust/risk signal rapidly
+- It preserves the evidence-based narrative (ERC-8004 feedback)
+- It is visually differentiated while remaining honest about insufficient data
+
+### Next focus after v1 approval
+
+1. Instrument share interactions and downstream return/CTR metrics
+2. Observe real-world usage and user interpretation
+3. Tune thresholds using data (not aesthetics)
