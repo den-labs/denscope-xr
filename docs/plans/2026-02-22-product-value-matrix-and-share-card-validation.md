@@ -814,3 +814,161 @@ Reasoning:
 1. Instrument share interactions and downstream return/CTR metrics
 2. Observe real-world usage and user interpretation
 3. Tune thresholds using data (not aesthetics)
+
+## DenLabs `trust-sdk` (Strategic Integration Layer) - 2026-02-23
+
+Context:
+- Denscope also has a separate SDK repository: `den-labs/trust-sdk`
+- The SDK should be treated as a strategic product surface (developer adoption + trust infrastructure), not only as a side project
+
+### What the SDK already provides (code review summary)
+
+Reviewed locally from `../trust-sdk`:
+- `src/client.ts`
+- `src/x402.ts`
+- `src/types.ts`
+- `src/errors.ts`
+- `src/constants.ts`
+- `__tests__/*`
+
+Current strengths:
+- Small, clear API surface:
+  - `getAgent`
+  - `getScore`
+  - `getSignals`
+  - `getEvents`
+  - `search`
+- Supports both auth/payment modes:
+  - API key (`Authorization: Bearer`)
+  - x402 micropayment flow (402 -> sign -> retry)
+- Error taxonomy is usable for integrators:
+  - `AuthenticationError`
+  - `PaymentRequiredError`
+  - `DenScopeError`
+- x402 logic is isolated and tested (EIP-712 signing / EIP-3009 payload shaping)
+
+### Gaps to address before pushing SDK as a flagship integration surface
+
+1. No request timeout / abort support
+- `fetch` can hang on bad networks
+- Add optional `timeoutMs` and/or `signal` support
+
+2. No injectable `fetch`
+- Limits usage in some runtimes and observability/testing scenarios
+- Add `fetch?: typeof globalThis.fetch` in config
+
+3. No retry/backoff for transient failures
+- Only retries 402 (x402 flow), not `429` / `5xx`
+- Add conservative retry policy (opt-in or default low-count)
+
+4. x402 method selection is naive
+- Current behavior picks `accepts[0]`
+- Prefer method selection by compatibility/cost/asset policy
+
+5. No runtime response validation
+- TypeScript types are compile-time only
+- Consider lightweight runtime guards (especially for public SDK hardening)
+
+6. Portal semantics not yet reflected in SDK/docs
+- Denscope UI now uses semantic states (`Confiable`, `En observación`, etc.)
+- SDK/docs should eventually expose or document equivalent interpretation guidance
+
+### Denscope ↔ `trust-sdk` Integration Matrix (Product + Engineering)
+
+#### `/docs/api` (Developer enablement) -> `trust-sdk` = High-priority integration
+
+- Role:
+  - Primary onboarding path for developers
+- Why integrate:
+  - Turns Denscope from portal-only into consumable trust infrastructure
+- Recommended action:
+  - Add "Start with SDK" section with 2-3 minimal examples:
+    - `getScore`
+    - `getSignals`
+    - `search`
+- Decision:
+  - `YES (CORE GROWTH)`
+
+#### Share Card / Agent Report narrative -> `trust-sdk` = Medium-priority semantic alignment
+
+- Role:
+  - Keep portal messaging and API usage conceptually aligned
+- Why integrate:
+  - Developers should be able to reproduce the same trust interpretation logic
+- Recommended action:
+  - Document mapping from score/confidence/stats -> semantic state (even if helper is not in SDK yet)
+- Decision:
+  - `YES (SEMANTIC CONSISTENCY)`
+
+#### Denscope frontend runtime (`/`, `/discovery`, `/console`) -> `trust-sdk` = Low priority for now
+
+- Role:
+  - Internal app data fetching
+- Why not now:
+  - The app already has direct internal data access patterns and server-side helpers
+  - Swapping core app internals to the SDK now would increase risk without near-term user value
+- Recommended action:
+  - Do not refactor internal fetch layer to SDK yet
+  - Revisit after SDK hardening (timeouts, retries, fetch injection)
+- Decision:
+  - `NOT YET`
+
+#### Internal scripts / examples / demos -> `trust-sdk` = High-value, low-risk
+
+- Role:
+  - Demonstrate real usage and keep SDK honest
+- Why integrate:
+  - Great way to validate API ergonomics and docs without refactoring app runtime
+- Recommended action:
+  - Add example scripts (outside core app runtime) that use the SDK against Denscope API
+- Decision:
+  - `YES (VALIDATION + DX)`
+
+### Repository strategy: submodule vs alternatives
+
+Decision (current stage):
+- Do **not** add `trust-sdk` as a Git submodule to Denscope right now
+
+Reasoning:
+- We need code/context review and roadmap alignment more than repo coupling
+- Submodules add workflow friction (update/init drift, CI complexity) before they provide enough benefit
+
+Preferred order of integration options:
+1. Published npm package (`@denlabs/trust-sdk`) with tags/releases
+2. Git dependency pinned to tag/commit (temporary if needed)
+3. Local workspace linkage (for active co-development)
+4. Git submodule (only if strict repo pinning/CI coordination becomes necessary)
+
+### Short SDK roadmap (practical, high-leverage)
+
+#### Phase 1 (public SDK hardening)
+
+1. Add timeout / `AbortSignal`
+2. Add injectable `fetch`
+3. Add retry/backoff for `429`/`5xx` (careful defaults)
+4. Improve x402 payment-method selection (not just first accepted)
+
+#### Phase 2 (developer adoption)
+
+1. Add richer examples in `/docs/api`
+2. Publish versioned releases + changelog
+3. Add usage snippets for API key and x402 side-by-side
+4. Document common errors and recovery patterns
+
+#### Phase 3 (semantic alignment with portal)
+
+1. Publish interpretation guide (score/confidence -> semantic state)
+2. Optional helper utilities in SDK (or separate helper package) for trust-state mapping
+3. Keep share card semantics and API examples consistent across UI + SDK
+
+### Product positioning implication
+
+With `trust-sdk`, Denscope is not only:
+- a portal for observing and sharing agent trust signals
+
+It can also be positioned as:
+- trust/reputation infrastructure for agent ecosystems (`trust-as-a-service`)
+
+This supports a two-loop strategy:
+1. UI loop (Feed -> XRay -> Report -> Share)
+2. Developer loop (`/docs/api` -> SDK -> integration -> recurring API usage)
