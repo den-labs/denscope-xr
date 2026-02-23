@@ -29,6 +29,56 @@ export default function ApiDocsPage() {
           </p>
         </Section>
 
+        <Section title="Start with SDK" id="start-with-sdk">
+          <p className="text-sm text-text-secondary">
+            Prefer TypeScript? Use <code className="text-xs font-mono">@denlabs/trust-sdk</code> to query the same trust data used by the portal.
+            It supports both API keys and x402 payment mode.
+          </p>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Install</h4>
+          <CodeBlock>{`pnpm add @denlabs/trust-sdk
+
+# For x402 payment mode (optional)
+pnpm add viem`}</CodeBlock>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">API Key Example</h4>
+          <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
+
+const ds = new DenScope({ apiKey: 'ds_...' })
+
+const { score } = await ds.getScore(42220, 5)
+console.log(score.value, score.confidence)
+
+const { signals } = await ds.getSignals(42220, 5, { status: 'open' })
+const { agents } = await ds.search({ q: '0xabc', chainId: 42220, limit: 5 })`}</CodeBlock>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">x402 Example (wallet/agent)</h4>
+          <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
+import { privateKeyToAccount } from 'viem/accounts'
+
+const account = privateKeyToAccount('0x...')
+const ds = new DenScope({ account })
+
+// SDK handles: 402 -> decode PAYMENT-REQUIRED -> sign -> retry
+const { score } = await ds.getScore(42220, 5)
+const { signals } = await ds.getSignals(42220, 5)`}</CodeBlock>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Interpretation Guide (Portal-Aligned)</h4>
+          <p className="text-sm text-text-secondary">
+            The API returns raw score data (<code className="text-xs font-mono">value</code>, <code className="text-xs font-mono">confidence</code>, feedback stats).
+            In the portal, Denscope maps those fields into semantic states for faster reading.
+          </p>
+          <Table headers={['Portal State', 'Starter Interpretation (guide)', 'Typical signals']}>
+            <Row cells={['Sin suficiente señal', 'Too little evidence for a strong trust/risk label', 'Low feedback count or low confidence']} />
+            <Row cells={['En observación', 'Early or mixed signal; monitor before relying', 'Some feedback but not enough evidence / confidence']} />
+            <Row cells={['Confiable', 'Positive signal with enough evidence', 'Higher feedback count + positive ratio + medium/high confidence']} />
+            <Row cells={['Alto riesgo', 'Negative signal with enough evidence', 'Negative dominance + medium/high confidence']} />
+          </Table>
+          <p className="text-xs text-text-muted font-mono mt-2">
+            Note: Semantic labels are UX interpretation helpers. Use raw fields for strict programmatic decisions.
+          </p>
+        </Section>
+
         <Section title="Authentication">
           <p className="text-sm text-text-secondary">
             Two authentication methods are supported. Use whichever fits your use case:
