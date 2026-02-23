@@ -37,12 +37,18 @@ export default function ApiDocsPage() {
           <p className="text-xs text-text-muted font-mono mt-2">
             Repo: <a className="underline hover:text-text-primary" href="https://github.com/den-labs/trust-sdk" target="_blank" rel="noreferrer">github.com/den-labs/trust-sdk</a>
           </p>
+          <p className="text-xs text-text-muted font-mono mt-1">
+            Example: <a className="underline hover:text-text-primary" href="https://github.com/den-labs/trust-sdk/blob/main/examples/get-score.mjs" target="_blank" rel="noreferrer">examples/get-score.mjs</a>
+          </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Install</h4>
           <CodeBlock>{`pnpm add @denlabs/trust-sdk
 
 # For x402 payment mode (optional)
 pnpm add viem`}</CodeBlock>
+          <p className="text-xs text-text-muted font-mono mt-2">
+            Local SDK repo example (after cloning): <code className="text-xs">DENSCOPE_API_KEY=ds_xxx node examples/get-score.mjs</code>
+          </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">API Key Example</h4>
           <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
