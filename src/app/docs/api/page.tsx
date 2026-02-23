@@ -50,10 +50,10 @@ export default function ApiDocsPage() {
 # For x402 payment mode (optional)
 pnpm add viem`}</CodeBlock>
           <p className="text-xs text-text-muted font-mono mt-2">
-            Local SDK repo example (after cloning): <code className="text-xs">DENSCOPE_API_KEY=ds_xxx node examples/get-score.mjs</code>
+            Local SDK repo example (after cloning): <code className="text-xs">DENSCOPE_API_KEY=ds_xxx pnpm example:get-score</code>
           </p>
           <p className="text-xs text-text-muted font-mono mt-1">
-            Local x402 example: <code className="text-xs">DENSCOPE_PRIVATE_KEY=0x... node examples/get-score-x402.mjs</code>
+            Local x402 example: <code className="text-xs">DENSCOPE_PRIVATE_KEY=0x... pnpm example:get-score:x402</code>
           </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">API Key Example</h4>
