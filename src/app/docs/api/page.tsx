@@ -34,6 +34,9 @@ export default function ApiDocsPage() {
             Prefer TypeScript? Use <code className="text-xs font-mono">@denlabs/trust-sdk</code> to query the same trust data used by the portal.
             It supports both API keys and x402 payment mode.
           </p>
+          <p className="text-xs text-text-muted font-mono mt-2">
+            Repo: <a className="underline hover:text-text-primary" href="https://github.com/den-labs/trust-sdk" target="_blank" rel="noreferrer">github.com/den-labs/trust-sdk</a>
+          </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Install</h4>
           <CodeBlock>{`pnpm add @denlabs/trust-sdk
@@ -62,6 +65,31 @@ const ds = new DenScope({ account })
 // SDK handles: 402 -> decode PAYMENT-REQUIRED -> sign -> retry
 const { score } = await ds.getScore(42220, 5)
 const { signals } = await ds.getSignals(42220, 5)`}</CodeBlock>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Error Handling Example</h4>
+          <CodeBlock>{`import {
+  DenScope,
+  DenScopeError,
+  AuthenticationError,
+  PaymentRequiredError,
+} from '@denlabs/trust-sdk'
+
+const ds = new DenScope({ apiKey: process.env.DENSCOPE_API_KEY! })
+
+try {
+  const { score } = await ds.getScore(42220, 5)
+  console.log(score.value, score.confidence)
+} catch (e) {
+  if (e instanceof AuthenticationError) {
+    console.error('Invalid or disabled API key')
+  } else if (e instanceof PaymentRequiredError) {
+    console.error('x402 payment required (use wallet mode or X-PAYMENT flow)')
+  } else if (e instanceof DenScopeError) {
+    console.error('Denscope API error', e.status, e.body)
+  } else {
+    console.error('Unexpected error', e)
+  }
+}`}</CodeBlock>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Interpretation Guide (Portal-Aligned)</h4>
           <p className="text-sm text-text-secondary">
