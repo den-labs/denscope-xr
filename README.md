@@ -1,4 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DenScope
+
+<!-- denlabs-meta
+name: denscope
+type: app
+surface: public-product
+status: public
+owner: Wolfcito
+pm: pnpm
+repo: https://github.com/den-labs/denscope-xr
+url: https://denscope.vercel.app
+scripts: [dev, build, test, lint]
+-->
+
+> **DenLabs Lab** · Product · Celo
+> Real-time ERC-8004 trust explorer and reputation surface for autonomous agents.
 
 ## Getting Started
 
