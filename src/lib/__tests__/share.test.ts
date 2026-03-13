@@ -35,7 +35,7 @@ describe('buildCertificateShareText', () => {
     const text = buildCertificateShareText({ chainId: 42220, agentId: 126, name: 'Esusu AI' })
     expect(text).toContain('Esusu AI')
     expect(text).toContain('@Celo')
-    expect(text).toContain('Trust Certificate')
+    expect(text).toContain('Community Trust Snapshot')
     expect(text).toContain('/agent/42220/126')
     expect(text).toContain('@denlabs_app')
   })
@@ -56,7 +56,7 @@ describe('buildOwnerShareText', () => {
     const text = buildOwnerShareText({ chainId: 42220, agentId: 126, name: 'Esusu AI' })
     expect(text).toContain('I shipped my ERC-8004 agent')
     expect(text).toContain('Esusu AI')
-    expect(text).toContain('Trust Certificate + trust signals')
+    expect(text).toContain('Community Trust Snapshot + feedback signals')
     expect(text).toContain('/agent/42220/126')
   })
 
