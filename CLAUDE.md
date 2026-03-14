@@ -46,6 +46,8 @@ pnpm run indexer:backfill     # One-shot backfill only
 - `src/lib/graph/` — d3-force layout engine
 - `src/lib/cache/` — IndexedDB cursor persistence + block timestamp cache
 - `src/lib/auth/` — SIWE message creation, nonce generation, signature verification
+- `src/lib/auth/session.ts` — HMAC-signed httpOnly session cookies (`denscope_session`)
+- `src/lib/security/url-validator.ts` — SSRF protection for webhook URLs
 - `src/lib/supabase/` — Supabase client (anon), admin (service_role), event fetching + realtime, owner profiles, incidents, alerts, trust scores
 - `src/lib/signals/` — Server-side signal detection rules (5 detectors: first_interaction, validation_complete, feedback_spike, reputation_drop, sybil_cluster)
 - `src/lib/reputation/` — Trust score computation (v1 formula: positiveRatio + age + activity - incidents - sybil)
@@ -182,7 +184,7 @@ Pay-per-call micropayments on `/score` and `/signals` via HTTP 402. Enables auto
 - **Cron**: `erc8004-poll` — runs every minute via pg_cron + pg_net
 - **RLS**: Public read (events, agents), service_role write
 - **Realtime**: Enabled on `scope_events` and `incidents` for live UI updates
-- **Migrations**: `supabase/migrations/`
+- **Migrations**: `supabase/migrations/` (9 migrations)
 
 ## Chains
 
@@ -205,7 +207,7 @@ Pay-per-call micropayments on `/score` and `/signals` via HTTP 402. Enables auto
 ## Testing
 
 ```bash
-pnpm test                    # All tests (214 tests, 45 files)
+pnpm test                    # All tests (45 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
@@ -221,3 +223,13 @@ pnpm test src/config/        # Chain config tests
 - Mock patterns: zustand stores reset via `getState().clear()` in `beforeEach`
 - BigInt: use `BigInt(n)` not `0n` literals (ES2017 target)
 - No RPC mocking needed for unit tests — integration code tested via `pnpm build`
+
+## Security
+
+- **Session auth**: HMAC-SHA256 signed httpOnly cookies (`denscope_session`), 7-day expiry. Requires `SESSION_SECRET` env var.
+- **Protected endpoints**: All write endpoints require session — keys, alerts, incidents, IPFS uploads, webhook-test.
+- **SSRF protection**: Webhook URLs validated against private IP ranges; HTTPS required in production (`src/lib/security/url-validator.ts`).
+- **DB-backed nonces**: SIWE nonces stored in Supabase (replaces in-memory Map), serverless-safe.
+- **Atomic rate limiting**: `increment_api_usage` Postgres RPC for race-free request counting.
+- **SIWE domain binding**: Signature verification checks domain matches the request origin.
+- **SVG upload rejection**: SVG files blocked on IPFS uploads to prevent XSS via inline scripts.
