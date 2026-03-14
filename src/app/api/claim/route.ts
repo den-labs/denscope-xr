@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySiweMessage } from '@/lib/auth/verify'
+import { createSession } from '@/lib/auth/session'
 import { readAgentOwner } from '@/lib/agent/read'
 import { getChain } from '@/config/chains'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -81,6 +82,9 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Set session cookie
+    await createSession(result.address)
 
     return NextResponse.json({ claimed: true, profile: data })
   } catch (err) {

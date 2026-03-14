@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireSession } from '@/lib/auth/session'
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
-const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml']
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 
 export async function POST(req: NextRequest) {
+  const session = await requireSession()
+  if (!session.ok) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+
   try {
     const jwt = process.env.PINATA_JWT
     if (!jwt) {

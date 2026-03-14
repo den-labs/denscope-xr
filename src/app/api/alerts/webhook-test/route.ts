@@ -1,15 +1,23 @@
-// src/app/api/alerts/webhook-test/route.ts
 import { NextRequest, NextResponse } from 'next/server'
+import { requireSession } from '@/lib/auth/session'
+import { validateWebhookUrl } from '@/lib/security/url-validator'
 
 export async function POST(req: NextRequest) {
+  const session = await requireSession()
+  if (!session.ok) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+
   try {
     const { webhookUrl } = await req.json()
 
     if (!webhookUrl) {
-      return NextResponse.json(
-        { error: 'Missing webhookUrl' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing webhookUrl' }, { status: 400 })
+    }
+
+    const urlCheck = validateWebhookUrl(webhookUrl)
+    if (!urlCheck.safe) {
+      return NextResponse.json({ error: urlCheck.reason }, { status: 400 })
     }
 
     const testPayload = {
@@ -26,7 +34,7 @@ export async function POST(req: NextRequest) {
       consoleUrl: 'https://denscope.vercel.app/console',
     }
 
-    const res = await fetch(webhookUrl, {
+    const res = await fetch(urlCheck.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(testPayload),

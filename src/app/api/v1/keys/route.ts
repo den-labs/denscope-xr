@@ -1,33 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { requireSession } from '@/lib/auth/session'
 import { generateApiKey, hashApiKey, getKeyPrefix } from '@/lib/api-keys/generate'
 
-export async function GET(req: NextRequest) {
-  const ownerAddress = req.nextUrl.searchParams.get('ownerAddress')
-  if (!ownerAddress) {
-    return NextResponse.json({ error: 'Missing ownerAddress' }, { status: 400 })
+export async function GET() {
+  const session = await requireSession()
+  if (!session.ok) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
 
   const { data } = await supabaseAdmin
     .from('api_keys')
     .select('id, key_prefix, label, tier, daily_limit, enabled, last_used_at, created_at')
-    .eq('owner_address', ownerAddress.toLowerCase())
+    .eq('owner_address', session.address)
     .order('created_at', { ascending: false })
 
   return NextResponse.json({ keys: data ?? [] })
 }
 
 export async function POST(req: NextRequest) {
+  const session = await requireSession()
+  if (!session.ok) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+
   try {
-    const { ownerAddress, label } = await req.json()
-    if (!ownerAddress) {
-      return NextResponse.json({ error: 'Missing ownerAddress' }, { status: 400 })
-    }
+    const { label } = await req.json()
 
     const { count } = await supabaseAdmin
       .from('api_keys')
       .select('id', { count: 'exact', head: true })
-      .eq('owner_address', ownerAddress.toLowerCase())
+      .eq('owner_address', session.address)
 
     if (count && count >= 5) {
       return NextResponse.json(
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from('api_keys')
       .insert({
-        owner_address: ownerAddress.toLowerCase(),
+        owner_address: session.address,
         key_prefix: keyPrefix,
         key_hash: keyHash,
         label: label || 'default',
@@ -66,17 +69,22 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const session = await requireSession()
+  if (!session.ok) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+
   try {
-    const { keyId, ownerAddress } = await req.json()
-    if (!keyId || !ownerAddress) {
-      return NextResponse.json({ error: 'Missing keyId or ownerAddress' }, { status: 400 })
+    const { keyId } = await req.json()
+    if (!keyId) {
+      return NextResponse.json({ error: 'Missing keyId' }, { status: 400 })
     }
 
     const { error } = await supabaseAdmin
       .from('api_keys')
       .delete()
       .eq('id', keyId)
-      .eq('owner_address', ownerAddress.toLowerCase())
+      .eq('owner_address', session.address)
 
     if (error) {
       return NextResponse.json({ error: 'Key not found' }, { status: 404 })
