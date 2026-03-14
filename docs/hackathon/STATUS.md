@@ -1,16 +1,16 @@
 # DenScope — Real Status
 
-> Last updated: 2026-02-18 (evening)
+> Last updated: 2026-03-13
 
 ## Build
 
 | Field | Value |
 |-------|-------|
 | App version | `v0.1.0` |
-| Commit (HEAD) | `294129f` |
 | Branch | `main` |
-| SDK version | `@denlabs/trust-sdk@0.1.0` ([npm](https://www.npmjs.com/package/@denlabs/trust-sdk)) |
-| Tests | 153/153 passing (30 files) |
+| SDK version | `@denlabs/trust-sdk@0.2.0` ([npm](https://www.npmjs.com/package/@denlabs/trust-sdk)) |
+| Tests | 214/214 passing (45 files) |
+| Coverage | 56.73% statements |
 | Deploy | Vercel — [denscope.vercel.app](https://denscope.vercel.app) |
 
 ## Deploy Targets
@@ -43,14 +43,14 @@ Supabase: all 8 migrations applied, Edge Function deployed, pg_cron running (1-m
 - [x] **Responsive Mobile UX** — Hamburger menu, mobile feed layout, responsive dossier page
 - [x] **UI Polish** — Copy feedback, loading skeletons, consistent button styles, debounced filters
 
-## Recent PRs (2026-02-18)
+## Recent PRs (2026-03-13)
 
-| PR | Description | Files |
-|----|-------------|-------|
-| #81 | Certificate Station — share-first docked panel | — |
-| #82 | Mobile UX: Certificate Station close fix + responsive Header hamburger | 3 |
-| #83 | UI polish: mobile feed layout, copy feedback, skeletons, debounce, StatusBar | 11 |
-| #84 | Agent Dossier mobile layout + button style consistency | 5 |
+| PR | Description |
+|----|-------------|
+| #89 | test: coverage baseline — 214 tests, 57% stmts |
+| #88 | fix: infinite re-render after registration (React #301) |
+| #87 | fix: image upload errors on registration |
+| #86 | fix: chain switch during registration |
 
 ## Known Gaps / Bugs
 

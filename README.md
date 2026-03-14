@@ -1,51 +1,122 @@
 # DenScope
 
-<!-- denlabs-meta
-name: denscope
-type: app
-surface: public-product
-status: public
-owner: Wolfcito
-pm: pnpm
-repo: https://github.com/den-labs/denscope-xr
-url: https://denscope.vercel.app
-scripts: [dev, build, test, lint]
--->
+Real-time ERC-8004 agent explorer with trust scoring, signal detection, and x402 micropayments.
 
-> **DenLabs Lab** · Product · Celo
-> Real-time ERC-8004 trust explorer and reputation surface for autonomous agents.
+[![Deploy](https://img.shields.io/badge/deploy-vercel-black)](https://denscope.vercel.app)
+
+**Live:** [https://denscope.vercel.app](https://denscope.vercel.app)
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Language:** TypeScript
+- **Chain client:** viem
+- **State:** zustand
+- **Graph:** d3-force
+- **Database:** Supabase (Postgres + Realtime + Edge Functions + pg_cron)
+- **Styling:** Tailwind CSS
+- **Wallet:** wagmi + SIWE
+
+## Features
+
+- Live event feed with Supabase Realtime subscriptions
+- Trust Graph visualization (d3-force canvas)
+- Discovery Signals -- 5 detection rules (first_interaction, validation_complete, feedback_spike, reputation_drop, sybil_cluster)
+- Owner Console with SIWE wallet-gated authentication
+- Agent Dossier pages with SSR and OG share cards
+- Reputation API (M6) -- pre-computed trust scores via authenticated REST
+- x402 Trust Oracle (M7) -- pay-per-call micropayments for autonomous agents
+- Public API documentation at `/docs/api`
+
+## Supported Chains
+
+| Chain | Chain ID | Status |
+|-------|----------|--------|
+| Celo Mainnet | 42220 | Active |
+| Celo Sepolia | 11142220 | Testnet |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+pnpm install
+
+# Copy environment variables
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Configure your `.env` with Supabase credentials, RPC endpoints, and optionally x402 settings. See `.env.example` for required variables.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Start development server
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start dev server (Turbopack) |
+| `pnpm build` | Production build |
+| `pnpm test` | Run vitest tests |
+| `pnpm test:watch` | Watch mode |
+| `pnpm lint` | ESLint |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **214 tests** across **45 files**
+- **57% statement coverage**
 
-## Deploy on Vercel
+```bash
+pnpm test                    # All tests
+pnpm test src/lib/           # Pipeline + discovery + agent tests
+pnpm test src/stores/        # Zustand store tests
+pnpm test src/config/        # Chain config tests
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route | Description |
+|-------|-------------|
+| `/api/auth/nonce` | Generate SIWE nonce |
+| `/api/claim` | Claim agent ownership |
+| `/api/v1/agent/[chain]/[id]` | Agent profile |
+| `/api/v1/agent/[chain]/[id]/score` | Trust score with breakdown (API key or x402) |
+| `/api/v1/agent/[chain]/[id]/signals` | Incidents (API key or x402) |
+| `/api/v1/agent/[chain]/[id]/events` | Paginated event history |
+| `/api/v1/keys` | API key CRUD |
+| `/api/v1/search` | Search agents by ID, owner, or chain |
+| `/api/og/agent/[chain]/[id]` | Agent OG share card |
+| `/docs/api` | Public API documentation |
+
+### Authentication
+
+API endpoints accept `Authorization: Bearer ds_...` or `X-API-Key: ds_...` headers. Endpoints marked with x402 also accept `X-PAYMENT` headers for pay-per-call access without API keys.
+
+## Architecture
+
+See [CLAUDE.md](./CLAUDE.md) for full architecture details, data flow diagrams, signal detection rules, trust score formula, and x402 integration.
+
+Key directories:
+
+```
+src/config/       Chain registry and constants
+src/lib/          Core logic (pipeline, discovery, auth, reputation, x402)
+src/stores/       Zustand state stores
+src/components/   React components
+src/app/          Next.js pages and API routes
+supabase/         Edge Functions and migrations
+```
+
+## License
+
+MIT
