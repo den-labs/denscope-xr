@@ -18,7 +18,7 @@ export function StatusBar() {
   const [uptime, setUptime] = useState(0)
   const eventCount = useEventStore((s) => s.events.length)
   const lastCountRef = useRef(eventCount)
-  const [feedActive, setFeedActive] = useState(false)
+  const [feedActive, setFeedActive] = useState(() => eventCount > 0)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof document === 'undefined') return true
