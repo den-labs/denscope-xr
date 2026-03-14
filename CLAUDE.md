@@ -205,7 +205,7 @@ Pay-per-call micropayments on `/score` and `/signals` via HTTP 402. Enables auto
 ## Testing
 
 ```bash
-pnpm test                    # All tests (144 tests, 29 files)
+pnpm test                    # All tests (214 tests, 45 files)
 pnpm test src/lib/           # Pipeline + discovery + agent tests
 pnpm test src/stores/        # Zustand store tests
 pnpm test src/config/        # Chain config tests
