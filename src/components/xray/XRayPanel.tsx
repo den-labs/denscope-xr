@@ -89,7 +89,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
 
   const trustScore = trustScoreCache?.key === agentKey ? trustScoreCache.value : null
   const metadata = agent?.metadata ?? (metadataCache?.key === agentKey ? metadataCache.value : null)
-  const enriched = agent ? { ...agent, metadata } : null
+  const enriched = agent ? { ...agent, metadata: metadata ?? undefined } : null
   const feedbackStats = useMemo(
     () => (agentKey ? feedbackStatsForTarget(edges, agentKey) : {
       total: 0,
