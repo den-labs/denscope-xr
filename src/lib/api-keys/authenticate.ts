@@ -68,29 +68,18 @@ export async function authenticateApiKey(headers: Headers): Promise<AuthResult> 
     }
   }
 
-  // Upsert daily usage counter
+  // Atomic increment via Supabase RPC
   const today = new Date().toISOString().slice(0, 10)
-  const { data: usage } = await supabaseAdmin
-    .from('api_usage_log')
-    .upsert(
-      { api_key_id: keyRow.id, usage_date: today, request_count: 1 },
-      { onConflict: 'api_key_id,usage_date' }
-    )
-    .select('request_count')
-    .single()
+  const { data: rpcResult, error: rpcError } = await supabaseAdmin
+    .rpc('increment_api_usage', { p_api_key_id: keyRow.id, p_usage_date: today })
 
-  // If row already existed, increment
-  if (usage && usage.request_count === 1) {
-    // Fresh insert, count is 1
-  } else if (usage) {
-    await supabaseAdmin
-      .from('api_usage_log')
-      .update({ request_count: usage.request_count + 1 })
-      .eq('api_key_id', keyRow.id)
-      .eq('usage_date', today)
+  if (rpcError) {
+    return {
+      ok: false,
+      error: NextResponse.json({ error: 'Rate limit service unavailable' }, { status: 503 }),
+    }
   }
-
-  const requestCount = usage?.request_count ?? 1
+  const requestCount = rpcResult as number
   const rateLimit = isRateLimited({ requestCount, dailyLimit: keyRow.daily_limit })
 
   if (rateLimit.limited) {

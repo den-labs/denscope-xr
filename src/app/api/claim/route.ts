@@ -4,7 +4,6 @@ import { createSession } from '@/lib/auth/session'
 import { readAgentOwner } from '@/lib/agent/read'
 import { getChain } from '@/config/chains'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { nonces } from '@/app/api/auth/nonce/route'
 import { SiweMessage } from 'siwe'
 
 export async function POST(req: NextRequest) {
@@ -18,15 +17,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify nonce is valid
+    // Verify nonce exists in DB and consume it atomically
     const siweMsg = new SiweMessage(message)
-    if (!nonces.has(siweMsg.nonce)) {
+    const { data: nonceRow, error: nonceErr } = await supabaseAdmin
+      .from('nonces')
+      .delete()
+      .eq('nonce', siweMsg.nonce)
+      .gt('expires_at', new Date().toISOString())
+      .select()
+      .maybeSingle()
+
+    if (nonceErr || !nonceRow) {
       return NextResponse.json(
         { error: 'Invalid or expired nonce' },
         { status: 401 }
       )
     }
-    nonces.delete(siweMsg.nonce)
 
     // Verify SIWE signature
     const result = await verifySiweMessage(message, signature)

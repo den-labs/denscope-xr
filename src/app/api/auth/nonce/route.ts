@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generateNonce } from '@/lib/auth/siwe'
 
-// In-memory nonce store (valid for 5 minutes)
-const nonces = new Map<string, number>()
-
-export function GET() {
-  // Clean expired nonces
-  const now = Date.now()
-  for (const [nonce, expiry] of nonces) {
-    if (expiry < now) nonces.delete(nonce)
-  }
-
+export async function GET() {
   const nonce = generateNonce()
-  nonces.set(nonce, now + 5 * 60 * 1000)
+
+  const { error } = await supabaseAdmin
+    .from('nonces')
+    .insert({ nonce })
+
+  if (error) {
+    console.error('Nonce insert error:', error)
+    return NextResponse.json({ error: 'Failed to generate nonce' }, { status: 500 })
+  }
 
   return NextResponse.json({ nonce })
 }
-
-export { nonces }
