@@ -30,37 +30,60 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     .eq('agent_id', agentId)
     .maybeSingle()
 
-  if (!data) {
-    return NextResponse.json(
-      { error: 'Trust score not available. Agent may have no events yet.' },
-      { status: 404 }
-    )
-  }
-
   // Record x402 payment (fire-and-forget)
   if (auth.method === 'x402') {
     recordX402Payment({ chainId, agentId, endpoint: endpointPath, x402: auth.x402, priceKey: 'score' })
   }
 
-  const score = toTrustScore(data)
+  // Return computed score, or default score for agents with no feedback yet
+  if (data) {
+    const score = toTrustScore(data)
+    return NextResponse.json({
+      score: {
+        value: score.score,
+        confidence: score.confidence,
+        breakdown: {
+          positiveRatio: { value: score.positiveRatio, weight: 0.40 },
+          ageScore: { value: score.ageScore, weight: 0.20 },
+          activityScore: { value: score.activityScore, weight: 0.20 },
+          incidentPenalty: { value: score.incidentPenalty, weight: 0.10 },
+        },
+        stats: {
+          feedbackCount: score.feedbackCount,
+          positiveCount: score.positiveCount,
+          negativeCount: score.negativeCount,
+          openIncidents: score.openIncidents,
+        },
+        updatedAt: score.updatedAt,
+      },
+      formula: 'https://denscope.vercel.app/docs/api#trust-score-formula',
+    }, { headers: buildHybridHeaders(auth) })
+  }
+
+  // Agent exists but has no trust score computed yet — return baseline
+  const { data: agent } = await supabaseAdmin
+    .from('agents')
+    .select('id')
+    .eq('chain_id', chainId)
+    .eq('agent_id', agentId)
+    .maybeSingle()
+
+  if (!agent) {
+    return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
+  }
 
   return NextResponse.json({
     score: {
-      value: score.score,
-      confidence: score.confidence,
+      value: 0,
+      confidence: 'low',
       breakdown: {
-        positiveRatio: { value: score.positiveRatio, weight: 0.40 },
-        ageScore: { value: score.ageScore, weight: 0.20 },
-        activityScore: { value: score.activityScore, weight: 0.20 },
-        incidentPenalty: { value: score.incidentPenalty, weight: 0.10 },
+        positiveRatio: { value: 0, weight: 0.40 },
+        ageScore: { value: 0, weight: 0.20 },
+        activityScore: { value: 0, weight: 0.20 },
+        incidentPenalty: { value: 0, weight: 0.10 },
       },
-      stats: {
-        feedbackCount: score.feedbackCount,
-        positiveCount: score.positiveCount,
-        negativeCount: score.negativeCount,
-        openIncidents: score.openIncidents,
-      },
-      updatedAt: score.updatedAt,
+      stats: { feedbackCount: 0, positiveCount: 0, negativeCount: 0, openIncidents: 0 },
+      updatedAt: null,
     },
     formula: 'https://denscope.vercel.app/docs/api#trust-score-formula',
   }, { headers: buildHybridHeaders(auth) })
