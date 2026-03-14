@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { createSiweMessage } from '@/lib/auth/siwe'
+import { humanizeError } from '@/lib/errors/humanize'
 import { ConnectButton } from './ConnectButton'
 
 type ClaimButtonProps = {
@@ -86,7 +87,7 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
       onClaimed?.()
     } catch (err) {
       setState('error')
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      setError(humanizeError(err))
     }
   }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { humanizeError } from '@/lib/errors/humanize'
 import {
   useAccount,
   useSwitchChain,
@@ -62,7 +63,7 @@ export function RegisterAgentPanel() {
       const { uri } = await res.json()
       setImage(uri)
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Image upload failed')
+      setErrorMsg(humanizeError(err))
       setImagePreview(null)
       setImage('')
     } finally {
@@ -137,7 +138,7 @@ export function RegisterAgentPanel() {
       console.error('Registration error:', err)
       setStatus('error')
       setErrorMsg(
-        err instanceof Error ? err.message : 'Registration failed'
+        humanizeError(err)
       )
     }
   }
