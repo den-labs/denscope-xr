@@ -1,5 +1,7 @@
 import { SiweMessage } from 'siwe'
 
+const DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'denscope.vercel.app'
+
 type VerifyResult =
   | { valid: true; address: string }
   | { valid: false; error: string }
@@ -10,7 +12,12 @@ export async function verifySiweMessage(
 ): Promise<VerifyResult> {
   try {
     const siweMessage = new SiweMessage(message)
-    const result = await siweMessage.verify({ signature })
+
+    if (siweMessage.domain !== DOMAIN) {
+      return { valid: false, error: 'Domain mismatch' }
+    }
+
+    const result = await siweMessage.verify({ signature, domain: DOMAIN })
     if (!result.success) {
       return { valid: false, error: 'Signature verification failed' }
     }
