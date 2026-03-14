@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         },
         { onConflict: 'chain_id,agent_id' }
       )
-      .select()
+      .select('chain_id, agent_id, display_name, claimed_at')
       .single()
 
     if (error) {
