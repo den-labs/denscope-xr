@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getChain } from '@/config/chains'
+import { requireSession } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
+  const session = await requireSession()
+  if (!session.ok) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+  }
+
   try {
     const jwt = process.env.PINATA_JWT
     if (!jwt) {
