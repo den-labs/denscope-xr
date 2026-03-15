@@ -4,6 +4,9 @@ import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
 import { buildXIntentUrl, buildCertificateShareText } from '@/lib/share'
+import { findLatestSnapshot } from '@/lib/supabase/certificate-snapshots'
+import { getAppBaseUrl } from '@/lib/trust/certificate'
+import { AgentCertificateActions } from '@/components/agent/AgentCertificateActions'
 import { AddressChip } from '@/components/shared/AddressChip'
 import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
 import { AgentClaimSection } from '@/components/agent/AgentClaimSection'
@@ -26,7 +29,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
 
-  const ogImage = `/api/og/agent/${chain}/${id}`
+  // Use latest certificate snapshot for OG if available, else fall back to OG card
+  let ogImage = `/api/og/agent/${chain}/${id}`
+  try {
+    const snapshot = await findLatestSnapshot(chainConfig.id, agentId)
+    if (snapshot?.image_key) {
+      const baseUrl = getAppBaseUrl()
+      ogImage = `${baseUrl}/api/certificate/snapshot/${snapshot.hash}`
+    }
+  } catch { /* fall back to OG card */ }
 
   return {
     title: `${name} — DenScope`,
@@ -235,27 +246,32 @@ export default async function AgentPage({ params }: Props) {
 
         {/* Actions */}
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          {/* Watch Agent — placeholder, disabled */}
-          <button
-            disabled
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-muted cursor-not-allowed opacity-50"
-            title="Coming soon"
-          >
-            Watch Agent
-          </button>
+          <AgentCertificateActions
+            chainId={chainConfig.id}
+            agentId={agentId}
+            agentName={metadata?.name ?? null}
+          />
 
           <span className="hidden md:inline-block border-l border-border h-5 mx-1" />
 
-          {/* Secondary CTAs */}
           <a
             href={buildXIntentUrl(buildCertificateShareText({ chainId: chainConfig.id, agentId, name: metadata?.name }))}
             target="_blank"
             rel="noopener noreferrer"
             className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
           >
-            Share Certificate
+            Share on X
           </a>
-          <EmbedSnippet chainId={chainConfig.id} agentId={agentId} />
+
+          <details className="relative">
+            <summary className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover cursor-pointer list-none">
+              Embed
+            </summary>
+            <div className="absolute top-full mt-1 z-10">
+              <EmbedSnippet chainId={chainConfig.id} agentId={agentId} />
+            </div>
+          </details>
+
           <a
             href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
             target="_blank"
