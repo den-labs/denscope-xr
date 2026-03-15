@@ -15,6 +15,7 @@ Evolve the DenScope trust certificate from an OG-card-only social preview into a
 - The server-generated PNG is the canonical visual artifact — no client-side rendering
 - Verification is hash-based (server-side SHA-256), not on-chain
 - Bilingüe: English default, Spanish option
+- Never hardcode domain — all URLs derived from `NEXT_PUBLIC_APP_URL` env var
 
 ### Scope
 
@@ -49,7 +50,7 @@ Evolve the DenScope trust certificate from an OG-card-only social preview into a
 
 ### Response Header Contract
 
-`X-Certificate-Hash: {full_64_char_hex}` is present on every `200 OK` response, regardless of whether the PNG was freshly generated, served from storage, or served from HTTP cache. Client reads this header to build the verify URL for sharing.
+`X-Certificate-Hash: {full_64_char_hex}` is included in every `200 OK` response originated by the app (freshly generated or served from storage). Note: intermediate caches (CDN, browser) may strip or omit custom headers on cached responses. The client should read the hash on first response and persist it locally (e.g., component state) rather than relying on re-reading it from cached responses. The generation endpoint also supports `?format=json` which returns the hash in the response body as a reliable alternative.
 
 ### vs OG Card
 
@@ -126,7 +127,7 @@ All seals rendered as SVG paths inside `next/og` ImageResponse. Single-word labe
 | Agent address | Always 6+4 | `0x1234...abcd` |
 | Controller address | Always 6+4 | `0xOwn...er` |
 | Agent name | 32 chars | Ellipsis: `"My Very Long Agent Na..."` |
-| Certificate hash (display) | 8 chars | First 4 + last 4: `3f8a...c2d1` |
+| Certificate hash (display) | 4 + "..." + 4 | `3f8a...c2d1` (always this format, everywhere) |
 | Chain name | 16 chars | Ellipsis (no known chain exceeds this) |
 
 ### Null Field Display Rules
@@ -167,7 +168,7 @@ Static labels via `lang` query param (`en` default, `es`):
 | trustworthy | "TRUSTWORTHY" | "CONFIABLE" |
 | monitoring | "MONITORING" | "EN OBSERVACIÓN" |
 | high_risk | "HIGH RISK" | "ALTO RIESGO" |
-| insufficient_signal (line 1 / line 2) | "INSUFFICIENT" / "DATA" | "DATOS" / "INSUFICIENTES" |
+| insufficient_signal (line 1 / line 2) | "INSUFFICIENT" / "DATA" | "DATOS" / "INSUFICIENTES" (visual order: top="DATOS", bottom="INSUFICIENTES"; renderer may swap lines if layout requires — decision must be explicit in implementation, not ambiguous) |
 
 ---
 
@@ -243,6 +244,15 @@ function canonicalize(p: CertificatePayload): string {
 ```
 
 If a field is added to `CertificatePayload`, it is appended to the end of the array — never inserted mid-sequence — to preserve backward compatibility.
+
+### String Normalization Rules
+
+Before canonicalization, string fields must be normalized for deterministic hashing:
+- `chainName`: lowercase, trimmed (`p.chainName.toLowerCase().trim()`)
+- `name`: trimmed if non-null; empty string `""` normalized to `null`
+- `controller`: lowercase, trimmed if non-null; empty string `""` normalized to `null` (addresses are case-insensitive in EVM)
+
+These rules ensure that whitespace variations or mixed-case addresses never produce different hashes for the same logical agent state.
 
 ### Image Traceability
 
@@ -367,7 +377,7 @@ Defined in Section 2 as part of the certificate image (56x56 in credential bar).
 
 - Generated server-side during certificate PNG rendering
 - Library: lightweight QR matrix generator, rendered as rectangles within `next/og`
-- Encodes: `https://denscope.vercel.app/verify/{hash}`
+- Encodes: `${NEXT_PUBLIC_APP_URL}/verify/{hash}` (never hardcode domain)
 - Error correction: Level M (15% recovery)
 - No logo overlay (too small at 56px)
 - Fallback: solid accent square + hash text if generation fails
@@ -418,6 +428,7 @@ Secondary action button (download icon) in CertificateStation and agent detail p
 - **Found + `image_key` null:** Regenerate PNG from snapshot payload (visual-equivalent, not byte-identical). Return inline. Attempt storage write + update `image_key` for next request.
 - **Not found:** 404, no body
 - No auth required. This endpoint exists primarily for `og:image` resolution.
+- This route resolves exclusively from the stored snapshot — it never reads current trust state. The payload in `certificate_snapshots` is the sole data source.
 
 ### QR Library
 
@@ -448,6 +459,12 @@ New Supabase Storage bucket: `certificates` (public read, service role write).
 | `buildXIntentUrl()` / `buildCertificateShareText()` | Unchanged. Used by secondary X action. |
 | CertificateStation | Modified action bar, same panel layout |
 | Embed system | Unchanged, repositioned in agent detail page |
+
+### Implementation Notes
+
+**`agentId` type conversion:** Route params arrive as `string`. `CertificatePayload.agentId` is `number`. Convert explicitly with `Number(params.id)` and validate (`Number.isInteger`, > 0) before use. The `shareCertificate()` client function uses `agentId: string` because it only builds URLs — no type confusion with the payload.
+
+**Supabase Storage bucket:** The `certificates` bucket must be created manually (Supabase dashboard or CLI: `supabase storage create certificates --public`). This is not part of the SQL migration.
 
 ### Key Migrations from Phase 1
 
