@@ -15,7 +15,6 @@ Evolve the DenScope trust certificate from an OG-card-only social preview into a
 - The server-generated PNG is the canonical visual artifact — no client-side rendering
 - Verification is hash-based (server-side SHA-256), not on-chain
 - Bilingüe: English default, Spanish option
-- Never hardcode domain — all URLs derived from `NEXT_PUBLIC_APP_URL` env var
 
 ### Scope
 
@@ -37,7 +36,7 @@ Evolve the DenScope trust certificate from an OG-card-only social preview into a
 
 ### Flow
 
-1. Fetch trust score via `fetchTrustScore(chainId, agentId)`. Resolve agent metadata URI from `agents` table (`metadata_uri` column), then call `fetchAgentMetadataServer(metadataUri)` (existing helpers — note: `fetchAgentMetadataServer` takes a URI string, not chain/id)
+1. Fetch trust score via `fetchTrustScore` + agent metadata via `fetchAgentMetadataServer` (existing helpers)
 2. Determine share card state via `getShareCardState` (existing in `share-card-state.ts`)
 3. Build `CertificatePayload` from fetched data
 4. Canonicalize payload → SHA-256 → `certificateHash`
@@ -50,7 +49,7 @@ Evolve the DenScope trust certificate from an OG-card-only social preview into a
 
 ### Response Header Contract
 
-`X-Certificate-Hash: {full_64_char_hex}` is included in every `200 OK` response originated by the app (freshly generated or served from storage). Note: intermediate caches (CDN, browser) may strip or omit custom headers on cached responses. The client should read the hash on first response and persist it locally (e.g., component state) rather than relying on re-reading it from cached responses. The generation endpoint also supports `?format=json` which returns the hash in the response body as a reliable alternative.
+`X-Certificate-Hash: {full_64_char_hex}` is present on every `200 OK` response, regardless of whether the PNG was freshly generated, served from storage, or served from HTTP cache. Client reads this header to build the verify URL for sharing.
 
 ### vs OG Card
 
@@ -127,7 +126,7 @@ All seals rendered as SVG paths inside `next/og` ImageResponse. Single-word labe
 | Agent address | Always 6+4 | `0x1234...abcd` |
 | Controller address | Always 6+4 | `0xOwn...er` |
 | Agent name | 32 chars | Ellipsis: `"My Very Long Agent Na..."` |
-| Certificate hash (display) | 4 + "..." + 4 | `3f8a...c2d1` (always this format, everywhere) |
+| Certificate hash (display) | 8 chars | First 4 + last 4: `3f8a...c2d1` |
 | Chain name | 16 chars | Ellipsis (no known chain exceeds this) |
 
 ### Null Field Display Rules
@@ -162,13 +161,13 @@ Static labels via `lang` query param (`en` default, `es`):
 |---|---|---|
 | title | "DenScope Agent Trust Certificate" | "Certificado de Confianza del Agente DenScope" |
 | trustScore | "Trust Score" | "Puntaje de Confianza" |
-| signals | "Signals" | "Señales" |
+| signals | "Signals" | "Senales" |
 | controller | "Controller" | "Controlador" |
 | verify | "verify" | "verificar" |
 | trustworthy | "TRUSTWORTHY" | "CONFIABLE" |
-| monitoring | "MONITORING" | "EN OBSERVACIÓN" |
+| monitoring | "MONITORING" | "EN OBSERVACION" |
 | high_risk | "HIGH RISK" | "ALTO RIESGO" |
-| insufficient_signal (line 1 / line 2) | "INSUFFICIENT" / "DATA" | "DATOS" / "INSUFICIENTES" (visual order: top="DATOS", bottom="INSUFICIENTES"; renderer may swap lines if layout requires — decision must be explicit in implementation, not ambiguous) |
+| insufficient_signal (line 1 / line 2) | "INSUFFICIENT" / "DATA" | "DATOS" / "INSUFICIENTES" |
 
 ---
 
@@ -183,7 +182,7 @@ create table certificate_snapshots (
   id uuid primary key default gen_random_uuid(),
   hash text not null unique,
   chain_id integer not null,
-  agent_id integer not null,
+  agent_id text not null,
   payload jsonb not null,
   image_key text,                -- storage path: "certificates/{chain_id}/{agent_id}/{hash}.png"
   issued_at timestamptz not null default now()
@@ -203,17 +202,14 @@ Single source of truth: `issued_at` (DB column). No `generatedAt` in the payload
 ### Payload Schema
 
 ```typescript
-// ShareCardStateKey is the string union: 'trustworthy' | 'monitoring' | 'high_risk' | 'insufficient_signal'
-// (not the full ShareCardState object which includes label, colors, etc.)
-
 interface CertificatePayload {
-  agentId: number;              // numeric agent ID (matches codebase convention)
+  agentId: string;
   chainId: number;
   chainName: string;
   name: string | null;
   controller: string | null;
   score: number;
-  state: ShareCardStateKey;     // string key, not the full state object
+  state: ShareCardState;
   signalCount: number;
   positiveCount: number;
   negativeCount: number;
@@ -245,18 +241,9 @@ function canonicalize(p: CertificatePayload): string {
 
 If a field is added to `CertificatePayload`, it is appended to the end of the array — never inserted mid-sequence — to preserve backward compatibility.
 
-### String Normalization Rules
-
-Before canonicalization, string fields must be normalized for deterministic hashing:
-- `chainName`: lowercase, trimmed (`p.chainName.toLowerCase().trim()`)
-- `name`: trimmed if non-null; empty string `""` normalized to `null`
-- `controller`: lowercase, trimmed if non-null; empty string `""` normalized to `null` (addresses are case-insensitive in EVM)
-
-These rules ensure that whitespace variations or mixed-case addresses never produce different hashes for the same logical agent state.
-
 ### Image Traceability
 
-After PNG generation, the image is stored in Supabase Storage at `certificates/{chain_id}/{agent_id}/{hash}.png`. The `image_key` column records this path. If storage write fails (including bucket misconfiguration or Supabase Storage outage), `image_key` stays `null` — the certificate endpoint still returns the freshly-rendered PNG inline (render happens before storage write). The certificate remains valid (payload + hash are the source of truth), but without exact visual traceability until storage recovers.
+After PNG generation, the image is stored in Supabase Storage at `certificates/{chain_id}/{agent_id}/{hash}.png`. The `image_key` column records this path. If storage write fails, `image_key` stays `null` — the certificate remains valid (payload + hash are the source of truth), but without exact visual traceability.
 
 ### Idempotency
 
@@ -265,7 +252,7 @@ On each request, the endpoint computes payload from current trust state, canonic
 - **Hash exists, `image_key` null:** Re-render, attempt storage write, update `image_key`
 - **Hash does not exist:** Insert row, render, store, set `image_key`
 
-No duplicate rows, no unnecessary re-renders. Concurrent first-generation requests for the same hash: use `INSERT ... ON CONFLICT (hash) DO NOTHING` + subsequent `SELECT` to handle the race without errors.
+No duplicate rows, no unnecessary re-renders.
 
 ### Verification Endpoint
 
@@ -322,7 +309,7 @@ async function shareCertificate(params: {
   agentId: string;
   hash: string;
   name: string | null;
-  state: ShareCardStateKey;
+  state: ShareCardState;
   lang: 'en' | 'es';
 }) {
   const verifyUrl = `${origin}/verify/${params.hash}`;
@@ -377,7 +364,7 @@ Defined in Section 2 as part of the certificate image (56x56 in credential bar).
 
 - Generated server-side during certificate PNG rendering
 - Library: lightweight QR matrix generator, rendered as rectangles within `next/og`
-- Encodes: `${NEXT_PUBLIC_APP_URL}/verify/{hash}` (never hardcode domain)
+- Encodes: `https://denscope.vercel.app/verify/{hash}`
 - Error correction: Level M (15% recovery)
 - No logo overlay (too small at 56px)
 - Fallback: solid accent square + hash text if generation fails
@@ -419,21 +406,6 @@ Secondary action button (download icon) in CertificateStation and agent detail p
 | `src/lib/trust/certificate-i18n.ts` | Label maps (en/es) |
 | `src/lib/trust/qr.ts` | QR matrix generation for next/og |
 
-### Snapshot Image Endpoint Contract
-
-`GET /api/certificate/snapshot/[hash]` — serves the stored certificate PNG by hash.
-
-- **Input:** `hash` path parameter (64-char hex)
-- **Found + `image_key` present:** Redirect or proxy PNG from Supabase Storage. `Content-Type: image/png`, `Cache-Control: public, max-age=86400` (24h — snapshot images are immutable)
-- **Found + `image_key` null:** Regenerate PNG from snapshot payload (visual-equivalent, not byte-identical). Return inline. Attempt storage write + update `image_key` for next request.
-- **Not found:** 404, no body
-- No auth required. This endpoint exists primarily for `og:image` resolution.
-- This route resolves exclusively from the stored snapshot — it never reads current trust state. The payload in `certificate_snapshots` is the sole data source.
-
-### QR Library
-
-Must be pure JS (no native deps) — `next/og` runs in an Edge-like environment. Candidate: `qrcode-generator` (zero-dep, returns matrix data suitable for rendering as SVG rectangles in ImageResponse).
-
 ### Modified Files
 
 | File | Change |
@@ -455,16 +427,10 @@ New Supabase Storage bucket: `certificates` (public read, service role write).
 | Artifact | Status |
 |---|---|
 | `/api/og/agent/[chain]/[id]` | Unchanged. Social preview for agent page links. |
-| `share-card-state.ts` | Extended with new certificate palette/seal config exports (additive — existing Phase 1 colors like `#22C55E` for trustworthy remain unchanged to avoid breaking CertificateStation card styling) |
+| `share-card-state.ts` | Extended with palette/seal config exports |
 | `buildXIntentUrl()` / `buildCertificateShareText()` | Unchanged. Used by secondary X action. |
 | CertificateStation | Modified action bar, same panel layout |
 | Embed system | Unchanged, repositioned in agent detail page |
-
-### Implementation Notes
-
-**`agentId` type conversion:** Route params arrive as `string`. `CertificatePayload.agentId` is `number`. Convert explicitly with `Number(params.id)` and validate (`Number.isInteger`, > 0) before use. The `shareCertificate()` client function uses `agentId: string` because it only builds URLs — no type confusion with the payload.
-
-**Supabase Storage bucket:** The `certificates` bucket must be created manually (Supabase dashboard or CLI: `supabase storage create certificates --public`). This is not part of the SQL migration.
 
 ### Key Migrations from Phase 1
 
