@@ -129,8 +129,10 @@ export async function GET(req: Request, { params }: Props) {
     )
   }
 
-  // If existing snapshot has stored image, serve from storage
-  if (existing?.image_key) {
+  // If existing snapshot has stored image for this lang, serve from storage
+  const langSuffix = lang === 'es' ? '_es' : ''
+  const expectedImageKey = `${chainId}/${agentId}/${hash}${langSuffix}.png`
+  if (existing?.image_key === expectedImageKey) {
     try {
       const { data } = supabaseAdmin.storage
         .from('certificates')
@@ -411,9 +413,9 @@ export async function GET(req: Request, { params }: Props) {
   }
 
   // Store image in Supabase Storage (fire-and-forget)
-  const imageKey = `${chainId}/${agentId}/${hash}.png`
+  const imageKey = expectedImageKey
   try {
-    const needsUpload = !existing?.image_key
+    const needsUpload = existing?.image_key !== imageKey
     if (needsUpload) {
       await supabaseAdmin.storage
         .from('certificates')
