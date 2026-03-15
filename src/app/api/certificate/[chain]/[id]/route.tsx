@@ -25,12 +25,49 @@ import {
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
-async function loadFonts() {
-  const [interRegular, interBlack] = await Promise.all([
+async function loadAssets() {
+  const [interRegular, interBlack, wolfcilloRaw, logoRaw] = await Promise.all([
     readFile(join(process.cwd(), 'assets/fonts/Inter-Regular.ttf')),
     readFile(join(process.cwd(), 'assets/fonts/Inter-Black.ttf')),
+    readFile(join(process.cwd(), 'design/wolfcillo.png')),
+    readFile(join(process.cwd(), 'design/denscope-log.png')),
   ])
-  return { interRegular, interBlack }
+  const wolfcilloSrc = `data:image/png;base64,${Buffer.from(wolfcilloRaw).toString('base64')}`
+  const logoSrc = `data:image/png;base64,${Buffer.from(logoRaw).toString('base64')}`
+  return { interRegular, interBlack, wolfcilloSrc, logoSrc }
+}
+
+function confidenceLabel(confidence: string | null, lang: CertificateLang): string {
+  const labels: Record<string, Record<string, string>> = {
+    en: { high: 'HIGH CONFIDENCE', medium: 'MEDIUM CONFIDENCE', low: 'LOW CONFIDENCE' },
+    es: { high: 'CONF. ALTA', medium: 'CONF. MEDIA', low: 'CONF. BAJA' },
+  }
+  return labels[lang]?.[confidence ?? ''] ?? (lang === 'es' ? 'SIN SCORE' : 'NO SCORE')
+}
+
+function evidenceInterpretation(
+  state: string,
+  positiveRatio: number | null,
+  feedbackCount: number,
+  lang: CertificateLang,
+): string | null {
+  if (feedbackCount === 0) return null
+  if (state === 'trustworthy') {
+    return lang === 'es'
+      ? `${Math.round((positiveRatio ?? 0) * 100)}% positivo — trayectoria verificada`
+      : `${Math.round((positiveRatio ?? 0) * 100)}% positive — verified track record`
+  }
+  if (state === 'monitoring') {
+    if ((positiveRatio ?? 0) >= 0.7) return lang === 'es' ? 'Senal positiva, aun temprana' : 'Positive signal, still early'
+    if ((positiveRatio ?? 0) <= 0.35) return lang === 'es' ? 'Senal negativa, aun temprana' : 'Negative signal, still early'
+    return lang === 'es' ? 'Senal mixta, aun temprana' : 'Mixed signal, still early'
+  }
+  if (state === 'high_risk') {
+    return lang === 'es'
+      ? `${Math.round((positiveRatio ?? 0) * 100)}% positivo — riesgo detectado`
+      : `${Math.round((positiveRatio ?? 0) * 100)}% positive — risk detected`
+  }
+  return null
 }
 
 function formatTimestamp(date: Date): string {
@@ -163,9 +200,21 @@ export async function GET(req: Request, { params }: Props) {
   const displayController = payload.controller
     ? truncateAddress(payload.controller)
     : labels.noController
-  const displayAgentId = truncateAddress(`0x${agentId.toString(16).padStart(8, '0')}`)
   const stateLabel = labels.stateLabels[payload.state]
   const now = formatTimestamp(new Date())
+  const scoreValue = Math.max(0, Math.min(100, Math.round(payload.score)))
+  const scoreBarWidth = Math.max(8, scoreValue)
+  const accentColor = palette.sealFill === 'transparent' ? '#6B7280' : palette.sealFill
+  const confLabel = confidenceLabel(trustScore?.confidence ?? null, lang)
+  const interpretation = evidenceInterpretation(
+    payload.state,
+    trustScore?.positiveRatio ?? null,
+    payload.signalCount,
+    lang,
+  )
+  const evidenceLine = lang === 'es'
+    ? `Basado en ${payload.signalCount} feedbacks ERC-8004`
+    : `Based on ${payload.signalCount} ERC-8004 feedbacks`
 
   // QR code
   let qrRects: Array<{ x: number; y: number; w: number; h: number }> = []
@@ -174,222 +223,256 @@ export async function GET(req: Request, { params }: Props) {
     qrRects = qrMatrixToRects(matrix, 48, 4, 4)
   } catch { /* QR failed — will use fallback */ }
 
-  const fonts = await loadFonts()
+  const assets = await loadAssets()
 
   const imageResponse = new ImageResponse(
     (
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
           width: '100%',
           height: '100%',
-          background: '#FAFAFA',
+          background: '#050505',
           fontFamily: 'Inter',
-          color: '#111827',
+          color: '#F0F0F0',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        {/* ═══ TITLE BAR ═══ */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            background: palette.titleBar,
-            color: '#FFFFFF',
-            padding: '24px 40px 20px',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: '0.05em' }}>
-              {labels.title.toUpperCase()}
-            </span>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 400,
-                background: 'rgba(255,255,255,0.2)',
-                padding: '4px 10px',
-                borderRadius: 4,
-                letterSpacing: '0.1em',
-              }}
-            >
-              ERC-8004
-            </span>
-          </div>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 6 }}>
-            {chainConfig.name} · {now}
-          </span>
+        {/* ── Grid lines (architectural depth) ── */}
+        <div style={{ position: 'absolute', top: 100, left: 0, width: '100%', height: 1, background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+        <div style={{ position: 'absolute', top: 510, left: 0, width: '100%', height: 1, background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+        <div style={{ position: 'absolute', top: 0, left: 80, width: 1, height: '100%', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+        <div style={{ position: 'absolute', top: 0, left: 1120, width: 1, height: '100%', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+
+        {/* ── TRUST watermark ── */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{
+            fontSize: 200, fontWeight: 900, letterSpacing: '-0.06em',
+            color: 'rgba(255,255,255,0.05)', lineHeight: 0.8,
+          }}>TRUST</span>
         </div>
 
-        {/* ═══ BODY ═══ */}
-        <div
-          style={{
-            display: 'flex',
-            flex: 1,
-            padding: '32px 40px',
-            gap: 40,
-            alignItems: 'center',
-          }}
-        >
-          {/* Left: Seal */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 160,
-              height: 160,
-              borderRadius: '50%',
-              border: `4px ${palette.sealDashed ? 'dashed' : 'solid'} ${palette.sealBorder}`,
-              background: palette.sealFill,
-              flexShrink: 0,
-            }}
-          >
-            {payload.state === 'insufficient_signal' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#9CA3AF', letterSpacing: '0.05em' }}>
-                  {labels.insufficientSealLines[0]}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 900, color: '#9CA3AF', letterSpacing: '0.05em' }}>
-                  {labels.insufficientSealLines[1]}
+        {/* ── Content layer ── */}
+        <div style={{
+          display: 'flex', flexDirection: 'column',
+          width: '100%', height: '100%',
+          padding: '36px 80px 0',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}>
+
+          {/* ═══ TOP BAR ═══ */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+            {/* Left: status dot + protocol + certificate label */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: accentColor, display: 'flex' }} />
+                <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.1em', fontWeight: 400 }}>
+                  ERC-8004
                 </span>
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                {/* Seal icon placeholder — simple shapes */}
-                {payload.state === 'trustworthy' && (
-                  <svg width="40" height="40" viewBox="0 0 40 40">
-                    <path d="M20 2 L36 12 V26 C36 34 20 38 20 38 C20 38 4 34 4 26 V12 Z" fill="rgba(255,255,255,0.3)" />
-                    <path d="M13 20 L18 25 L28 15" stroke="white" strokeWidth="3" fill="none" />
-                  </svg>
-                )}
-                {payload.state === 'monitoring' && (
-                  <svg width="40" height="40" viewBox="0 0 40 40">
-                    <circle cx="20" cy="20" r="14" stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none" />
-                    <circle cx="20" cy="20" r="4" fill="white" />
-                    <path d="M20 6 V12" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
-                    <path d="M34 20 H28" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
-                  </svg>
-                )}
-                {payload.state === 'high_risk' && (
-                  <svg width="40" height="40" viewBox="0 0 40 40">
-                    <path d="M20 4 L38 36 H2 Z" fill="rgba(255,255,255,0.3)" />
-                    <path d="M20 16 V26" stroke="white" strokeWidth="3" />
-                    <circle cx="20" cy="31" r="2" fill="white" />
-                  </svg>
-                )}
-                <span
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 900,
-                    color: '#FFFFFF',
-                    letterSpacing: '0.05em',
-                    marginTop: payload.state === 'high_risk' ? -2 : 2,
-                  }}
-                >
-                  {stateLabel}
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 700, letterSpacing: '0.1em' }}>
+                {labels.title.toUpperCase()}
+              </span>
+              <span style={{ fontSize: 11, color: '#6b7280', letterSpacing: '0.05em' }}>
+                {chainConfig.name} · {now}
+              </span>
+            </div>
+
+            {/* Right: DENSCOPE branding + wolfcillo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img src={assets.logoSrc} width={24} height={24} style={{ filter: 'invert(1)' }} />
+                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1 }}>
+                    DENSCOPE
+                  </span>
+                </div>
+                <span style={{ fontSize: 10, color: '#6b7280', letterSpacing: '0.2em', marginTop: 4 }}>
+                  BY DENLABS
                 </span>
               </div>
-            )}
+              <img src={assets.wolfcilloSrc} width={70} height={40} style={{ borderRadius: 6 }} />
+            </div>
           </div>
 
-          {/* Right: Agent info + score */}
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 8 }}>
-            <span style={{ fontSize: 16, color: '#6B7280', fontFamily: 'monospace' }}>
-              {displayAgentId}
-            </span>
-            <span
-              style={{
-                fontSize: 24,
-                fontWeight: 900,
-                color: payload.name ? '#111827' : '#9CA3AF',
-                fontStyle: payload.name ? 'normal' : 'italic',
-              }}
-            >
+          {/* ═══ CENTER HERO ═══ */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 80,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            {/* Agent ID + name */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 6 }}>
+              <span style={{ fontSize: 22, color: '#6b7280', fontWeight: 400 }}>ID</span>
+              <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-0.025em' }}>
+                #{agentId}
+              </span>
+            </div>
+            <span style={{
+              fontSize: 16, color: payload.name ? '#F0F0F0' : '#6b7280',
+              letterSpacing: '0.05em', fontWeight: 400,
+              fontStyle: payload.name ? 'normal' : 'italic',
+            }}>
               {displayName}
             </span>
 
-            {/* Divider */}
-            <div style={{ display: 'flex', width: '100%', height: 1, background: '#E5E7EB', margin: '8px 0' }} />
+            {/* Score hero block */}
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              marginTop: 18, width: 480, maxWidth: '100%',
+              padding: '16px 24px',
+              border: `1px solid ${cardState.accentSoft}`,
+              background: 'rgba(0,0,0,0.45)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* Seal (compact, left of score) */}
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  width: 72, height: 72, borderRadius: '50%', flexShrink: 0,
+                  border: `3px ${palette.sealDashed ? 'dashed' : 'solid'} ${palette.sealBorder}`,
+                  background: palette.sealFill,
+                }}>
+                  {payload.state === 'insufficient_signal' ? (
+                    <span style={{ fontSize: 9, fontWeight: 900, color: '#9CA3AF', letterSpacing: '0.05em', textAlign: 'center' }}>
+                      {labels.insufficientSealLines[0]}{'\n'}{labels.insufficientSealLines[1]}
+                    </span>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {payload.state === 'trustworthy' && (
+                        <svg width="24" height="24" viewBox="0 0 40 40">
+                          <path d="M20 2 L36 12 V26 C36 34 20 38 20 38 C20 38 4 34 4 26 V12 Z" fill="rgba(255,255,255,0.3)" />
+                          <path d="M13 20 L18 25 L28 15" stroke="white" strokeWidth="3" fill="none" />
+                        </svg>
+                      )}
+                      {payload.state === 'monitoring' && (
+                        <svg width="24" height="24" viewBox="0 0 40 40">
+                          <circle cx="20" cy="20" r="14" stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none" />
+                          <circle cx="20" cy="20" r="4" fill="white" />
+                        </svg>
+                      )}
+                      {payload.state === 'high_risk' && (
+                        <svg width="24" height="24" viewBox="0 0 40 40">
+                          <path d="M20 4 L38 36 H2 Z" fill="rgba(255,255,255,0.3)" />
+                          <path d="M20 16 V26" stroke="white" strokeWidth="3" />
+                          <circle cx="20" cy="31" r="2" fill="white" />
+                        </svg>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-            {/* Score */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-              <span style={{ fontSize: 14, color: '#6B7280' }}>{labels.trustScore}</span>
-              <span style={{ fontSize: 36, fontWeight: 900 }}>{payload.score}</span>
-              <span style={{ fontSize: 18, color: '#9CA3AF' }}>/ 100</span>
+                {/* Score number */}
+                <span style={{ fontSize: 64, fontWeight: 900, letterSpacing: '-0.03em', color: accentColor }}>
+                  {scoreValue}
+                </span>
+
+                {/* State + confidence */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <span style={{ fontSize: 11, color: '#9CA3AF', letterSpacing: '0.15em' }}>
+                    {labels.trustScore.toUpperCase()}
+                  </span>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: accentColor }}>
+                    {stateLabel}
+                  </span>
+                  <span style={{ fontSize: 10, color: '#9CA3AF', letterSpacing: '0.14em' }}>
+                    {confLabel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Score bar */}
+              <div style={{
+                width: '100%', marginTop: 12, height: 10,
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.04)',
+                display: 'flex', alignItems: 'center', padding: '1px',
+              }}>
+                <div style={{
+                  height: '100%', width: `${scoreBarWidth}%`,
+                  background: accentColor, display: 'flex',
+                }} />
+              </div>
+
+              {/* Evidence + interpretation */}
+              <span style={{ fontSize: 12, color: '#D1D5DB', marginTop: 10 }}>
+                {evidenceLine}
+              </span>
+              {interpretation && (
+                <span style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
+                  {interpretation}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* ═══ BOTTOM BAR (3-col verification rail) ═══ */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%', paddingBottom: 36 }}>
+
+            {/* Left: Controller */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{
+                fontSize: 10, color: '#6b7280', letterSpacing: '0.1em', fontWeight: 400,
+                borderBottom: '1px solid #1f2937', paddingBottom: 4, marginBottom: 4,
+              }}>
+                {labels.controller.toUpperCase()}
+              </span>
+              <span style={{ fontSize: 20, fontWeight: 700 }}>
+                {displayController}
+              </span>
             </div>
 
-            {/* Score bar */}
-            <div
-              style={{
-                display: 'flex',
-                width: '100%',
-                height: 12,
-                background: '#E5E7EB',
-                borderRadius: 6,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  width: `${Math.max(2, payload.score)}%`,
-                  height: '100%',
-                  background: palette.sealFill === 'transparent' ? '#6B7280' : palette.sealFill,
-                  borderRadius: 6,
-                }}
-              />
+            {/* Center: QR + verify hash */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                display: 'flex', width: 56, height: 56,
+                background: qrRects.length > 0 ? '#FFFFFF' : '#1f2937',
+                flexShrink: 0,
+              }}>
+                {qrRects.length > 0 ? (
+                  <svg width="56" height="56" viewBox="0 0 56 56">
+                    {qrRects.map((r, i) => (
+                      <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill="#111827" />
+                    ))}
+                  </svg>
+                ) : (
+                  <div style={{ display: 'flex', width: '100%', height: '100%' }} />
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 10, color: '#6b7280', letterSpacing: '0.1em' }}>
+                  {labels.verify.toUpperCase()}
+                </span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#D1D5DB' }}>
+                  {displayHash}
+                </span>
+              </div>
             </div>
 
-            {/* Signals */}
-            <span style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
-              {labels.signals}: {payload.signalCount} (+{payload.positiveCount} · -{payload.negativeCount})
-            </span>
-          </div>
-        </div>
-
-        {/* ═══ CREDENTIAL BAR ═══ */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: '#F3F4F6',
-            borderTop: '1px solid #E5E7EB',
-            padding: '12px 40px',
-            gap: 16,
-          }}
-        >
-          {/* QR Code */}
-          <div
-            style={{
-              display: 'flex',
-              width: 56,
-              height: 56,
-              background: qrRects.length > 0 ? '#FFFFFF' : palette.titleBar,
-              flexShrink: 0,
-              position: 'relative',
-            }}
-          >
-            {qrRects.length > 0 ? (
-              <svg width="56" height="56" viewBox="0 0 56 56">
-                {qrRects.map((r, i) => (
-                  <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill="#111827" />
-                ))}
-              </svg>
-            ) : (
-              /* QR fallback: solid square */
-              <div style={{ display: 'flex', width: '100%', height: '100%' }} />
-            )}
-          </div>
-
-          {/* Verify + Controller */}
-          <div style={{ display: 'flex', flex: 1, justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 13, color: '#6B7280' }}>
-              {labels.verify}: {displayHash}
-            </span>
-            <span style={{ fontSize: 13, color: '#6B7280' }}>
-              {labels.controller}: {displayController}
-            </span>
+            {/* Right: Chain + signals */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              <span style={{
+                fontSize: 10, color: '#6b7280', letterSpacing: '0.1em', fontWeight: 400,
+                borderBottom: '1px solid #1f2937', paddingBottom: 4, marginBottom: 4,
+              }}>
+                {labels.signals.toUpperCase()}
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <span style={{
+                  fontSize: 12, color: '#D1D5DB',
+                  border: '1px solid #374151', padding: '4px 10px',
+                }}>
+                  {payload.signalCount} feedbacks
+                </span>
+                <span style={{ fontSize: 11, color: '#9CA3AF' }}>
+                  Chain: {chainConfig.badge.label}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -398,8 +481,8 @@ export async function GET(req: Request, { params }: Props) {
       width: 1200,
       height: 630,
       fonts: [
-        { name: 'Inter', data: fonts.interRegular, style: 'normal' as const, weight: 400 },
-        { name: 'Inter', data: fonts.interBlack, style: 'normal' as const, weight: 900 },
+        { name: 'Inter', data: assets.interRegular, style: 'normal' as const, weight: 400 },
+        { name: 'Inter', data: assets.interBlack, style: 'normal' as const, weight: 900 },
       ],
     },
   )
