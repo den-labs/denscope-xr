@@ -36,7 +36,7 @@ Evolve the DenScope trust certificate from an OG-card-only social preview into a
 
 ### Flow
 
-1. Fetch trust score via `fetchTrustScore` + agent metadata via `fetchAgentMetadataServer` (existing helpers)
+1. Fetch trust score via `fetchTrustScore(chainId, agentId)`. Resolve agent metadata URI from `agents` table (`metadata_uri` column), then call `fetchAgentMetadataServer(metadataUri)` (existing helpers — note: `fetchAgentMetadataServer` takes a URI string, not chain/id)
 2. Determine share card state via `getShareCardState` (existing in `share-card-state.ts`)
 3. Build `CertificatePayload` from fetched data
 4. Canonicalize payload → SHA-256 → `certificateHash`
@@ -161,11 +161,11 @@ Static labels via `lang` query param (`en` default, `es`):
 |---|---|---|
 | title | "DenScope Agent Trust Certificate" | "Certificado de Confianza del Agente DenScope" |
 | trustScore | "Trust Score" | "Puntaje de Confianza" |
-| signals | "Signals" | "Senales" |
+| signals | "Signals" | "Señales" |
 | controller | "Controller" | "Controlador" |
 | verify | "verify" | "verificar" |
 | trustworthy | "TRUSTWORTHY" | "CONFIABLE" |
-| monitoring | "MONITORING" | "EN OBSERVACION" |
+| monitoring | "MONITORING" | "EN OBSERVACIÓN" |
 | high_risk | "HIGH RISK" | "ALTO RIESGO" |
 | insufficient_signal (line 1 / line 2) | "INSUFFICIENT" / "DATA" | "DATOS" / "INSUFICIENTES" |
 
@@ -182,7 +182,7 @@ create table certificate_snapshots (
   id uuid primary key default gen_random_uuid(),
   hash text not null unique,
   chain_id integer not null,
-  agent_id text not null,
+  agent_id integer not null,
   payload jsonb not null,
   image_key text,                -- storage path: "certificates/{chain_id}/{agent_id}/{hash}.png"
   issued_at timestamptz not null default now()
@@ -202,14 +202,17 @@ Single source of truth: `issued_at` (DB column). No `generatedAt` in the payload
 ### Payload Schema
 
 ```typescript
+// ShareCardStateKey is the string union: 'trustworthy' | 'monitoring' | 'high_risk' | 'insufficient_signal'
+// (not the full ShareCardState object which includes label, colors, etc.)
+
 interface CertificatePayload {
-  agentId: string;
+  agentId: number;              // numeric agent ID (matches codebase convention)
   chainId: number;
   chainName: string;
   name: string | null;
   controller: string | null;
   score: number;
-  state: ShareCardState;
+  state: ShareCardStateKey;     // string key, not the full state object
   signalCount: number;
   positiveCount: number;
   negativeCount: number;
@@ -243,7 +246,7 @@ If a field is added to `CertificatePayload`, it is appended to the end of the ar
 
 ### Image Traceability
 
-After PNG generation, the image is stored in Supabase Storage at `certificates/{chain_id}/{agent_id}/{hash}.png`. The `image_key` column records this path. If storage write fails, `image_key` stays `null` — the certificate remains valid (payload + hash are the source of truth), but without exact visual traceability.
+After PNG generation, the image is stored in Supabase Storage at `certificates/{chain_id}/{agent_id}/{hash}.png`. The `image_key` column records this path. If storage write fails (including bucket misconfiguration or Supabase Storage outage), `image_key` stays `null` — the certificate endpoint still returns the freshly-rendered PNG inline (render happens before storage write). The certificate remains valid (payload + hash are the source of truth), but without exact visual traceability until storage recovers.
 
 ### Idempotency
 
@@ -252,7 +255,7 @@ On each request, the endpoint computes payload from current trust state, canonic
 - **Hash exists, `image_key` null:** Re-render, attempt storage write, update `image_key`
 - **Hash does not exist:** Insert row, render, store, set `image_key`
 
-No duplicate rows, no unnecessary re-renders.
+No duplicate rows, no unnecessary re-renders. Concurrent first-generation requests for the same hash: use `INSERT ... ON CONFLICT (hash) DO NOTHING` + subsequent `SELECT` to handle the race without errors.
 
 ### Verification Endpoint
 
@@ -309,7 +312,7 @@ async function shareCertificate(params: {
   agentId: string;
   hash: string;
   name: string | null;
-  state: ShareCardState;
+  state: ShareCardStateKey;
   lang: 'en' | 'es';
 }) {
   const verifyUrl = `${origin}/verify/${params.hash}`;
@@ -406,6 +409,20 @@ Secondary action button (download icon) in CertificateStation and agent detail p
 | `src/lib/trust/certificate-i18n.ts` | Label maps (en/es) |
 | `src/lib/trust/qr.ts` | QR matrix generation for next/og |
 
+### Snapshot Image Endpoint Contract
+
+`GET /api/certificate/snapshot/[hash]` — serves the stored certificate PNG by hash.
+
+- **Input:** `hash` path parameter (64-char hex)
+- **Found + `image_key` present:** Redirect or proxy PNG from Supabase Storage. `Content-Type: image/png`, `Cache-Control: public, max-age=86400` (24h — snapshot images are immutable)
+- **Found + `image_key` null:** Regenerate PNG from snapshot payload (visual-equivalent, not byte-identical). Return inline. Attempt storage write + update `image_key` for next request.
+- **Not found:** 404, no body
+- No auth required. This endpoint exists primarily for `og:image` resolution.
+
+### QR Library
+
+Must be pure JS (no native deps) — `next/og` runs in an Edge-like environment. Candidate: `qrcode-generator` (zero-dep, returns matrix data suitable for rendering as SVG rectangles in ImageResponse).
+
 ### Modified Files
 
 | File | Change |
@@ -427,7 +444,7 @@ New Supabase Storage bucket: `certificates` (public read, service role write).
 | Artifact | Status |
 |---|---|
 | `/api/og/agent/[chain]/[id]` | Unchanged. Social preview for agent page links. |
-| `share-card-state.ts` | Extended with palette/seal config exports |
+| `share-card-state.ts` | Extended with new certificate palette/seal config exports (additive — existing Phase 1 colors like `#22C55E` for trustworthy remain unchanged to avoid breaking CertificateStation card styling) |
 | `buildXIntentUrl()` / `buildCertificateShareText()` | Unchanged. Used by secondary X action. |
 | CertificateStation | Modified action bar, same panel layout |
 | Embed system | Unchanged, repositioned in agent detail page |
