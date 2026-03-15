@@ -7,8 +7,9 @@ import { fetchAgentMetadata } from '@/lib/agent/metadata'
 import {
   buildXIntentUrl,
   buildCertificateShareText,
-  buildAgentPageUrl,
+  shareCertificate,
 } from '@/lib/share'
+import type { ShareCardStateKey } from '@/lib/trust/share-card-state'
 import type { AgentMetadata, AgentSummary } from '@/types/agents'
 
 const LS_KEY = 'denscope-station-open'
@@ -45,6 +46,9 @@ function StationContent({
   error: boolean
   onRetry: () => void
 }) {
+  const [shareStatus, setShareStatus] = useState<string | null>(null)
+  const [copyModalUrl, setCopyModalUrl] = useState<string | null>(null)
+
   if (!agent) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
@@ -60,10 +64,53 @@ function StationContent({
 
   const name = agent.metadata?.name ?? `Agent #${agent.agentId}`
   const shareInput = { chainId: agent.chainId, agentId: agent.agentId, name: agent.metadata?.name }
-  const ogUrl = `/api/og/agent/${agent.chainId}/${agent.agentId}`
+  const certUrl = `/api/certificate/${agent.chainId}/${agent.agentId}`
   const reportUrl = `/agent/${agent.chainId}/${agent.agentId}`
 
-  function handleShare() {
+  async function handleShare() {
+    try {
+      // Get hash from certificate endpoint
+      const res = await fetch(`${certUrl}?format=json`)
+      if (!res.ok) return
+      const data = await res.json()
+      const hash = data.hash as string
+      const state = (data.payload?.state ?? 'insufficient_signal') as ShareCardStateKey
+
+      const result = await shareCertificate({
+        hash,
+        name: agent?.metadata?.name ?? null,
+        state,
+        lang: 'en',
+      })
+
+      if (result === 'copied') {
+        setShareStatus('Link copied!')
+        setTimeout(() => setShareStatus(null), 2000)
+      } else if (result === 'modal') {
+        const baseUrl = window.location.origin
+        setCopyModalUrl(`${baseUrl}/verify/${hash}`)
+      }
+    } catch { /* share failed silently */ }
+  }
+
+  async function handleDownload() {
+    try {
+      const res = await fetch(certUrl)
+      if (!res.ok) return
+      const blob = await res.blob()
+      const hash = res.headers.get('X-Certificate-Hash') ?? 'cert'
+      const shortId = (agent?.agentId ?? 0).toString().slice(0, 6)
+      const shortHash = hash.slice(0, 8)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `denscope-certificate-${shortId}-${shortHash}.png`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch { /* download failed silently */ }
+  }
+
+  function handleShareX() {
     window.open(buildXIntentUrl(buildCertificateShareText(shareInput)), '_blank')
   }
 
@@ -78,10 +125,10 @@ function StationContent({
           </div>
         ) : (
           <>
-            {/* 2) Certificate Preview — OG card thumbnail */}
+            {/* 2) Certificate Preview */}
             <div className="border border-border bg-surface overflow-hidden">
               <img
-                src={ogUrl}
+                src={certUrl}
                 alt={`Trust Certificate for ${name}`}
                 className="w-full h-auto"
                 loading="lazy"
@@ -118,14 +165,53 @@ function StationContent({
         )}
       </div>
 
-      {/* 3) Primary CTA — sticky bottom bar */}
-      <div className="sticky bottom-0 border-t border-border bg-bg px-5 py-4">
+      {/* Copy modal fallback */}
+      {copyModalUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setCopyModalUrl(null)}>
+          <div className="bg-bg border border-border p-4 rounded-lg max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs text-text-muted mb-2 font-mono">Copy this link:</p>
+            <input
+              type="text"
+              readOnly
+              value={copyModalUrl}
+              className="w-full bg-surface border border-border px-3 py-2 text-sm font-mono text-text-primary rounded"
+              onFocus={(e) => e.target.select()}
+            />
+            <button onClick={() => setCopyModalUrl(null)} className="mt-3 w-full text-xs text-text-muted hover:text-text-primary font-mono">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3) Action bar — sticky bottom */}
+      <div className="sticky bottom-0 border-t border-border bg-bg px-5 py-3">
+        {shareStatus && (
+          <p className="text-xs text-accent font-mono text-center mb-2">{shareStatus}</p>
+        )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleShare}
+            disabled={!agent}
+            className="flex-1 border border-text-primary bg-text-primary px-4 py-2.5 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Share Certificate
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={!agent}
+            className="border border-border px-3 py-2.5 text-sm text-text-muted hover:text-text-primary hover:border-text-primary transition-colors disabled:opacity-40"
+            title="Download PNG"
+          >
+            ⬇
+          </button>
+        </div>
         <button
-          onClick={handleShare}
+          onClick={handleShareX}
           disabled={!agent}
-          className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full mt-2 text-xs text-text-muted font-mono hover:text-accent transition-colors disabled:opacity-40"
         >
-          Share Certificate
+          Share on X →
         </button>
       </div>
     </div>

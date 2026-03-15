@@ -1,9 +1,61 @@
 import { getChain } from '@/config/chains'
+import { getAppBaseUrl } from '@/lib/trust/certificate'
+import { getCertificateLabels, type CertificateLang } from '@/lib/trust/certificate-i18n'
+import type { ShareCardStateKey } from '@/lib/trust/share-card-state'
 
 export type AgentShareInput = {
   chainId: number
   agentId: number
   name?: string
+}
+
+export type CertificateShareParams = {
+  hash: string
+  name: string | null
+  state: ShareCardStateKey
+  lang: CertificateLang
+}
+
+/**
+ * Share a trust certificate via Web Share API with fallback chain.
+ * Returns 'shared' | 'copied' | 'modal' indicating which method was used.
+ */
+export async function shareCertificate(
+  params: CertificateShareParams,
+): Promise<'shared' | 'copied' | 'modal'> {
+  const baseUrl = getAppBaseUrl()
+  const verifyUrl = `${baseUrl}/verify/${params.hash}`
+  const labels = getCertificateLabels(params.lang)
+  const displayName = params.name ?? labels.unnamedAgent
+  const stateLabel = labels.stateLabels[params.state]
+
+  const title = labels.title
+  const text = params.lang === 'es'
+    ? `${displayName} · ${stateLabel}\nVerificable en DenScope`
+    : `${displayName} · ${stateLabel}\nVerifiable on DenScope`
+
+  // Level 1: Web Share API
+  if (typeof navigator !== 'undefined' && navigator.canShare?.({ url: verifyUrl })) {
+    try {
+      await navigator.share({ title, text, url: verifyUrl })
+      return 'shared'
+    } catch {
+      // User cancelled or share failed — fall through
+    }
+  }
+
+  // Level 2: Clipboard
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(verifyUrl)
+      return 'copied'
+    } catch {
+      // Clipboard denied — fall through
+    }
+  }
+
+  // Level 3: Modal fallback (caller handles UI)
+  return 'modal'
 }
 
 export function buildAgentPageUrl(chainId: number, agentId: number): string {
