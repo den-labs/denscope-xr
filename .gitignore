@@ -40,6 +40,13 @@ yarn-error.log*
 /design
 /docs/hackathon/
 
+# internal process docs (not public-facing)
+/docs/process/
+
+# bmad framework (symlinked, not project code)
+_bmad/
+_bmad-output/
+
 # worktrees
 .worktrees/
 

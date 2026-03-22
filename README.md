@@ -104,7 +104,12 @@ API endpoints accept `Authorization: Bearer ds_...` or `X-API-Key: ds_...` heade
 
 ## Architecture
 
-See [CLAUDE.md](./CLAUDE.md) for full architecture details, data flow diagrams, signal detection rules, trust score formula, and x402 integration.
+DenScope is organized around a real-time trust pipeline that indexes ERC-8004 agent activity on Celo, detects behavioral signals, computes trust scores, and renders an interactive force-directed graph.
+
+**Stack:** Next.js 16 · viem · Zustand · d3-force · Supabase Edge Functions
+
+**Data flow:**
+On-chain events → Signal detection → Trust scoring → Live visualization
 
 Key directories:
 
