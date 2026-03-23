@@ -68,7 +68,7 @@ function BreakdownRow({
       <span className="text-[10px] text-foreground-muted font-mono w-28 shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-background border border-border relative">
         <div
-          className={`h-full ${negative ? 'bg-critical' : 'bg-interactive'}`}
+          className={`h-full ${negative ? 'bg-danger' : 'bg-interactive'}`}
           style={{ width: `${Math.min(barWidth, 100)}%` }}
         />
       </div>

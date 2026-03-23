@@ -49,7 +49,7 @@ export function Header() {
               alt="DenScope"
               width={28}
               height={28}
-              className="invert"
+              className="dark:invert"
             />
             <span className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
               Denscope
@@ -77,7 +77,7 @@ export function Header() {
                   )}
                   {isActive && (
                     <span
-                      className="absolute bottom-0 left-0 h-px w-full bg-text-primary"
+                      className="absolute bottom-0 left-0 h-px w-full bg-primary"
                       aria-hidden="true"
                     />
                   )}

@@ -234,6 +234,14 @@ export function TrustGraph({
     baseCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
     fxCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
 
+    const styles = getComputedStyle(document.documentElement)
+    const colorSuccess = styles.getPropertyValue('--color-success').trim() || '#2ebd56'
+    const colorWarning = styles.getPropertyValue('--color-warning').trim() || '#f0c040'
+    const colorDanger = styles.getPropertyValue('--color-danger').trim() || '#ff453a'
+    const colorForeground = styles.getPropertyValue('--color-foreground').trim() || '#e8e8e6'
+    const colorBackground = styles.getPropertyValue('--color-background').trim() || '#151718'
+    const colorBorder = styles.getPropertyValue('--color-border').trim() || '#2a2c2e'
+
     const prevPositions = nodeByIdRef.current
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => {
       const prev = prevPositions.get(n.id)
@@ -260,7 +268,7 @@ export function TrustGraph({
 
     if (nodes.length === 0) {
       baseCtx2.clearRect(0, 0, width, height)
-      baseCtx2.fillStyle = '#555555'
+      baseCtx2.fillStyle = colorBorder
       baseCtx2.textAlign = 'center'
       baseCtx2.font = '14px monospace'
       baseCtx2.fillText('No agents in graph yet', width / 2, height / 2)
@@ -284,9 +292,9 @@ export function TrustGraph({
     function getNodeColor(nodeId: string): string {
       const neg = negativeFeedback.get(nodeId) ?? 0
       const pos = positiveFeedback.get(nodeId) ?? 0
-      if (neg > 0 && neg > pos) return '#ff3b30'
-      if (neg > 0) return '#ffcc00'
-      return '#34c759'
+      if (neg > 0 && neg > pos) return colorDanger
+      if (neg > 0) return colorWarning
+      return colorSuccess
     }
 
     function draw() {
@@ -298,7 +306,7 @@ export function TrustGraph({
       baseCtx2.scale(t.k, t.k)
 
       // Draw edges
-      baseCtx2.strokeStyle = 'rgba(255, 255, 255, 0.06)'
+      baseCtx2.strokeStyle = colorBorder
       baseCtx2.lineWidth = 1 / t.k
       for (const link of links) {
         const s = link.source as SimNode
@@ -319,7 +327,7 @@ export function TrustGraph({
         baseCtx2.arc(node.x, node.y!, radius, 0, Math.PI * 2)
         baseCtx2.fillStyle = getNodeColor(node.id)
         baseCtx2.fill()
-        baseCtx2.strokeStyle = '#222222'
+        baseCtx2.strokeStyle = colorBackground
         baseCtx2.lineWidth = 1.5 / t.k
         baseCtx2.stroke()
 
@@ -327,13 +335,13 @@ export function TrustGraph({
           const halo = 4 + pulse * 4
           baseCtx2.beginPath()
           baseCtx2.arc(node.x, node.y!, radius + halo / t.k, 0, Math.PI * 2)
-          baseCtx2.strokeStyle = '#ffffff'
+          baseCtx2.strokeStyle = colorForeground
           baseCtx2.lineWidth = 2 / t.k
           baseCtx2.stroke()
         }
 
         // Label
-        baseCtx2.fillStyle = isSelected ? '#f5f5f5' : '#888888'
+        baseCtx2.fillStyle = isSelected ? colorForeground : colorBorder
         baseCtx2.font = `${10 / t.k}px monospace`
         baseCtx2.textAlign = 'center'
         baseCtx2.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)

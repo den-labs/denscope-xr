@@ -6,9 +6,10 @@ import type { ReactNode } from 'react'
 export function PulseEffect({ children }: { children: ReactNode }) {
   return (
     <motion.div
-      initial={{ opacity: 0, backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
-      animate={{ opacity: 1, backgroundColor: 'rgba(255, 255, 255, 0)' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
+      className="animate-pulse-bg"
     >
       {children}
     </motion.div>
