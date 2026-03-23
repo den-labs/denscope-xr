@@ -20,40 +20,40 @@ export default function GraphPage() {
       {/* Top-left: Title */}
       <div className="absolute top-4 left-4 z-10">
         <h1 className="font-display font-bold text-sm">DenScope</h1>
-        <p className="text-xs text-foreground-muted">Trust Graph Explorer</p>
+        <p className="font-mono text-xs text-text-muted">Trust Graph Explorer</p>
       </div>
 
       {/* Top-right: Legend */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-4 text-xs">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-4 font-mono text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-success" />
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: '#34c759' }} />
           Healthy
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-warning" />
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: '#ffcc00' }} />
           Warning
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-danger" />
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: '#ff3b30' }} />
           Critical
         </span>
       </div>
 
       {/* Bottom-right: Stats HUD */}
       <div className="absolute bottom-4 right-4 z-10 font-mono text-xs text-right">
-        <p>Nodes <span className="text-foreground-muted">{nodes.size}</span></p>
-        <p>Edges <span className="text-foreground-muted">{edges.length}</span></p>
+        <p>Nodes <span className="text-text-muted">{nodes.size}</span></p>
+        <p>Edges <span className="text-text-muted">{edges.length}</span></p>
       </div>
 
       {/* Corner crosshairs */}
       {/* Top-left */}
-      <div className="absolute top-0 left-0 z-0 h-4 w-4 border-t border-l border-interactive/20" />
+      <div className="absolute top-0 left-0 z-0 h-4 w-4 border-t border-l border-accent/20" />
       {/* Top-right */}
-      <div className="absolute top-0 right-0 z-0 h-4 w-4 border-t border-r border-interactive/20" />
+      <div className="absolute top-0 right-0 z-0 h-4 w-4 border-t border-r border-accent/20" />
       {/* Bottom-left */}
-      <div className="absolute bottom-0 left-0 z-0 h-4 w-4 border-b border-l border-interactive/20" />
+      <div className="absolute bottom-0 left-0 z-0 h-4 w-4 border-b border-l border-accent/20" />
       {/* Bottom-right */}
-      <div className="absolute bottom-0 right-0 z-0 h-4 w-4 border-b border-r border-interactive/20" />
+      <div className="absolute bottom-0 right-0 z-0 h-4 w-4 border-b border-r border-accent/20" />
 
       {/* XRay Panel */}
       <XRayPanel

@@ -26,16 +26,16 @@ export function SearchResult({ agent, active, onSelect }: SearchResultProps) {
       }`}
     >
       <div className="min-w-0">
-        <div className="truncate font-display text-sm text-foreground">
+        <div className="truncate font-display text-sm text-text-primary">
           {name}
         </div>
-        <div className="truncate font-mono text-xs text-foreground-muted">
+        <div className="truncate font-mono text-xs text-text-muted">
           {owner}
         </div>
       </div>
       {chain && (
         <span
-          className="ml-3 shrink-0 text-xs text-foreground-secondary"
+          className="ml-3 shrink-0 text-xs text-text-secondary"
           style={{ color: chain.badge.color }}
         >
           {chain.badge.label}

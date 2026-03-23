@@ -63,7 +63,7 @@ export function StatusBar() {
   }, [eventCount, isVisible])
 
   return (
-    <footer className="border-t border-border bg-background px-6 py-2 font-mono text-xs uppercase tracking-wider text-foreground-secondary">
+    <footer className="border-t border-border bg-bg px-6 py-2 font-mono text-xs uppercase tracking-wider text-text-secondary">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span>Session: {formatUptime(uptime)}</span>

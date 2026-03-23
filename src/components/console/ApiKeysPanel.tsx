@@ -56,11 +56,11 @@ export function ApiKeysPanel() {
   }
 
   return (
-    <div className="bg-surface border border-border p-6 space-y-4 shadow-sm dark:shadow-none">
-      <h2 className="font-display text-lg font-bold uppercase tracking-wider text-foreground">
+    <div className="bg-surface border border-border p-6 space-y-4">
+      <h2 className="font-display text-lg font-bold uppercase tracking-wider text-text-primary">
         API Keys
       </h2>
-      <p className="text-xs text-foreground-muted">
+      <p className="text-xs text-text-muted font-mono">
         Use API keys to query agent trust scores programmatically.
         Free tier: 100 requests/day.
       </p>
@@ -71,23 +71,23 @@ export function ApiKeysPanel() {
           placeholder="Label (optional)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="bg-background border border-border px-3 py-1.5 text-xs font-mono text-foreground flex-1"
+          className="bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary flex-1"
         />
         <button
           onClick={handleCreate}
           disabled={creating || keys.length >= 5}
-          className="bg-interactive text-background px-4 py-1.5 text-xs font-bold hover:bg-interactive/90 transition-colors disabled:opacity-50"
+          className="bg-accent text-bg px-4 py-1.5 text-xs font-mono font-bold hover:bg-accent/90 transition-colors disabled:opacity-50"
         >
           {creating ? 'Creating...' : 'Generate Key'}
         </button>
       </div>
 
       {newKey && (
-        <div className="bg-background border border-interactive p-3 space-y-1">
-          <p className="text-xs text-interactive font-bold">
+        <div className="bg-background border border-accent p-3 space-y-1">
+          <p className="text-xs text-accent font-mono font-bold">
             Copy your API key now — it won&apos;t be shown again:
           </p>
-          <code className="text-xs text-foreground font-mono break-all block">
+          <code className="text-xs text-text-primary font-mono break-all block">
             {newKey}
           </code>
           <button
@@ -97,7 +97,7 @@ export function ApiKeysPanel() {
               if (btn) btn.textContent = 'Copied!'
               setTimeout(() => setNewKey(null), 800)
             }}
-            className="text-[11px] text-interactive hover:underline"
+            className="text-[10px] font-mono text-accent hover:underline"
           >
             Copy &amp; Dismiss
           </button>
@@ -105,25 +105,25 @@ export function ApiKeysPanel() {
       )}
 
       {keys.length === 0 ? (
-        <p className="text-xs text-foreground-muted">No API keys yet.</p>
+        <p className="text-xs text-text-muted font-mono">No API keys yet.</p>
       ) : (
         <div className="space-y-2">
           {keys.map((k) => (
             <div key={k.id} className="flex items-center justify-between bg-background border border-border px-3 py-2">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <code className="text-xs font-mono text-foreground">{k.key_prefix}...</code>
-                  <span className="text-[11px] text-foreground-muted">{k.label}</span>
-                  <span className="status-pill status-pill-accent text-[11px]">{k.tier}</span>
+                  <code className="text-xs font-mono text-text-primary">{k.key_prefix}...</code>
+                  <span className="text-[10px] text-text-muted font-mono">{k.label}</span>
+                  <span className="status-pill status-pill-accent text-[10px]">{k.tier}</span>
                 </div>
-                <p className="text-[11px] text-foreground-muted">
+                <p className="text-[10px] text-text-muted font-mono">
                   {k.daily_limit} req/day &middot; Created {new Date(k.created_at).toLocaleDateString()}
                   {k.last_used_at && ` \u00b7 Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
                 </p>
               </div>
               <button
                 onClick={() => handleRevoke(k.id)}
-                className="text-[11px] text-danger hover:underline"
+                className="text-[10px] font-mono text-critical hover:underline"
               >
                 Revoke
               </button>

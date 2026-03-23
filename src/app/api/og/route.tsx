@@ -62,7 +62,7 @@ export async function GET() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 4, background: '#34c759', display: 'flex' }} />
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: '#22C55E', display: 'flex' }} />
                 <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.1em', fontWeight: 400 }}>
                   ERC-8004
                 </span>

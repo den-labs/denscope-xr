@@ -9,7 +9,6 @@ import { eventsFromEdges } from '@/lib/firehose/fromEdges'
 import { PacketAnimator } from '@/lib/firehose/packetAnimator'
 import type { DenEvent } from '@/lib/firehose/types'
 import { GraphTooltip } from './GraphTooltip'
-import { useTheme } from '@/hooks/useTheme'
 import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom'
 import { select } from 'd3-selection'
 
@@ -55,7 +54,6 @@ export function TrustGraph({
   const selectedAgentKeyRef = useRef<string | null>(null)
   const drawRef = useRef<(() => void) | null>(null)
   const selectionLastFrameAtRef = useRef(0)
-  const { theme } = useTheme()
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
@@ -236,14 +234,6 @@ export function TrustGraph({
     baseCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
     fxCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    const styles = getComputedStyle(document.documentElement)
-    const colorSuccess = styles.getPropertyValue('--color-success').trim() || '#34c759'
-    const colorWarning = styles.getPropertyValue('--color-warning').trim() || '#ffcc00'
-    const colorDanger = styles.getPropertyValue('--color-danger').trim() || '#ff3b30'
-    const colorForeground = styles.getPropertyValue('--color-foreground').trim() || '#ffffff'
-    const colorBackground = styles.getPropertyValue('--color-background').trim() || '#000000'
-    const colorBorder = styles.getPropertyValue('--color-border').trim() || '#222222'
-
     const prevPositions = nodeByIdRef.current
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => {
       const prev = prevPositions.get(n.id)
@@ -270,7 +260,7 @@ export function TrustGraph({
 
     if (nodes.length === 0) {
       baseCtx2.clearRect(0, 0, width, height)
-      baseCtx2.fillStyle = colorBorder
+      baseCtx2.fillStyle = '#555555'
       baseCtx2.textAlign = 'center'
       baseCtx2.font = '14px monospace'
       baseCtx2.fillText('No agents in graph yet', width / 2, height / 2)
@@ -294,9 +284,9 @@ export function TrustGraph({
     function getNodeColor(nodeId: string): string {
       const neg = negativeFeedback.get(nodeId) ?? 0
       const pos = positiveFeedback.get(nodeId) ?? 0
-      if (neg > 0 && neg > pos) return colorDanger
-      if (neg > 0) return colorWarning
-      return colorSuccess
+      if (neg > 0 && neg > pos) return '#ff3b30'
+      if (neg > 0) return '#ffcc00'
+      return '#34c759'
     }
 
     function draw() {
@@ -308,7 +298,7 @@ export function TrustGraph({
       baseCtx2.scale(t.k, t.k)
 
       // Draw edges
-      baseCtx2.strokeStyle = colorBorder
+      baseCtx2.strokeStyle = 'rgba(255, 255, 255, 0.06)'
       baseCtx2.lineWidth = 1 / t.k
       for (const link of links) {
         const s = link.source as SimNode
@@ -329,7 +319,7 @@ export function TrustGraph({
         baseCtx2.arc(node.x, node.y!, radius, 0, Math.PI * 2)
         baseCtx2.fillStyle = getNodeColor(node.id)
         baseCtx2.fill()
-        baseCtx2.strokeStyle = colorBackground
+        baseCtx2.strokeStyle = '#222222'
         baseCtx2.lineWidth = 1.5 / t.k
         baseCtx2.stroke()
 
@@ -337,13 +327,13 @@ export function TrustGraph({
           const halo = 4 + pulse * 4
           baseCtx2.beginPath()
           baseCtx2.arc(node.x, node.y!, radius + halo / t.k, 0, Math.PI * 2)
-          baseCtx2.strokeStyle = colorForeground
+          baseCtx2.strokeStyle = '#ffffff'
           baseCtx2.lineWidth = 2 / t.k
           baseCtx2.stroke()
         }
 
         // Label
-        baseCtx2.fillStyle = isSelected ? colorForeground : colorBorder
+        baseCtx2.fillStyle = isSelected ? '#f5f5f5' : '#888888'
         baseCtx2.font = `${10 / t.k}px monospace`
         baseCtx2.textAlign = 'center'
         baseCtx2.fillText(`#${node.agentId}`, node.x, node.y! + radius + 12 / t.k)
@@ -395,7 +385,7 @@ export function TrustGraph({
       baseCtxRef.current = null
       fxCtxRef.current = null
     }
-  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop, stopSelectionLoop, theme])
+  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop, stopSelectionLoop])
 
   useEffect(() => {
     if (edges.length === 0) {
@@ -492,7 +482,7 @@ export function TrustGraph({
       />
       <button
         onClick={fitToView}
-        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground transition-colors"
+        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
       >
         Fit to view
       </button>

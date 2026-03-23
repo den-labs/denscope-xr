@@ -7,31 +7,38 @@
    ═══════════════════════════════════════════════════════════ */
 
 @theme inline {
+  /* Original tokens (used by components) */
+  --color-bg: initial;
+  --color-surface: initial;
+  --color-surface-hover: initial;
+  --color-border: initial;
+  --color-border-bright: initial;
+  --color-text-primary: initial;
+  --color-text-secondary: initial;
+  --color-text-muted: initial;
+  --color-accent: initial;
+  --color-success: initial;
+  --color-warning: initial;
+  --color-critical: initial;
+  /* Extended tokens (for dual-theme) */
   --color-background: initial;
   --color-foreground: initial;
   --color-foreground-secondary: initial;
   --color-foreground-muted: initial;
-  --color-surface: initial;
-  --color-surface-hover: initial;
   --color-elevated: initial;
   --color-card: initial;
   --color-card-foreground: initial;
   --color-panel: initial;
   --color-panel-foreground: initial;
-  --color-border: initial;
-  --color-border-bright: initial;
   --color-input: initial;
   --color-ring: initial;
   --color-primary: initial;
   --color-primary-foreground: initial;
   --color-interactive: initial;
   --color-interactive-foreground: initial;
-  --color-accent: initial;
   --color-accent-foreground: initial;
   --color-muted: initial;
   --color-muted-foreground: initial;
-  --color-success: initial;
-  --color-warning: initial;
   --color-danger: initial;
   --color-info: initial;
   --color-verified: initial;
@@ -45,31 +52,38 @@
 
 /* ── LIGHT THEME (default) ─────────────────────────────── */
 :root {
+  /* Original tokens */
+  --color-bg: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f0efeb;
+  --color-border: #f0efeb;
+  --color-border-bright: #e8e7e2;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #5c5c5c;
+  --color-text-muted: #8c8c88;
+  --color-accent: #1a7a8a;
+  --color-success: #2d7a4f;
+  --color-warning: #b8860b;
+  --color-critical: #c0392b;
+  /* Extended tokens */
   --color-background: #f6f5f1;
   --color-foreground: #1a1a1a;
   --color-foreground-secondary: #5c5c5c;
   --color-foreground-muted: #8c8c88;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f0efeb;
   --color-elevated: #ffffff;
   --color-card: #ffffff;
   --color-card-foreground: #1a1a1a;
   --color-panel: #f6f5f1;
   --color-panel-foreground: #1a1a1a;
-  --color-border: #f0efeb;
-  --color-border-bright: #e8e7e2;
   --color-input: #f0efeb;
   --color-ring: #1a7a8a;
   --color-primary: #2d7a4f;
   --color-primary-foreground: #ffffff;
   --color-interactive: #1a7a8a;
   --color-interactive-foreground: #ffffff;
-  --color-accent: #b89b3e;
   --color-accent-foreground: #1a1a1a;
   --color-muted: #f0efeb;
   --color-muted-foreground: #8c8c88;
-  --color-success: #2d7a4f;
-  --color-warning: #b8860b;
   --color-danger: #c0392b;
   --color-info: #1a7a8a;
   --color-verified: #2d7a4f;
@@ -80,31 +94,38 @@
 
 /* ── DARK THEME (original identity) ───────────────────── */
 .dark {
+  /* Original tokens */
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-hover: #111111;
+  --color-border: #222222;
+  --color-border-bright: #333333;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #888888;
+  --color-text-muted: #555555;
+  --color-accent: #0df2f2;
+  --color-success: #34c759;
+  --color-warning: #ffcc00;
+  --color-critical: #ff3b30;
+  /* Extended tokens */
   --color-background: #000000;
   --color-foreground: #ffffff;
   --color-foreground-secondary: #888888;
   --color-foreground-muted: #555555;
-  --color-surface: #0a0a0a;
-  --color-surface-hover: #111111;
   --color-elevated: #111111;
   --color-card: #0a0a0a;
   --color-card-foreground: #ffffff;
   --color-panel: #050505;
   --color-panel-foreground: #ffffff;
-  --color-border: #222222;
-  --color-border-bright: #333333;
   --color-input: #0a0a0a;
   --color-ring: #0df2f2;
   --color-primary: #34c759;
   --color-primary-foreground: #000000;
   --color-interactive: #0df2f2;
   --color-interactive-foreground: #000000;
-  --color-accent: #c4a44a;
   --color-accent-foreground: #ffffff;
   --color-muted: #111111;
   --color-muted-foreground: #555555;
-  --color-success: #34c759;
-  --color-warning: #ffcc00;
   --color-danger: #ff3b30;
   --color-info: #0df2f2;
   --color-verified: #34c759;
@@ -115,8 +136,8 @@
 
 /* ── BASE STYLES ───────────────────────────────────────── */
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
@@ -154,7 +175,7 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
@@ -244,14 +265,14 @@ body {
 /* ── GRID BACKGROUND ───────────────────────────────────── */
 .bg-grid {
   background-image:
-    linear-gradient(color-mix(in srgb, var(--color-foreground) 2%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--color-foreground) 2%, transparent) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--color-text-primary) 2%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-text-primary) 2%, transparent) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 .dark .bg-grid {
   background-image:
-    linear-gradient(color-mix(in srgb, var(--color-foreground) 3%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--color-foreground) 3%, transparent) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--color-text-primary) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-text-primary) 3%, transparent) 1px, transparent 1px);
 }
 
 /* ── RAW SIGNAL TEXTURE (brand background) ─────────────── */
@@ -267,7 +288,7 @@ body {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   line-height: 1.8;
-  color: var(--color-foreground);
+  color: var(--color-text-primary);
   opacity: 0.04;
   filter: blur(1.5px);
   overflow: hidden;

@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} flex h-screen flex-col bg-background text-foreground antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} flex h-screen flex-col bg-bg text-text-primary antialiased`}>
         <ThemeProvider>
           <WalletProvider>
             <PipelineProvider>
