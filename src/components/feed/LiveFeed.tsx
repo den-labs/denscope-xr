@@ -6,6 +6,7 @@ import { useEventStore } from '@/stores/events'
 import type { FeedFilters } from '@/hooks/useFeedFilters'
 import { FeedLine } from './FeedLine'
 import { PulseEffect } from './PulseEffect'
+import { WolfMascot } from '@/components/brand/WolfMascot'
 
 const MAX_VISIBLE_FEED_ROWS = 150
 const MAX_ANIMATED_FEED_ROWS = 24
@@ -56,6 +57,7 @@ export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
       {events.length === 0 ? (
         <div className="flex h-full items-center justify-center text-foreground-muted">
           <div className="text-center">
+            <WolfMascot variant="loading" size={48} className="mb-3" />
             <p className="text-lg">Waiting for events...</p>
             <p className="mt-1 text-sm">Listening on ERC-8004 contracts</p>
           </div>

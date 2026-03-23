@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import Link from 'next/link'
 import { fetchOwnerAgents, type OwnerProfile } from '@/lib/supabase/owner-profiles'
 import { getChain } from '@/config/chains'
+import { WolfMascot } from '@/components/brand/WolfMascot'
 
 export function ClaimedAgentsList() {
   const { address } = useAccount()
@@ -38,6 +39,7 @@ export function ClaimedAgentsList() {
   if (agents.length === 0) {
     return (
       <div className="bg-surface border border-border p-8 text-center shadow-sm dark:shadow-none">
+        <WolfMascot variant="empty" size={48} className="mb-3 mx-auto" />
         <p className="text-sm text-foreground-secondary">
           No claimed agents yet.
         </p>

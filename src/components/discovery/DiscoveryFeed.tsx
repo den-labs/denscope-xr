@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useDiscoveryStore } from '@/stores/discovery'
 import { SignalCard } from './SignalCard'
+import { WolfMascot } from '@/components/brand/WolfMascot'
 
 type Props = {
   severity?: string
@@ -53,6 +54,7 @@ export function DiscoveryFeed({ severity, search }: Props) {
     return (
       <div className="flex h-full items-center justify-center text-foreground-muted">
         <div className="text-center">
+          <WolfMascot variant="empty" size={48} className="mb-3" />
           <p className="text-lg">No signals match filters</p>
           <p className="mt-1 text-sm">Try adjusting severity or search criteria</p>
         </div>
