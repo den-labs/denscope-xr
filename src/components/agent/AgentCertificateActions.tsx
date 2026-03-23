@@ -57,7 +57,7 @@ export function AgentCertificateActions({ chainId, agentId, agentName }: Props) 
 
       <button
         onClick={handleShare}
-        className="border border-text-primary bg-text-primary px-4 py-1.5 text-xs font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
+        className="border border-foreground bg-foreground px-4 py-1.5 text-xs font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
       >
         Share Certificate
       </button>

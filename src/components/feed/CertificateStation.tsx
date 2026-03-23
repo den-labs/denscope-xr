@@ -193,14 +193,14 @@ function StationContent({
           <button
             onClick={handleShare}
             disabled={!agent}
-            className="flex-1 border border-text-primary bg-text-primary px-4 py-2.5 text-sm font-bold text-background hover:bg-transparent hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 border border-foreground bg-foreground px-4 py-2.5 text-sm font-bold text-background hover:bg-transparent hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Share Certificate
           </button>
           <button
             onClick={handleDownload}
             disabled={!agent}
-            className="border border-border px-3 py-2.5 text-sm text-foreground-muted hover:text-foreground hover:border-text-primary transition-colors disabled:opacity-40"
+            className="border border-border px-3 py-2.5 text-sm text-foreground-muted hover:text-foreground hover:border-foreground transition-colors disabled:opacity-40"
             title="Download PNG"
           >
             ⬇
