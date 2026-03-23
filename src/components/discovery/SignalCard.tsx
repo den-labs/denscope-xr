@@ -5,7 +5,7 @@ import { ChainBadge } from '@/components/shared/ChainBadge'
 const severityBorder = {
   info: 'border-l-accent',
   warning: 'border-l-warning',
-  critical: 'border-l-danger',
+  critical: 'border-l-critical',
 }
 
 const severityPill = {
@@ -17,14 +17,14 @@ const severityPill = {
 export function SignalCard({ signal }: { signal: DiscoverySignal }) {
   return (
     <div
-      className={`bg-surface border border-border border-l-2 p-4 shadow-sm dark:shadow-none ${severityBorder[signal.severity]}`}
+      className={`bg-surface border border-border border-l-2 p-4 ${severityBorder[signal.severity]}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="font-display font-semibold text-sm text-foreground">
+          <h3 className="font-display font-semibold text-sm text-text-primary">
             {signal.title}
           </h3>
-          <span className="font-mono text-xs text-foreground-muted">
+          <span className="font-mono text-xs text-text-muted">
             {signal.kind} / {signal.agentIds[0] ?? '---'}
           </span>
         </div>
@@ -36,9 +36,9 @@ export function SignalCard({ signal }: { signal: DiscoverySignal }) {
         </div>
       </div>
 
-      <p className="text-sm text-foreground-secondary mt-2">{signal.description}</p>
+      <p className="text-sm text-text-secondary mt-2">{signal.description}</p>
 
-      <time className="font-mono text-[11px] text-foreground-muted uppercase mt-3 block">
+      <time className="font-mono text-[10px] text-text-muted uppercase mt-3 block">
         {new Date(signal.timestamp).toLocaleTimeString()}
       </time>
 
@@ -46,7 +46,7 @@ export function SignalCard({ signal }: { signal: DiscoverySignal }) {
         <div className="mt-3">
           <Link
             href={`/agent/${signal.chainId}/${signal.agentIds[0]}`}
-            className="text-xs border border-border px-3 py-1 text-foreground-secondary hover:text-foreground hover:border-border-bright transition-colors"
+            className="text-xs border border-border px-3 py-1 text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors"
           >
             Open Agent
           </Link>

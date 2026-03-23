@@ -32,42 +32,42 @@ function IncidentCard({ incident, onResolve }: { incident: Incident; onResolve: 
   }
 
   return (
-    <div className="bg-surface border border-border p-4 space-y-2 shadow-sm dark:shadow-none">
+    <div className="bg-surface border border-border p-4 space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`status-pill ${SEVERITY_STYLES[incident.severity] ?? 'status-pill-neutral'}`}>
             {incident.severity.toUpperCase()}
           </span>
-          <span className="text-xs text-foreground font-bold">
+          <span className="font-mono text-xs text-text-primary font-bold">
             {incident.title}
           </span>
         </div>
-        <span className="text-[11px] text-foreground-muted font-mono">
+        <span className="text-[10px] text-text-muted font-mono">
           {new Date(incident.triggeredAt).toLocaleString()}
         </span>
       </div>
-      <p className="text-xs text-foreground-secondary">
+      <p className="text-xs text-text-secondary font-mono">
         {incident.description}
       </p>
       {incident.whyItMatters && (
-        <p className="text-xs text-foreground-muted italic">
+        <p className="text-xs text-text-muted italic">
           {incident.whyItMatters}
         </p>
       )}
       <div className="flex items-center justify-between pt-1">
-        <span className="text-[11px] text-foreground-muted">
+        <span className="text-[10px] text-text-muted font-mono">
           Agent #{incident.agentId} &middot; Chain {incident.chainId}
         </span>
         {!incident.resolvedAt ? (
           <button
             onClick={handleResolve}
             disabled={resolving}
-            className="text-[11px] text-interactive hover:underline disabled:opacity-50"
+            className="text-[10px] font-mono text-accent hover:underline disabled:opacity-50"
           >
             {resolving ? 'Resolving...' : 'Mark Resolved'}
           </button>
         ) : (
-          <span className="text-[11px] text-success">Resolved</span>
+          <span className="text-[10px] font-mono text-success">Resolved</span>
         )}
       </div>
     </div>
@@ -105,14 +105,14 @@ export function IncidentTimeline() {
   }, [address, push])
 
   if (loading) {
-    return <p className="text-xs text-foreground-muted">Loading signals...</p>
+    return <p className="text-xs text-text-muted font-mono">Loading signals...</p>
   }
 
   if (incidents.length === 0) {
     return (
-      <div className="bg-surface border border-border p-8 text-center shadow-sm dark:shadow-none">
-        <p className="text-sm text-foreground-secondary">No signals detected yet.</p>
-        <p className="mt-2 text-xs text-foreground-muted">
+      <div className="bg-surface border border-border p-8 text-center">
+        <p className="text-sm text-text-secondary">No signals detected yet.</p>
+        <p className="mt-2 text-xs text-text-muted">
           Signals appear when your agents receive feedback, reputation changes, or validation events.
         </p>
       </div>

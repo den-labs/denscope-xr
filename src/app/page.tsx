@@ -78,7 +78,7 @@ export default function FeedPage() {
         <h1 className="font-display text-2xl font-bold uppercase tracking-wider">
           LIVE FEED
         </h1>
-        <p className="text-foreground-secondary text-xs uppercase tracking-widest">
+        <p className="text-text-secondary text-xs uppercase tracking-widest font-mono">
           REAL-TIME AGENT OBSERVABILITY LAYER
         </p>
       </div>
@@ -86,16 +86,16 @@ export default function FeedPage() {
       {/* Stat Strip */}
       <div className="grid grid-cols-3 border-b border-border">
         <div className="bg-surface border-r border-border px-4 py-2">
-          <p className="text-[11px] uppercase tracking-widest text-foreground-muted">Head Block</p>
-          <p className="text-sm font-mono text-foreground">{headBlock > 0 ? headBlock.toLocaleString() : '\u2014'}</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Head Block</p>
+          <p className="text-sm font-mono text-text-primary">{headBlock > 0 ? headBlock.toLocaleString() : '\u2014'}</p>
         </div>
         <div className="bg-surface border-r border-border px-4 py-2">
-          <p className="text-[11px] uppercase tracking-widest text-foreground-muted">Agents</p>
-          <p className="text-sm font-mono text-foreground">{agentCount}</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Agents</p>
+          <p className="text-sm font-mono text-text-primary">{agentCount}</p>
         </div>
         <div className="bg-surface border-border px-4 py-2">
-          <p className="text-[11px] uppercase tracking-widest text-foreground-muted">Events</p>
-          <p className="text-sm font-mono text-foreground">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Events</p>
+          <p className="text-sm font-mono text-text-primary">
             {filteredCount !== null ? `${filteredCount} / ${events.length}` : events.length}
           </p>
         </div>

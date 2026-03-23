@@ -76,7 +76,7 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
     <div className="border-b border-border bg-surface px-4 py-2 flex flex-wrap items-center gap-3">
       {/* Kind pills */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] uppercase tracking-widest text-foreground-muted mr-1">Kind</span>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted mr-1">Kind</span>
         {ALL_KINDS.map((kind) => {
           const active = filters.kinds.has(kind)
           return (
@@ -84,7 +84,7 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
               key={kind}
               onClick={() => toggleKind(kind)}
               className={`status-pill cursor-pointer transition-opacity ${kindPillClass[kind]} ${
-                active ? 'opacity-100 ring-1 ring-ring' : filters.kinds.size > 0 ? 'opacity-40' : 'opacity-100'
+                active ? 'opacity-100 ring-1 ring-text-primary' : filters.kinds.size > 0 ? 'opacity-40' : 'opacity-100'
               }`}
             >
               {kindLabels[kind]}
@@ -95,11 +95,11 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
 
       {/* Chain dropdown */}
       <div className="flex items-center gap-1.5">
-        <span className="text-[11px] uppercase tracking-widest text-foreground-muted">Chain</span>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Chain</span>
         <select
           value={filters.chainId ?? ''}
           onChange={(e) => setChain(e.target.value)}
-          className="bg-surface border border-border text-foreground text-xs px-2 py-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="bg-surface border border-border text-text-primary text-xs font-mono px-2 py-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-text-primary"
         >
           <option value="">All Chains</option>
           {chains.map((c) => (
@@ -112,14 +112,14 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
 
       {/* Agent ID input */}
       <div className="flex items-center gap-1.5">
-        <span className="text-[11px] uppercase tracking-widest text-foreground-muted">Agent</span>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Agent</span>
         <input
           type="text"
           inputMode="numeric"
           placeholder="#"
           value={agentInput}
           onChange={(e) => setAgent(e.target.value)}
-          className="bg-surface border border-border text-foreground text-xs px-2 py-1 w-16 rounded-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-foreground-muted"
+          className="bg-surface border border-border text-text-primary text-xs font-mono px-2 py-1 w-16 rounded-sm focus:outline-none focus:ring-1 focus:ring-text-primary placeholder:text-text-muted"
         />
       </div>
 
@@ -127,7 +127,7 @@ export function FeedFiltersBar({ filters, onChange }: FeedFiltersBarProps) {
       {hasActiveFilters && (
         <button
           onClick={() => onChange({ kinds: new Set(), chainId: null, agentId: '' })}
-          className="text-[11px] uppercase tracking-widest text-foreground-muted hover:text-foreground transition-colors ml-auto"
+          className="text-[10px] font-mono uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors ml-auto"
         >
           Clear filters
         </button>

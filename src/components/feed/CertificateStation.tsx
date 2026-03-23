@@ -51,11 +51,11 @@ function StationContent({
 
   if (!agent) {
     return (
-      <div className="raw-signal-texture flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <p className="relative z-10 font-display text-base font-bold text-foreground">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <p className="font-display text-base font-bold text-text-primary">
           Select an agent to generate a Trust Certificate
         </p>
-        <p className="relative z-10 mt-2 text-xs text-foreground-muted">
+        <p className="mt-2 font-mono text-xs text-text-muted">
           Click any row in the feed.
         </p>
       </div>
@@ -126,7 +126,7 @@ function StationContent({
         ) : (
           <>
             {/* 2) Certificate Preview */}
-            <div className="corner-framed border border-border bg-surface overflow-hidden shadow-sm dark:shadow-none" style={{ '--corner-size': '60px' } as React.CSSProperties}>
+            <div className="border border-border bg-surface overflow-hidden">
               <img
                 src={certUrl}
                 alt={`Trust Certificate for ${name}`}
@@ -137,7 +137,7 @@ function StationContent({
 
             {/* Description (max 2 lines) */}
             {agent.metadata?.description && (
-              <p className="text-sm text-foreground-secondary line-clamp-2">
+              <p className="text-sm text-text-secondary line-clamp-2">
                 {agent.metadata.description}
               </p>
             )}
@@ -145,20 +145,20 @@ function StationContent({
             {/* 4) Secondary CTA */}
             <a
               href={reportUrl}
-              className="text-xs text-interactive hover:underline"
+              className="text-xs text-accent font-mono hover:underline"
             >
               Open Full Report &rarr;
             </a>
 
             {/* 5) Micro-data (1 line) */}
-            <p className="font-mono text-[11px] text-foreground-muted truncate">
+            <p className="font-mono text-[10px] text-text-muted truncate">
               Owner {truncAddr(agent.owner)} | +{agent.positiveFeedback} / -{agent.negativeFeedback} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
             </p>
 
             {error && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-foreground-muted">Metadata unavailable</span>
-                <button onClick={onRetry} className="text-xs text-interactive hover:underline">Retry</button>
+                <span className="text-xs text-text-muted font-mono">Metadata unavailable</span>
+                <button onClick={onRetry} className="text-xs text-accent font-mono hover:underline">Retry</button>
               </div>
             )}
           </>
@@ -168,16 +168,16 @@ function StationContent({
       {/* Copy modal fallback */}
       {copyModalUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setCopyModalUrl(null)}>
-          <div className="bg-background border border-border p-4 rounded-lg max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs text-foreground-muted mb-2">Copy this link:</p>
+          <div className="bg-bg border border-border p-4 rounded-lg max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs text-text-muted mb-2 font-mono">Copy this link:</p>
             <input
               type="text"
               readOnly
               value={copyModalUrl}
-              className="w-full bg-surface border border-border px-3 py-2 text-sm font-mono text-foreground rounded"
+              className="w-full bg-surface border border-border px-3 py-2 text-sm font-mono text-text-primary rounded"
               onFocus={(e) => e.target.select()}
             />
-            <button onClick={() => setCopyModalUrl(null)} className="mt-3 w-full text-xs text-foreground-muted hover:text-foreground">
+            <button onClick={() => setCopyModalUrl(null)} className="mt-3 w-full text-xs text-text-muted hover:text-text-primary font-mono">
               Close
             </button>
           </div>
@@ -185,22 +185,22 @@ function StationContent({
       )}
 
       {/* 3) Action bar — sticky bottom */}
-      <div className="sticky bottom-0 border-t border-border bg-background px-5 py-3">
+      <div className="sticky bottom-0 border-t border-border bg-bg px-5 py-3">
         {shareStatus && (
-          <p className="text-xs text-interactive text-center mb-2">{shareStatus}</p>
+          <p className="text-xs text-accent font-mono text-center mb-2">{shareStatus}</p>
         )}
         <div className="flex items-center gap-2">
           <button
             onClick={handleShare}
             disabled={!agent}
-            className="flex-1 border border-foreground bg-foreground px-4 py-2.5 text-sm font-bold text-background hover:bg-transparent hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 border border-text-primary bg-text-primary px-4 py-2.5 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Share Certificate
           </button>
           <button
             onClick={handleDownload}
             disabled={!agent}
-            className="border border-border px-3 py-2.5 text-sm text-foreground-muted hover:text-foreground hover:border-foreground transition-colors disabled:opacity-40"
+            className="border border-border px-3 py-2.5 text-sm text-text-muted hover:text-text-primary hover:border-text-primary transition-colors disabled:opacity-40"
             title="Download PNG"
           >
             ⬇
@@ -209,7 +209,7 @@ function StationContent({
         <button
           onClick={handleShareX}
           disabled={!agent}
-          className="w-full mt-2 text-xs text-foreground-muted hover:text-interactive transition-colors disabled:opacity-40"
+          className="w-full mt-2 text-xs text-text-muted font-mono hover:text-accent transition-colors disabled:opacity-40"
         >
           Share on X →
         </button>
@@ -223,10 +223,10 @@ function RailHandle({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex h-full w-10 flex-col items-center justify-center border-l border-border bg-background hover:bg-surface transition-colors"
+      className="flex h-full w-10 flex-col items-center justify-center border-l border-border bg-bg hover:bg-surface transition-colors"
       aria-label="Open Certificate Station"
     >
-      <span className="text-[11px] uppercase tracking-widest text-foreground-muted [writing-mode:vertical-rl] rotate-180">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted [writing-mode:vertical-rl] rotate-180">
         CERT
       </span>
     </button>
@@ -306,10 +306,10 @@ export function CertificateStation({ agentKey, layout, onClose }: CertificateSta
   // ── Header (shared) ──
   const header = (
     <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
-      <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
         TRUST CERTIFICATE
       </span>
-      <button onClick={handleClose} className="text-foreground-muted hover:text-foreground text-xs" aria-label="Close station">
+      <button onClick={handleClose} className="text-text-muted hover:text-text-primary text-xs" aria-label="Close station">
         ✕
       </button>
     </div>
@@ -322,7 +322,7 @@ export function CertificateStation({ agentKey, layout, onClose }: CertificateSta
     }
 
     return (
-      <div className="flex h-full w-[440px] shrink-0 flex-col border-l border-border bg-background">
+      <div className="flex h-full w-[440px] shrink-0 flex-col border-l border-border bg-bg">
         {header}
         <StationContent agent={enriched ?? null} loading={loading} error={error} onRetry={retry} />
       </div>
@@ -354,7 +354,7 @@ export function CertificateStation({ agentKey, layout, onClose }: CertificateSta
             onDragEnd={(_, info) => {
               if (info.offset.y > 100) onClose?.()
             }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[85vh] flex-col rounded-t-2xl border-t border-border bg-background shadow-2xl"
+            className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[85vh] flex-col rounded-t-2xl border-t border-border bg-bg shadow-2xl"
           >
             {/* Drag handle */}
             <div className="flex justify-center py-2 shrink-0">

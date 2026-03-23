@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SearchModal } from '@/components/search/SearchModal'
 import { ConnectButton } from '@/components/auth/ConnectButton'
 import { IncidentBadge } from '@/components/console/IncidentBadge'
-import { ThemeToggle } from '@/components/layout/ThemeToggle'
 
 const navItems = [
   { href: '/', label: 'Live Feed' },
@@ -39,7 +38,7 @@ export function Header() {
   }, [])
 
   return (
-    <header className="border-b border-border bg-background">
+    <header className="border-b border-border bg-bg">
       <div className="flex items-center justify-between px-6 py-3">
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-8">
@@ -50,9 +49,9 @@ export function Header() {
               alt="DenScope"
               width={28}
               height={28}
-              className="dark:invert"
+              className="invert"
             />
-            <span className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
+            <span className="font-display text-sm font-bold uppercase tracking-widest text-text-primary">
               Denscope
             </span>
           </Link>
@@ -68,8 +67,8 @@ export function Header() {
                   href={item.href}
                   className={`relative px-0 py-1.5 text-xs uppercase tracking-widest transition-colors ${
                     isActive
-                      ? 'text-foreground'
-                      : 'text-foreground-muted hover:text-foreground-secondary'
+                      ? 'text-text-primary'
+                      : 'text-text-muted hover:text-text-secondary'
                   }`}
                 >
                   {item.label}
@@ -78,7 +77,7 @@ export function Header() {
                   )}
                   {isActive && (
                     <span
-                      className="absolute bottom-0 left-0 h-px w-full bg-primary"
+                      className="absolute bottom-0 left-0 h-px w-full bg-text-primary"
                       aria-hidden="true"
                     />
                   )}
@@ -93,22 +92,20 @@ export function Header() {
           {/* Search — desktop only */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="hidden md:flex items-center gap-2 border border-border bg-surface px-3 py-1 text-xs text-foreground-muted transition-colors hover:text-foreground-secondary"
+            className="hidden md:flex items-center gap-2 border border-border bg-surface px-3 py-1 text-xs font-mono text-text-muted transition-colors hover:text-text-secondary"
           >
             Search
-            <kbd className="border border-border px-1 py-0.5 text-[11px]">
+            <kbd className="border border-border px-1 py-0.5 text-[10px]">
               {'\u2318'}K
             </kbd>
           </button>
-
-          <ThemeToggle />
 
           <ConnectButton />
 
           {/* Status — desktop only */}
           <div className="hidden md:flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
+            <span className="text-[10px] uppercase tracking-widest text-text-muted">
               Mainnet
             </span>
           </div>
@@ -116,7 +113,7 @@ export function Header() {
           {/* Hamburger — mobile only */}
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="md:hidden flex items-center justify-center w-8 h-8 text-foreground-muted hover:text-foreground transition-colors"
+            className="md:hidden flex items-center justify-center w-8 h-8 text-text-muted hover:text-text-primary transition-colors"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           >
             <svg
@@ -153,7 +150,7 @@ export function Header() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden border-t border-border bg-background"
+            className="md:hidden overflow-hidden border-t border-border bg-bg"
           >
             <div className="px-6 py-3">
               {/* Search */}
@@ -162,10 +159,10 @@ export function Header() {
                   setMenuOpen(false)
                   setSearchOpen(true)
                 }}
-                className="flex w-full items-center gap-2 border border-border bg-surface px-3 py-2.5 text-xs text-foreground-muted transition-colors hover:text-foreground-secondary"
+                className="flex w-full items-center gap-2 border border-border bg-surface px-3 py-2.5 text-xs font-mono text-text-muted transition-colors hover:text-text-secondary"
               >
                 Search
-                <kbd className="ml-auto border border-border px-1 py-0.5 text-[11px]">
+                <kbd className="ml-auto border border-border px-1 py-0.5 text-[10px]">
                   {'\u2318'}K
                 </kbd>
               </button>
@@ -185,8 +182,8 @@ export function Header() {
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center px-6 py-3 text-xs uppercase tracking-widest transition-colors ${
                       isActive
-                        ? 'text-foreground bg-surface'
-                        : 'text-foreground-muted hover:text-foreground-secondary hover:bg-surface/50'
+                        ? 'text-text-primary bg-surface'
+                        : 'text-text-muted hover:text-text-secondary hover:bg-surface/50'
                     }`}
                   >
                     {item.label}
@@ -201,14 +198,11 @@ export function Header() {
             <div className="border-t border-border" />
 
             {/* Status */}
-            <div className="flex items-center justify-between px-6 py-3">
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
-                  Mainnet
-                </span>
-              </div>
-              <ThemeToggle />
+            <div className="flex items-center gap-2 px-6 py-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />
+              <span className="text-[10px] uppercase tracking-widest text-text-muted">
+                Mainnet
+              </span>
             </div>
           </motion.div>
         )}

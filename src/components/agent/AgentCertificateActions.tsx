@@ -52,19 +52,19 @@ export function AgentCertificateActions({ chainId, agentId, agentName }: Props) 
   return (
     <>
       {status && (
-        <span className="text-xs text-interactive">{status}</span>
+        <span className="text-xs text-accent font-mono">{status}</span>
       )}
 
       <button
         onClick={handleShare}
-        className="border border-foreground bg-foreground px-4 py-1.5 text-xs font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
+        className="border border-text-primary bg-text-primary px-4 py-1.5 text-xs font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors"
       >
         Share Certificate
       </button>
 
       <button
         onClick={handleDownload}
-        className="border border-border bg-surface px-3 py-1.5 text-xs text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
+        className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
         title="Download PNG"
       >
         Download
@@ -72,16 +72,16 @@ export function AgentCertificateActions({ chainId, agentId, agentName }: Props) 
 
       {copyModalUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setCopyModalUrl(null)}>
-          <div className="bg-background border border-border p-4 rounded-lg max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs text-foreground-muted mb-2">Copy this link:</p>
+          <div className="bg-bg border border-border p-4 rounded-lg max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs text-text-muted mb-2 font-mono">Copy this link:</p>
             <input
               type="text"
               readOnly
               value={copyModalUrl}
-              className="w-full bg-surface border border-border px-3 py-2 text-sm font-mono text-foreground rounded"
+              className="w-full bg-surface border border-border px-3 py-2 text-sm font-mono text-text-primary rounded"
               onFocus={(e) => e.target.select()}
             />
-            <button onClick={() => setCopyModalUrl(null)} className="mt-3 w-full text-xs text-foreground-muted hover:text-foreground">
+            <button onClick={() => setCopyModalUrl(null)} className="mt-3 w-full text-xs text-text-muted hover:text-text-primary font-mono">
               Close
             </button>
           </div>

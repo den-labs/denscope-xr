@@ -25,7 +25,7 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
   if (!isConnected || !address) {
     return (
       <div className="flex items-center gap-3">
-        <p className="text-xs text-foreground-muted">
+        <p className="text-xs text-text-muted font-mono">
           Are you the owner of this agent?
         </p>
         <ConnectButton />
@@ -36,7 +36,7 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
   // Connected but not the owner
   if (address.toLowerCase() !== ownerAddress.toLowerCase()) {
     return (
-      <p className="text-xs text-foreground-muted">
+      <p className="text-xs text-text-muted font-mono">
         Connected wallet does not match the on-chain owner of this agent.
       </p>
     )
@@ -45,7 +45,7 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
   // Already claimed
   if (state === 'success') {
     return (
-      <p className="text-xs text-success">
+      <p className="text-xs text-success font-mono">
         Agent claimed successfully.
       </p>
     )
@@ -96,14 +96,14 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
       <button
         onClick={handleClaim}
         disabled={state === 'signing' || state === 'verifying'}
-        className="border border-interactive/30 bg-interactive/5 px-3 py-1.5 text-xs text-interactive hover:bg-interactive/10 hover:border-interactive/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="border border-accent/30 bg-accent/5 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/10 hover:border-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {state === 'signing' && 'Sign message...'}
         {state === 'verifying' && 'Verifying...'}
         {(state === 'idle' || state === 'error') && 'Claim this Agent'}
       </button>
       {error && (
-        <p className="text-xs text-danger">{error}</p>
+        <p className="text-xs text-critical font-mono">{error}</p>
       )}
     </div>
   )

@@ -5,7 +5,6 @@ import { useAccount } from 'wagmi'
 import Link from 'next/link'
 import { fetchOwnerAgents, type OwnerProfile } from '@/lib/supabase/owner-profiles'
 import { getChain } from '@/config/chains'
-import { WolfMascot } from '@/components/brand/WolfMascot'
 
 export function ClaimedAgentsList() {
   const { address } = useAccount()
@@ -38,12 +37,11 @@ export function ClaimedAgentsList() {
 
   if (agents.length === 0) {
     return (
-      <div className="bg-surface border border-border p-8 text-center shadow-sm dark:shadow-none">
-        <WolfMascot variant="empty" size={48} className="mb-3 mx-auto" />
-        <p className="text-sm text-foreground-secondary">
+      <div className="bg-surface border border-border p-8 text-center">
+        <p className="text-sm text-text-secondary">
           No claimed agents yet.
         </p>
-        <p className="mt-2 text-xs text-foreground-muted">
+        <p className="mt-2 text-xs text-text-muted">
           Visit an agent page and click &ldquo;Claim this Agent&rdquo; to get started.
         </p>
       </div>
@@ -61,16 +59,16 @@ export function ClaimedAgentsList() {
             className="flex items-center justify-between bg-surface border border-border p-4 hover:border-border-bright transition-colors"
           >
             <div className="flex items-center gap-4">
-              <span className="font-display text-lg font-bold text-foreground">
+              <span className="font-display text-lg font-bold text-text-primary">
                 #{agent.agent_id}
               </span>
-              <span className="text-xs text-foreground-muted">
+              <span className="text-xs text-text-muted font-mono">
                 {chain?.name ?? `Chain ${agent.chain_id}`}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="status-pill status-pill-success">CLAIMED</span>
-              <span className="text-[11px] text-foreground-muted">
+              <span className="text-[10px] text-text-muted font-mono">
                 {new Date(agent.claimed_at).toLocaleDateString()}
               </span>
             </div>
