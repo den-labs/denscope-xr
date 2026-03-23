@@ -132,15 +132,15 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
   // Empty state content
   const emptyContent = (
     <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <p className="font-display text-lg font-bold text-text-primary">
+      <p className="font-display text-lg font-bold text-foreground">
         Generate a Trust Certificate
       </p>
-      <p className="mt-2 font-mono text-xs text-text-secondary">
+      <p className="mt-2 text-xs text-foreground-secondary">
         Click any agent to preview and share.
       </p>
       <button
         disabled
-        className="mt-6 w-full border border-border bg-surface px-4 py-3 text-sm font-mono font-bold text-text-muted cursor-not-allowed"
+        className="mt-6 w-full border border-border bg-surface px-4 py-3 text-sm font-bold text-foreground-muted cursor-not-allowed"
       >
         Share Certificate
       </button>
@@ -161,7 +161,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             {/* Certificate Preview Card */}
             <div className="border border-border bg-surface p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <span className="font-display text-lg font-bold text-text-primary truncate">
+                <span className="font-display text-lg font-bold text-foreground truncate">
                   {name}
                 </span>
                 <ChainBadge chainId={enriched.chainId} />
@@ -175,7 +175,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
               >
                 <div className="flex items-center justify-between gap-3">
                   <span
-                    className="font-mono text-[11px] uppercase tracking-widest"
+                    className="text-[11px] uppercase tracking-widest"
                     style={{ color: shareCardState.accentColor }}
                   >
                     {shareCardState.label}
@@ -187,23 +187,23 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
                     {trustScore ? Math.round(trustScore.score) : '\u2014'}
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-text-secondary">
+                <p className="text-[11px] text-foreground-secondary">
                   {shareCardState.evidenceLine}
                 </p>
               </div>
               {enriched.metadata?.description && (
-                <p className="text-sm text-text-secondary line-clamp-2">
+                <p className="text-sm text-foreground-secondary line-clamp-2">
                   {enriched.metadata.description}
                 </p>
               )}
-              <div className="font-mono text-xs text-text-secondary">
+              <div className="text-xs text-foreground-secondary">
                 {feedbackStats.total > 0 ? (
                   <span>
                     Positive: <span className="text-success">{feedbackStats.positivePct}%</span>
                     {' '}({feedbackStats.total} total)
                   </span>
                 ) : (
-                  <span className="text-text-muted">Awaiting feedback</span>
+                  <span className="text-foreground-muted">Awaiting feedback</span>
                 )}
               </div>
             </div>
@@ -211,7 +211,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             {/* Primary CTA — Share Certificate (direct X intent) */}
             <button
               onClick={handleShare}
-              className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors"
+              className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
             >
               Share Certificate
             </button>
@@ -220,7 +220,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             <div className="relative">
               <button
                 onClick={toggleShareMenu}
-                className="w-full text-center font-mono text-[11px] text-text-muted hover:text-text-secondary transition-colors"
+                className="w-full text-center text-[11px] text-foreground-muted hover:text-foreground-secondary transition-colors"
               >
                 More share options...
               </button>
@@ -231,7 +231,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setShareMenuOpen(false)}
-                    className="px-4 py-2.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors text-left"
+                    className="px-4 py-2.5 text-xs text-foreground-secondary hover:bg-surface-hover hover:text-foreground transition-colors text-left"
                   >
                     I Own This Agent
                   </a>
@@ -242,20 +242,20 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             {/* Secondary CTA */}
             <a
               href={`/agent/${enriched.chainId}/${enriched.agentId}`}
-              className="block text-center font-mono text-xs text-text-muted hover:text-accent transition-colors"
+              className="block text-center text-xs text-foreground-muted hover:text-interactive transition-colors"
             >
               View Full Report &rarr;
             </a>
 
             {/* Micro-data (1 line) */}
-            <p className="font-mono text-[10px] text-text-muted truncate">
+            <p className="font-mono text-[11px] text-foreground-muted truncate">
               Owner {truncateAddress(enriched.owner)} | +{feedbackStats.posCount} / -{feedbackStats.negCount} / ={feedbackStats.neutralCount} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
             </p>
 
             {error && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-text-muted font-mono">Metadata unavailable</span>
-                <button onClick={retry} className="text-xs text-accent font-mono hover:underline">Retry</button>
+                <span className="text-xs text-foreground-muted">Metadata unavailable</span>
+                <button onClick={retry} className="text-xs text-interactive hover:underline">Retry</button>
               </div>
             )}
 
@@ -280,43 +280,43 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
   // Docked mode: always render panel (no AnimatePresence wrapper for show/hide)
   if (isDocked) {
     return (
-      <div className="flex h-full w-96 flex-col border-l border-border bg-bg">
+      <div className="flex h-full w-96 flex-col border-l border-border bg-background">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+          <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
             TRUST CERTIFICATE
           </span>
-          <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs">
+          <button onClick={onClose} className="text-foreground-muted hover:text-foreground text-xs">
             ✕
           </button>
         </div>
         <div className="border-b border-border px-6 py-2 flex items-center gap-2">
           <button
             onClick={() => setTab('inspector')}
-            className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+            className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
               tab === 'inspector'
-                ? 'border-text-primary bg-text-primary text-bg'
-                : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                ? 'border-text-primary bg-text-primary text-background'
+                : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
             }`}
           >
             Inspector
           </button>
           <button
             onClick={() => setTab('tape')}
-            className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+            className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
               tab === 'tape'
-                ? 'border-text-primary bg-text-primary text-bg'
-                : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                ? 'border-text-primary bg-text-primary text-background'
+                : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
             }`}
           >
             Tape
           </button>
           <button
             onClick={() => setTab('leaders')}
-            className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+            className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
               tab === 'leaders'
-                ? 'border-text-primary bg-text-primary text-bg'
-                : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                ? 'border-text-primary bg-text-primary text-background'
+                : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
             }`}
           >
             Leaders
@@ -336,44 +336,44 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed right-0 top-0 z-50 flex h-full w-96 max-w-[90vw] flex-col border-l border-border bg-bg shadow-2xl"
+          className="fixed right-0 top-0 z-50 flex h-full w-96 max-w-[90vw] flex-col border-l border-border bg-background shadow-2xl"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted">
               TRUST CERTIFICATE
             </span>
-            <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs">
+            <button onClick={onClose} className="text-foreground-muted hover:text-foreground text-xs">
               ✕
             </button>
           </div>
           <div className="border-b border-border px-6 py-2 flex items-center gap-2">
             <button
               onClick={() => setTab('inspector')}
-              className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+              className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                 tab === 'inspector'
-                  ? 'border-text-primary bg-text-primary text-bg'
-                  : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                  ? 'border-text-primary bg-text-primary text-background'
+                  : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
               }`}
             >
               Inspector
             </button>
             <button
               onClick={() => setTab('tape')}
-              className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+              className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                 tab === 'tape'
-                  ? 'border-text-primary bg-text-primary text-bg'
-                  : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                  ? 'border-text-primary bg-text-primary text-background'
+                  : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
               }`}
             >
               Tape
             </button>
             <button
               onClick={() => setTab('leaders')}
-              className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+              className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                 tab === 'leaders'
-                  ? 'border-text-primary bg-text-primary text-bg'
-                  : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                  ? 'border-text-primary bg-text-primary text-background'
+                  : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
               }`}
             >
               Leaders

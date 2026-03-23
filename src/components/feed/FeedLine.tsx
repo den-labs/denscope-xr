@@ -88,7 +88,7 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
     >
       {/* Desktop: full grid */}
       <div className="hidden md:grid grid-cols-[120px_100px_100px_1fr_120px_auto_auto] items-center gap-0">
-        <span className="shrink-0 text-text-muted text-xs">
+        <span className="shrink-0 text-foreground-muted text-xs">
           {formatTime(event.timestamp)}
         </span>
         <span>
@@ -96,22 +96,22 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
             {kindLabels[event.kind] ?? event.kind.toUpperCase()}
           </span>
         </span>
-        <span className="text-text-secondary text-xs">ERC-8004</span>
-        <span className="truncate text-text-primary text-xs group-hover:text-accent group-hover:underline transition-colors">
+        <span className="text-foreground-secondary text-xs">ERC-8004</span>
+        <span className="truncate text-foreground text-xs group-hover:text-interactive group-hover:underline transition-colors">
           {formatSummary(event)}
         </span>
-        <span className="font-mono text-text-muted text-xs">
+        <span className="font-mono text-foreground-muted text-xs">
           {formatTxHash(event.txHash)}
         </span>
         <span
           role="button"
           tabIndex={-1}
           onClick={handleShare}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent px-2"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-foreground-muted hover:text-interactive px-2"
         >
           <ShareIcon />
         </span>
-        <span className="text-[10px] tracking-wider uppercase border border-border px-2 py-0.5 text-text-muted group-hover:border-accent group-hover:text-accent transition-colors whitespace-nowrap">
+        <span className="text-[11px] tracking-wider uppercase border border-border px-2 py-0.5 text-foreground-muted group-hover:border-interactive group-hover:text-interactive transition-colors whitespace-nowrap">
           INSPECT
         </span>
       </div>
@@ -122,19 +122,19 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
           <span className={kindPillClass[event.kind] ?? 'status-pill status-pill-neutral'}>
             {kindLabels[event.kind] ?? event.kind.toUpperCase()}
           </span>
-          <span className="truncate flex-1 text-text-primary text-xs group-hover:text-accent transition-colors">
+          <span className="truncate flex-1 text-foreground text-xs group-hover:text-interactive transition-colors">
             {formatSummary(event)}
           </span>
           <span
             role="button"
             tabIndex={-1}
             onClick={handleShare}
-            className="text-text-muted hover:text-accent shrink-0"
+            className="text-foreground-muted hover:text-interactive shrink-0"
           >
             <ShareIcon />
           </span>
         </div>
-        <div className="flex items-center justify-between text-text-muted text-[10px]">
+        <div className="flex items-center justify-between text-foreground-muted text-[11px]">
           <span>{formatTime(event.timestamp)}</span>
           <span>{formatTxHash(event.txHash)}</span>
         </div>

@@ -23,7 +23,7 @@ export default function EmbedLayout({ children }: { children: React.ReactNode })
         <meta name="robots" content="noindex" />
       </head>
       <body
-        className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} bg-bg text-text-primary antialiased`}
+        className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} bg-background text-foreground antialiased`}
       >
         {children}
       </body>

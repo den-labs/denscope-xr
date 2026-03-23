@@ -146,23 +146,23 @@ export function RegisterAgentPanel() {
   const isWorking = status === 'uploading' || status === 'signing' || status === 'confirming' || isConfirming
 
   return (
-    <div className="bg-surface border border-border p-6 space-y-4">
-      <h2 className="font-display text-lg font-bold uppercase tracking-wider text-text-primary">
+    <div className="bg-surface border border-border p-6 space-y-4 shadow-sm dark:shadow-none">
+      <h2 className="font-display text-lg font-bold uppercase tracking-wider text-foreground">
         Register Agent
       </h2>
-      <p className="text-xs text-text-muted font-mono">
+      <p className="text-xs text-foreground-muted">
         Register a new ERC-8004 agent on-chain. Metadata is uploaded to IPFS.
       </p>
 
       {status === 'success' ? (
-        <div className="bg-background border border-accent p-4 space-y-2">
-          <p className="text-sm font-mono text-accent font-bold">
+        <div className="bg-background border border-interactive p-4 space-y-2">
+          <p className="text-sm text-interactive font-bold">
             Agent registered successfully!
           </p>
           {agentId && (
             <Link
               href={`/agent/${selectedChainId}/${agentId}`}
-              className="inline-block text-xs font-mono text-accent hover:underline"
+              className="inline-block text-xs text-interactive hover:underline"
             >
               View agent #{agentId} on {selectedChain.name}
             </Link>
@@ -178,7 +178,7 @@ export function RegisterAgentPanel() {
                 setAgentId(null)
                 setTxHash(undefined)
               }}
-              className="text-xs font-mono text-text-muted hover:underline mt-2"
+              className="text-xs text-foreground-muted hover:underline mt-2"
             >
               Register another
             </button>
@@ -188,7 +188,7 @@ export function RegisterAgentPanel() {
         <>
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider block mb-1">
+              <label className="text-[11px] text-foreground-muted uppercase tracking-wider block mb-1">
                 Name *
               </label>
               <input
@@ -197,11 +197,11 @@ export function RegisterAgentPanel() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="My Agent"
                 disabled={isWorking}
-                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary disabled:opacity-50"
+                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-foreground disabled:opacity-50"
               />
             </div>
             <div>
-              <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider block mb-1">
+              <label className="text-[11px] text-foreground-muted uppercase tracking-wider block mb-1">
                 Description *
               </label>
               <textarea
@@ -210,12 +210,12 @@ export function RegisterAgentPanel() {
                 placeholder="What does this agent do?"
                 rows={3}
                 disabled={isWorking}
-                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary resize-none disabled:opacity-50"
+                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-foreground resize-none disabled:opacity-50"
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider">
+                <label className="text-[11px] text-foreground-muted uppercase tracking-wider">
                   Image <span className="normal-case">(optional)</span>
                 </label>
                 {!imagePreview && (
@@ -224,19 +224,19 @@ export function RegisterAgentPanel() {
                       type="button"
                       onClick={() => { setImageMode('upload'); setErrorMsg(''); setImage('') }}
                       disabled={isWorking}
-                      className={`text-[10px] font-mono transition-colors ${
-                        imageMode === 'upload' ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
+                      className={`text-[11px] transition-colors ${
+                        imageMode === 'upload' ? 'text-interactive' : 'text-foreground-muted hover:text-foreground-secondary'
                       }`}
                     >
                       Upload
                     </button>
-                    <span className="text-[10px] text-text-muted">/</span>
+                    <span className="text-[11px] text-foreground-muted">/</span>
                     <button
                       type="button"
                       onClick={() => { setImageMode('url'); setErrorMsg('') }}
                       disabled={isWorking}
-                      className={`text-[10px] font-mono transition-colors ${
-                        imageMode === 'url' ? 'text-accent' : 'text-text-muted hover:text-text-secondary'
+                      className={`text-[11px] transition-colors ${
+                        imageMode === 'url' ? 'text-interactive' : 'text-foreground-muted hover:text-foreground-secondary'
                       }`}
                     >
                       Paste URL
@@ -264,9 +264,9 @@ export function RegisterAgentPanel() {
                   />
                   <div className="flex-1 min-w-0">
                     {imageUploading ? (
-                      <p className="text-xs font-mono text-text-muted">Uploading to IPFS...</p>
+                      <p className="text-xs text-foreground-muted">Uploading to IPFS...</p>
                     ) : (
-                      <p className="text-xs font-mono text-accent truncate">{image}</p>
+                      <p className="text-xs text-interactive truncate">{image}</p>
                     )}
                   </div>
                   <button
@@ -278,7 +278,7 @@ export function RegisterAgentPanel() {
                       if (fileInputRef.current) fileInputRef.current.value = ''
                     }}
                     disabled={isWorking}
-                    className="text-[10px] font-mono text-critical hover:underline disabled:opacity-50"
+                    className="text-[11px] text-danger hover:underline disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -290,7 +290,7 @@ export function RegisterAgentPanel() {
                   onChange={(e) => setImage(e.target.value)}
                   placeholder="ipfs://... or https://..."
                   disabled={isWorking}
-                  className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary disabled:opacity-50"
+                  className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-foreground disabled:opacity-50"
                 />
               ) : (
                 <div
@@ -311,30 +311,30 @@ export function RegisterAgentPanel() {
                     if (file) handleImageFile(file)
                   }}
                   className={`w-full bg-background border border-dashed px-3 py-4 text-center cursor-pointer transition-colors ${
-                    dragOver ? 'border-accent text-accent' : 'border-border text-text-muted'
-                  } ${isWorking ? 'opacity-50 pointer-events-none' : 'hover:border-accent hover:text-accent'}`}
+                    dragOver ? 'border-interactive text-interactive' : 'border-border text-foreground-muted'
+                  } ${isWorking ? 'opacity-50 pointer-events-none' : 'hover:border-interactive hover:text-interactive'}`}
                 >
-                  <p className="text-xs font-mono">
+                  <p className="text-xs">
                     Drop image, paste, or click to browse
                   </p>
-                  <p className="text-[10px] font-mono mt-1">
+                  <p className="text-[11px] mt-1">
                     PNG, JPG, WebP, GIF, SVG &middot; Max 5 MB
                   </p>
                 </div>
               )}
               {errorMsg && status !== 'error' && (
-                <p className="text-xs font-mono text-critical mt-1">{errorMsg}</p>
+                <p className="text-xs text-danger mt-1">{errorMsg}</p>
               )}
             </div>
             <div>
-              <label className="text-[10px] text-text-muted font-mono uppercase tracking-wider block mb-1">
+              <label className="text-[11px] text-foreground-muted uppercase tracking-wider block mb-1">
                 Chain
               </label>
               <select
                 value={selectedChainId}
                 onChange={(e) => setSelectedChainId(Number(e.target.value))}
                 disabled={isWorking}
-                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-text-primary disabled:opacity-50"
+                className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-foreground disabled:opacity-50"
               >
                 {chains.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -346,14 +346,14 @@ export function RegisterAgentPanel() {
           </div>
 
           {status === 'error' && (
-            <p className="text-xs font-mono text-critical">{errorMsg}</p>
+            <p className="text-xs text-danger">{errorMsg}</p>
           )}
 
           <div className="flex items-center gap-3">
             <button
               onClick={handleRegister}
               disabled={isWorking || !name.trim() || !description.trim()}
-              className="bg-accent text-bg px-4 py-1.5 text-xs font-mono font-bold hover:bg-accent/90 transition-colors disabled:opacity-50"
+              className="bg-interactive text-background px-4 py-1.5 text-xs font-bold hover:bg-interactive/90 transition-colors disabled:opacity-50"
             >
               {status === 'uploading'
                 ? 'Uploading to IPFS...'
@@ -368,7 +368,7 @@ export function RegisterAgentPanel() {
                 href={`${selectedChain.explorer}/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] font-mono text-text-muted hover:underline"
+                className="text-[11px] text-foreground-muted hover:underline"
               >
                 View tx
               </a>

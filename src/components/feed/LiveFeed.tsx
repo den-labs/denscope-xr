@@ -6,6 +6,7 @@ import { useEventStore } from '@/stores/events'
 import type { FeedFilters } from '@/hooks/useFeedFilters'
 import { FeedLine } from './FeedLine'
 import { PulseEffect } from './PulseEffect'
+import { WolfMascot } from '@/components/brand/WolfMascot'
 
 const MAX_VISIBLE_FEED_ROWS = 150
 const MAX_ANIMATED_FEED_ROWS = 24
@@ -44,24 +45,25 @@ export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
     >
       {/* Column Headers */}
       <div className="sticky top-0 z-10 hidden md:grid grid-cols-[120px_100px_100px_1fr_120px_auto_auto] gap-0 border-b border-border bg-surface px-4 py-2">
-        <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Timestamp</span>
-        <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Event Type</span>
-        <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Protocol</span>
-        <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Agent Identity</span>
-        <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">Tx Hash</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Timestamp</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Event Type</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Protocol</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Agent Identity</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Tx Hash</span>
         <span />
         <span />
       </div>
 
       {events.length === 0 ? (
-        <div className="flex h-full items-center justify-center text-text-muted">
+        <div className="flex h-full items-center justify-center text-foreground-muted">
           <div className="text-center">
+            <WolfMascot variant="loading" size={48} className="mb-3" />
             <p className="text-lg">Waiting for events...</p>
             <p className="mt-1 text-sm">Listening on ERC-8004 contracts</p>
           </div>
         </div>
       ) : filteredEvents.length === 0 ? (
-        <div className="flex h-full items-center justify-center text-text-muted">
+        <div className="flex h-full items-center justify-center text-foreground-muted">
           <div className="text-center">
             <p className="text-lg">No events match filters</p>
             <p className="mt-1 text-sm">Try adjusting your filter criteria</p>
@@ -100,7 +102,7 @@ export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
             })}
           </AnimatePresence>
           {filteredEvents.length > visibleEvents.length && (
-            <div className="border-t border-border px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-text-muted">
+            <div className="border-t border-border px-4 py-3 text-[11px] uppercase tracking-widest text-foreground-muted">
               Showing {visibleEvents.length} most recent events ({filteredEvents.length} total after filters)
             </div>
           )}
@@ -109,7 +111,7 @@ export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
 
       {paused && (
         <div className="pointer-events-none fixed bottom-12 left-1/2 -translate-x-1/2">
-          <span className="bg-surface border border-border px-3 py-1 text-xs text-text-muted font-mono">paused -- move mouse away to resume</span>
+          <span className="bg-surface border border-border px-3 py-1 text-xs text-foreground-muted font-mono">paused -- move mouse away to resume</span>
         </div>
       )}
     </div>
