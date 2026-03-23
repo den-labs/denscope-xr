@@ -25,7 +25,7 @@ export function AgentClaimSection({ chainId, agentId, ownerAddress }: Props) {
   if (loading) {
     return (
       <div className="mt-6 border-t border-border pt-6">
-        <p className="text-xs text-text-muted font-mono">Checking claim status...</p>
+        <p className="text-xs text-foreground-muted font-mono">Checking claim status...</p>
       </div>
     )
   }
@@ -34,7 +34,7 @@ export function AgentClaimSection({ chainId, agentId, ownerAddress }: Props) {
     return (
       <div className="mt-6 border-t border-border pt-6 flex items-center gap-2">
         <ClaimedBadge />
-        <p className="text-xs text-text-secondary font-mono">
+        <p className="text-xs text-foreground-secondary font-mono">
           This agent has been claimed by its owner.
         </p>
       </div>
@@ -44,7 +44,7 @@ export function AgentClaimSection({ chainId, agentId, ownerAddress }: Props) {
   if (!ownerAddress) {
     return (
       <div className="mt-6 border-t border-border pt-6">
-        <p className="text-xs text-text-muted font-mono">
+        <p className="text-xs text-foreground-muted font-mono">
           Owner not found on-chain.
         </p>
       </div>

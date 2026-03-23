@@ -16,11 +16,11 @@ export function AddressChip({ address, chainId }: { address: string; chainId?: n
   }
 
   return (
-    <span className="inline-flex items-center gap-1 font-mono text-xs text-text-secondary">
+    <span className="inline-flex items-center gap-1 font-mono text-xs text-foreground-secondary">
       <span>{truncated}</span>
       <button
         onClick={handleCopy}
-        className="text-text-muted hover:text-accent transition-colors"
+        className="text-foreground-muted hover:text-interactive transition-colors"
         title="Copy"
       >
         {copied ? 'copied!' : 'copy'}
@@ -30,7 +30,7 @@ export function AddressChip({ address, chainId }: { address: string; chainId?: n
           href={explorerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-text-muted hover:text-accent"
+          className="text-foreground-muted hover:text-interactive"
         >
           ↗
         </a>

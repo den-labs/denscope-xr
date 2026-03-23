@@ -18,22 +18,22 @@ export function EmbedSnippet({ chainId, agentId }: { chainId: number; agentId: n
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+        className="border border-border bg-surface px-4 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
       >
         Embed
       </button>
 
       {open && (
         <div className="absolute top-full left-0 mt-2 z-50 w-[400px] border border-border bg-surface p-4 space-y-3">
-          <p className="font-mono text-[10px] text-text-muted uppercase tracking-wider">
+          <p className="font-mono text-[10px] text-foreground-muted uppercase tracking-wider">
             Embed this agent card
           </p>
-          <pre className="bg-bg border border-border p-3 font-mono text-xs text-text-secondary overflow-x-auto whitespace-pre-wrap break-all">
+          <pre className="bg-background border border-border p-3 font-mono text-xs text-foreground-secondary overflow-x-auto whitespace-pre-wrap break-all">
             {snippet}
           </pre>
           <button
             onClick={handleCopy}
-            className="border border-border bg-bg px-3 py-1 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+            className="border border-border bg-background px-3 py-1 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
           >
             {copied ? 'Copied' : 'Copy'}
           </button>

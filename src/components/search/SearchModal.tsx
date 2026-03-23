@@ -100,12 +100,12 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 overflow-hidden border border-border bg-bg shadow-2xl"
+            className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 overflow-hidden border border-border bg-background shadow-2xl"
           >
             {/* Input */}
             <div className="flex items-center gap-3 border-b border-border px-4 py-3">
               <svg
-                className="h-4 w-4 shrink-0 text-text-muted"
+                className="h-4 w-4 shrink-0 text-foreground-muted"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -123,9 +123,9 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search agents..."
-                className="flex-1 bg-transparent font-mono text-sm text-text-primary placeholder:text-text-muted outline-none"
+                className="flex-1 bg-transparent font-mono text-sm text-foreground placeholder:text-foreground-muted outline-none"
               />
-              <kbd className="hidden shrink-0 border border-border px-1.5 py-0.5 font-mono text-[10px] text-text-muted sm:inline-block">
+              <kbd className="hidden shrink-0 border border-border px-1.5 py-0.5 font-mono text-[10px] text-foreground-muted sm:inline-block">
                 ESC
               </kbd>
             </div>
@@ -133,7 +133,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
             {/* Results */}
             <div className="max-h-80 overflow-y-auto">
               {results.length === 0 ? (
-                <div className="px-4 py-8 text-center font-mono text-xs text-text-muted">
+                <div className="px-4 py-8 text-center font-mono text-xs text-foreground-muted">
                   No agents found
                 </div>
               ) : (

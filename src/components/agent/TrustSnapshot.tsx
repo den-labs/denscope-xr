@@ -12,9 +12,9 @@ type Props = {
 const variantTextColor: Record<string, string> = {
   success: 'text-success',
   warning: 'text-warning',
-  critical: 'text-critical',
-  neutral: 'text-text-primary',
-  accent: 'text-accent',
+  critical: 'text-danger',
+  neutral: 'text-foreground',
+  accent: 'text-interactive',
 }
 
 function MetricCard({
@@ -30,14 +30,14 @@ function MetricCard({
 }) {
   return (
     <div>
-      <div className="text-[10px] text-text-muted uppercase tracking-wider font-mono mb-2">
+      <div className="text-[10px] text-foreground-muted uppercase tracking-wider font-mono mb-2">
         {label}
       </div>
-      <div className={`font-mono text-lg font-bold ${colorClass ?? 'text-text-primary'}`}>
+      <div className={`font-mono text-lg font-bold ${colorClass ?? 'text-foreground'}`}>
         {value}
       </div>
       {sub && (
-        <div className="text-[10px] text-text-muted font-mono mt-1">{sub}</div>
+        <div className="text-[10px] text-foreground-muted font-mono mt-1">{sub}</div>
       )}
     </div>
   )
@@ -80,7 +80,7 @@ export function TrustSnapshot({
 
   return (
     <section className="bg-surface border border-border p-5">
-      <h3 className="text-sm font-mono font-bold text-text-primary mb-4">
+      <h3 className="text-sm font-mono font-bold text-foreground mb-4">
         Trust Snapshot
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -97,7 +97,7 @@ export function TrustSnapshot({
         <MetricCard
           label="Sybil Risk"
           value={sybilRisk.level}
-          colorClass={variantTextColor[sybilRisk.variant] ?? 'text-text-primary'}
+          colorClass={variantTextColor[sybilRisk.variant] ?? 'text-foreground'}
         />
         <MetricCard
           label="Proofs"

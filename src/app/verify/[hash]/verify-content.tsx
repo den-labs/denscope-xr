@@ -52,7 +52,7 @@ export function VerifyContent({ hash, displayHash, payload, issuedAt, imageUrl, 
   }
 
   return (
-    <main className="min-h-screen bg-bg flex items-center justify-center p-4">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div

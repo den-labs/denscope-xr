@@ -482,7 +482,7 @@ export function TrustGraph({
       />
       <button
         onClick={fitToView}
-        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
+        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground transition-colors"
       >
         Fit to view
       </button>

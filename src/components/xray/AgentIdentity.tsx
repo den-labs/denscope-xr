@@ -7,13 +7,13 @@ export function AgentIdentity({ agent }: { agent: AgentSummary }) {
     <div className="bg-surface border border-border p-4">
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-display font-bold text-text-primary">
+          <h2 className="text-lg font-display font-bold text-foreground">
             {agent.metadata?.name ?? `Agent #${agent.agentId}`}
           </h2>
           <ChainBadge chainId={agent.chainId} />
         </div>
         {agent.metadata?.description && (
-          <p className="text-sm text-text-secondary line-clamp-6">{agent.metadata.description}</p>
+          <p className="text-sm text-foreground-secondary line-clamp-6">{agent.metadata.description}</p>
         )}
       </div>
 
@@ -21,13 +21,13 @@ export function AgentIdentity({ agent }: { agent: AgentSummary }) {
 
       <div className="space-y-1">
         <div className="flex justify-between">
-          <span className="text-text-muted font-mono text-xs uppercase tracking-wider">Owner</span>
+          <span className="text-foreground-muted font-mono text-xs uppercase tracking-wider">Owner</span>
           <AddressChip address={agent.owner} chainId={agent.chainId} />
         </div>
         <div className="flex justify-between">
-          <span className="text-text-muted font-mono text-xs uppercase tracking-wider">Feedback</span>
-          <span className="text-text-secondary font-mono text-sm">
-            {agent.feedbackCount} (<span className="text-success">{agent.positiveFeedback}+</span> / <span className="text-critical">{agent.negativeFeedback}-</span>)
+          <span className="text-foreground-muted font-mono text-xs uppercase tracking-wider">Feedback</span>
+          <span className="text-foreground-secondary font-mono text-sm">
+            {agent.feedbackCount} (<span className="text-success">{agent.positiveFeedback}+</span> / <span className="text-danger">{agent.negativeFeedback}-</span>)
           </span>
         </div>
       </div>

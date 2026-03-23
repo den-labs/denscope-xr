@@ -83,8 +83,8 @@ export function TapePanel({ onSelectAgent }: TapePanelProps) {
                 onClick={() => setFilter(key)}
                 className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
                   filter === key
-                    ? 'border-text-primary bg-text-primary text-bg'
-                    : 'border-border text-text-secondary hover:text-text-primary hover:border-border-bright'
+                    ? 'border-text-primary bg-text-primary text-background'
+                    : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
                 }`}
               >
                 {key}
@@ -93,19 +93,19 @@ export function TapePanel({ onSelectAgent }: TapePanelProps) {
           </div>
           <button
             onClick={() => setPaused((p) => !p)}
-            className="px-2 py-1 text-[11px] font-mono uppercase border border-border text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors"
+            className="px-2 py-1 text-[11px] font-mono uppercase border border-border text-foreground-secondary hover:text-foreground hover:border-border-bright transition-colors"
           >
             {paused ? 'Resume' : 'Pause'}
           </button>
         </div>
-        <p className="font-mono text-[10px] text-text-muted">
+        <p className="font-mono text-[10px] text-foreground-muted">
           {paused ? `Paused • ${bufferedRef.current.length} buffered` : 'Live'}
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {visibleEvents.length === 0 ? (
-          <div className="px-4 py-6 font-mono text-xs text-text-muted">
+          <div className="px-4 py-6 font-mono text-xs text-foreground-muted">
             No feedback events yet.
           </div>
         ) : (
@@ -114,7 +114,7 @@ export function TapePanel({ onSelectAgent }: TapePanelProps) {
               <button
                 key={event.id}
                 onClick={() => { void handleRowClick(event) }}
-                className="block w-full px-4 py-2 text-left font-mono text-[11px] text-text-secondary hover:bg-surface hover:text-text-primary transition-colors"
+                className="block w-full px-4 py-2 text-left font-mono text-[11px] text-foreground-secondary hover:bg-surface hover:text-foreground transition-colors"
                 title={event.txHash ?? event.id}
               >
                 {formatTapeRow(event)}

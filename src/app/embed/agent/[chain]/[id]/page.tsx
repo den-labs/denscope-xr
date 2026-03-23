@@ -18,8 +18,8 @@ export default async function EmbedAgentCard({ params }: Props) {
   if (!chainConfig) {
     return (
       <div className="flex h-screen items-center justify-center bg-surface p-6">
-        <div className="border border-border bg-bg p-8 text-center">
-          <p className="font-mono text-xs text-text-muted uppercase tracking-wider">
+        <div className="border border-border bg-background p-8 text-center">
+          <p className="font-mono text-xs text-foreground-muted uppercase tracking-wider">
             Agent not found
           </p>
         </div>
@@ -49,11 +49,11 @@ export default async function EmbedAgentCard({ params }: Props) {
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-success" />
-            <span className="font-mono text-[10px] text-text-muted uppercase tracking-wider">
+            <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-wider">
               ERC-8004
             </span>
           </div>
-          <span className="font-mono text-[10px] text-text-muted uppercase tracking-wider">
+          <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-wider">
             DenScope
           </span>
         </div>
@@ -61,12 +61,12 @@ export default async function EmbedAgentCard({ params }: Props) {
         {/* Body */}
         <div className="px-4 py-4 space-y-3">
           <div>
-            <p className="font-display text-lg font-bold text-text-primary leading-tight">
+            <p className="font-display text-lg font-bold text-foreground leading-tight">
               Agent #{agentId}
               {metadata?.name ? ` — ${metadata.name}` : ''}
             </p>
             {description && (
-              <p className="mt-1 font-sans text-xs text-text-secondary leading-relaxed line-clamp-2">
+              <p className="mt-1 font-sans text-xs text-foreground-secondary leading-relaxed line-clamp-2">
                 {description}
               </p>
             )}
@@ -86,10 +86,10 @@ export default async function EmbedAgentCard({ params }: Props) {
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
-          <span className="font-mono text-[10px] text-text-secondary">
+          <span className="font-mono text-[10px] text-foreground-secondary">
             {owner ? truncateAddress(owner) : 'unknown'}
           </span>
-          <span className="font-mono text-[10px] text-text-secondary">
+          <span className="font-mono text-[10px] text-foreground-secondary">
             Chain: {chainConfig.badge.label}
           </span>
         </div>

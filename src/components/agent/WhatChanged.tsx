@@ -15,10 +15,10 @@ export function WhatChanged({ activity, lastSeen }: Props) {
   return (
     <section className="bg-surface border border-border p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-mono font-bold text-text-primary">
+        <h3 className="text-sm font-mono font-bold text-foreground">
           What Changed
         </h3>
-        <span className="text-[10px] text-text-muted font-mono">
+        <span className="text-[10px] text-foreground-muted font-mono">
           Last seen: {formatRelativeTime(lastSeen)}
         </span>
       </div>
@@ -28,15 +28,15 @@ export function WhatChanged({ activity, lastSeen }: Props) {
           {items.map((item) => (
             <li
               key={item}
-              className="text-sm text-text-secondary font-mono flex items-start gap-2"
+              className="text-sm text-foreground-secondary font-mono flex items-start gap-2"
             >
-              <span className="text-text-muted select-none">&bull;</span>
+              <span className="text-foreground-muted select-none">&bull;</span>
               {item}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-text-muted font-mono">
+        <p className="text-sm text-foreground-muted font-mono">
           No activity recorded yet.
         </p>
       )}

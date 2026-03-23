@@ -32,13 +32,13 @@ function RuleToggle({
   return (
     <div className="flex items-center justify-between py-2">
       <div>
-        <p className="text-xs font-mono text-text-primary">{label.label}</p>
-        <p className="text-[10px] text-text-muted">{label.description}</p>
+        <p className="text-xs font-mono text-foreground">{label.label}</p>
+        <p className="text-[10px] text-foreground-muted">{label.description}</p>
       </div>
       <button
         onClick={() => onToggle(rule.id, !rule.enabled)}
         className={`w-10 h-5 rounded-full transition-colors ${
-          rule.enabled ? 'bg-accent' : 'bg-border'
+          rule.enabled ? 'bg-interactive' : 'bg-border'
         }`}
       >
         <span
@@ -146,7 +146,7 @@ export function AlertsPanel() {
   if (rules.length === 0) {
     return (
       <div className="bg-surface border border-border p-5">
-        <p className="text-xs text-text-muted font-mono">
+        <p className="text-xs text-foreground-muted font-mono">
           Claim an agent to configure alerts.
         </p>
       </div>
@@ -155,7 +155,7 @@ export function AlertsPanel() {
 
   return (
     <div className="bg-surface border border-border p-5 space-y-4">
-      <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono">
+      <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono">
         Alert Rules
       </h2>
 
@@ -166,7 +166,7 @@ export function AlertsPanel() {
       </div>
 
       <div className="pt-4 border-t border-border space-y-3">
-        <label className="text-xs text-text-muted font-mono block">
+        <label className="text-xs text-foreground-muted font-mono block">
           Webhook URL
         </label>
         <input
@@ -174,25 +174,25 @@ export function AlertsPanel() {
           value={webhookUrl}
           onChange={(e) => setWebhookUrl(e.target.value)}
           placeholder="https://hooks.slack.com/..."
-          className="w-full bg-bg border border-border px-3 py-1.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:border-accent/50 focus:outline-none"
+          className="w-full bg-background border border-border px-3 py-1.5 text-xs font-mono text-foreground placeholder:text-foreground-muted focus:border-interactive/50 focus:outline-none"
         />
         <div className="flex items-center gap-2">
           <button
             onClick={handleSaveWebhook}
             disabled={saving}
-            className="border border-accent/30 bg-accent/5 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
+            className="border border-interactive/30 bg-interactive/5 px-3 py-1.5 text-xs font-mono text-interactive hover:bg-interactive/10 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>
           <button
             onClick={handleTestWebhook}
             disabled={testing || !webhookUrl}
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors disabled:opacity-50"
+            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors disabled:opacity-50"
           >
             {testing ? 'Sending...' : 'Test'}
           </button>
           {testResult && (
-            <span className="text-[10px] font-mono text-text-muted">{testResult}</span>
+            <span className="text-[10px] font-mono text-foreground-muted">{testResult}</span>
           )}
         </div>
       </div>
