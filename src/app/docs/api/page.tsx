@@ -9,7 +9,7 @@ export default function ApiDocsPage() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="bg-grid mx-auto max-w-4xl px-6 py-10">
-        <nav className="font-mono text-xs text-foreground-muted uppercase tracking-wider">
+        <nav className="text-xs text-foreground-muted uppercase tracking-wider">
           System / DenScope / API
         </nav>
 
@@ -24,7 +24,7 @@ export default function ApiDocsPage() {
         <Section title="Quick Start">
           <CodeBlock>{`curl -H "Authorization: Bearer ds_YOUR_KEY" \\
   https://denscope.vercel.app/api/v1/agent/42220/5/score`}</CodeBlock>
-          <p className="text-xs text-foreground-muted font-mono mt-2">
+          <p className="text-xs text-foreground-muted mt-2">
             Get your API key from the Console &rarr; API Keys section.
           </p>
         </Section>
@@ -34,29 +34,29 @@ export default function ApiDocsPage() {
             Prefer TypeScript? Use <code className="text-xs font-mono">@denlabs/trust-sdk</code> to query the same trust data used by the portal.
             It supports both API keys and x402 payment mode.
           </p>
-          <p className="text-xs text-foreground-muted font-mono mt-2">
+          <p className="text-xs text-foreground-muted mt-2">
             Repo: <a className="underline hover:text-foreground" href="https://github.com/den-labs/trust-sdk" target="_blank" rel="noreferrer">github.com/den-labs/trust-sdk</a>
           </p>
-          <p className="text-xs text-foreground-muted font-mono mt-1">
+          <p className="text-xs text-foreground-muted mt-1">
             Example: <a className="underline hover:text-foreground" href="https://github.com/den-labs/trust-sdk/blob/main/examples/get-score.mjs" target="_blank" rel="noreferrer">examples/get-score.mjs</a>
           </p>
-          <p className="text-xs text-foreground-muted font-mono mt-1">
+          <p className="text-xs text-foreground-muted mt-1">
             x402 Example: <a className="underline hover:text-foreground" href="https://github.com/den-labs/trust-sdk/blob/main/examples/get-score-x402.mjs" target="_blank" rel="noreferrer">examples/get-score-x402.mjs</a>
           </p>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Install</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Install</h4>
           <CodeBlock>{`pnpm add @denlabs/trust-sdk
 
 # For x402 payment mode (optional)
 pnpm add viem`}</CodeBlock>
-          <p className="text-xs text-foreground-muted font-mono mt-2">
+          <p className="text-xs text-foreground-muted mt-2">
             Local SDK repo example (after cloning): <code className="text-xs">DENSCOPE_API_KEY=ds_xxx pnpm example:get-score</code>
           </p>
-          <p className="text-xs text-foreground-muted font-mono mt-1">
+          <p className="text-xs text-foreground-muted mt-1">
             Local x402 example: <code className="text-xs">DENSCOPE_PRIVATE_KEY=0x... pnpm example:get-score:x402</code>
           </p>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">API Key Example</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">API Key Example</h4>
           <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
 
 const ds = new DenScope({ apiKey: 'ds_...' })
@@ -67,7 +67,7 @@ console.log(score.value, score.confidence)
 const { signals } = await ds.getSignals(42220, 5, { status: 'open' })
 const { agents } = await ds.search({ q: '0xabc', chainId: 42220, limit: 5 })`}</CodeBlock>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">x402 Example (wallet/agent)</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">x402 Example (wallet/agent)</h4>
           <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
 import { privateKeyToAccount } from 'viem/accounts'
 
@@ -78,7 +78,7 @@ const ds = new DenScope({ account })
 const { score } = await ds.getScore(42220, 5)
 const { signals } = await ds.getSignals(42220, 5)`}</CodeBlock>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Error Handling Example</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Error Handling Example</h4>
           <CodeBlock>{`import {
   DenScope,
   DenScopeError,
@@ -103,7 +103,7 @@ try {
   }
 }`}</CodeBlock>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Interpretation Guide (Portal-Aligned)</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Interpretation Guide (Portal-Aligned)</h4>
           <p className="text-sm text-foreground-secondary">
             The API returns raw score data (<code className="text-xs font-mono">value</code>, <code className="text-xs font-mono">confidence</code>, feedback stats).
             In the portal, Denscope maps those fields into semantic states for faster reading.
@@ -114,7 +114,7 @@ try {
             <Row cells={['Confiable', 'Positive signal with enough evidence', 'Higher feedback count + positive ratio + medium/high confidence']} />
             <Row cells={['Alto riesgo', 'Negative signal with enough evidence', 'Negative dominance + medium/high confidence']} />
           </Table>
-          <p className="text-xs text-foreground-muted font-mono mt-2">
+          <p className="text-xs text-foreground-muted mt-2">
             Note: Semantic labels are UX interpretation helpers. Use raw fields for strict programmatic decisions.
           </p>
         </Section>
@@ -124,7 +124,7 @@ try {
             Two authentication methods are supported. Use whichever fits your use case:
           </p>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Option 1: API Key (for developers)</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Option 1: API Key (for developers)</h4>
           <p className="text-sm text-foreground-secondary">
             Best for bulk integrations, dashboards, and analytics. Get a key from the Console.
           </p>
@@ -133,7 +133,7 @@ try {
             <li><code className="text-xs font-mono">X-API-Key: ds_...</code></li>
           </ul>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Option 2: x402 Payment (for agents)</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Option 2: x402 Payment (for agents)</h4>
           <p className="text-sm text-foreground-secondary">
             Any wallet can query trust data with zero setup. No API key, no account needed.
             Available on <code className="text-xs font-mono">/score</code> and <code className="text-xs font-mono">/signals</code> endpoints.
@@ -150,7 +150,7 @@ try {
             <Row cells={['Free', '100', '$0']} />
             <Row cells={['Pro', '10,000', 'Coming soon']} />
           </Table>
-          <p className="text-xs text-foreground-muted font-mono mt-2">
+          <p className="text-xs text-foreground-muted mt-2">
             Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
           </p>
         </Section>
@@ -196,7 +196,7 @@ try {
 - 0.10 * sybil_penalty         // 1.0 if open sybil_cluster, else 0.0
 ) * 100)`}</CodeBlock>
           <div className="mt-4">
-            <h4 className="text-xs text-foreground-muted uppercase font-mono mb-2">Confidence Levels</h4>
+            <h4 className="text-xs text-foreground-muted uppercase mb-2">Confidence Levels</h4>
             <Table headers={['Level', 'Condition']}>
               <Row cells={['Low', '0 feedbacks']} />
               <Row cells={['Medium', '3-9 feedbacks']} />
@@ -212,7 +212,7 @@ try {
             data without human-managed API keys.
           </p>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Flow</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Flow</h4>
           <CodeBlock>{`# 1. Call without auth -> get 402 with payment instructions
 curl -i https://denscope.vercel.app/api/v1/agent/42220/5/score
 # HTTP/2 402
@@ -225,13 +225,13 @@ curl -H "X-PAYMENT: <base64-encoded payment>" \\
   https://denscope.vercel.app/api/v1/agent/42220/5/score
 # HTTP/2 200 { score: { value: 85, ... } }`}</CodeBlock>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Pricing</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Pricing</h4>
           <Table headers={['Endpoint', 'Price (USDC)', 'micro-USDC']}>
             <Row cells={['/score', '$0.001', '1000']} />
             <Row cells={['/signals', '$0.0005', '500']} />
           </Table>
 
-          <h4 className="text-xs text-foreground-muted uppercase font-mono mt-4 mb-2">Details</h4>
+          <h4 className="text-xs text-foreground-muted uppercase mt-4 mb-2">Details</h4>
           <ul className="list-disc list-inside text-sm text-foreground-secondary mt-2 space-y-1">
             <li>Protocol: x402 v2 (HTTP 402 Payment Required)</li>
             <li>Settlement: EIP-3009 TransferWithAuthorization (off-chain signature, no gas for the caller)</li>
@@ -289,7 +289,7 @@ function Endpoint({ method, path, desc }: { method: string; path: string; desc: 
         <span className="status-pill status-pill-accent text-[10px]">{method}</span>
         <code className="text-xs font-mono text-foreground">{path}</code>
       </div>
-      <p className="text-xs text-foreground-secondary font-mono mt-1">{desc}</p>
+      <p className="text-xs text-foreground-secondary mt-1">{desc}</p>
     </div>
   )
 }

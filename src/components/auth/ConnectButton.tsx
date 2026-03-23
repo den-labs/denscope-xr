@@ -28,7 +28,7 @@ export function ConnectButton() {
         </span>
         <button
           onClick={() => disconnect()}
-          className="border border-border bg-surface px-3 py-1 text-xs font-mono text-foreground-muted hover:text-foreground-secondary hover:border-border-bright transition-colors"
+          className="border border-border bg-surface px-3 py-1 text-xs text-foreground-muted hover:text-foreground-secondary hover:border-border-bright transition-colors"
         >
           Disconnect
         </button>
@@ -39,7 +39,7 @@ export function ConnectButton() {
   return (
     <button
       onClick={() => connect({ connector: injected() })}
-      className="border border-interactive/30 bg-interactive/5 px-3 py-1 text-xs font-mono text-interactive hover:bg-interactive/10 hover:border-interactive/50 transition-colors"
+      className="border border-interactive/30 bg-interactive/5 px-3 py-1 text-xs text-interactive hover:bg-interactive/10 hover:border-interactive/50 transition-colors"
     >
       Connect Wallet
     </button>

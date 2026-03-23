@@ -60,7 +60,7 @@ export function ApiKeysPanel() {
       <h2 className="font-display text-lg font-bold uppercase tracking-wider text-foreground">
         API Keys
       </h2>
-      <p className="text-xs text-foreground-muted font-mono">
+      <p className="text-xs text-foreground-muted">
         Use API keys to query agent trust scores programmatically.
         Free tier: 100 requests/day.
       </p>
@@ -76,7 +76,7 @@ export function ApiKeysPanel() {
         <button
           onClick={handleCreate}
           disabled={creating || keys.length >= 5}
-          className="bg-interactive text-background px-4 py-1.5 text-xs font-mono font-bold hover:bg-interactive/90 transition-colors disabled:opacity-50"
+          className="bg-interactive text-background px-4 py-1.5 text-xs font-bold hover:bg-interactive/90 transition-colors disabled:opacity-50"
         >
           {creating ? 'Creating...' : 'Generate Key'}
         </button>
@@ -84,7 +84,7 @@ export function ApiKeysPanel() {
 
       {newKey && (
         <div className="bg-background border border-interactive p-3 space-y-1">
-          <p className="text-xs text-interactive font-mono font-bold">
+          <p className="text-xs text-interactive font-bold">
             Copy your API key now — it won&apos;t be shown again:
           </p>
           <code className="text-xs text-foreground font-mono break-all block">
@@ -97,7 +97,7 @@ export function ApiKeysPanel() {
               if (btn) btn.textContent = 'Copied!'
               setTimeout(() => setNewKey(null), 800)
             }}
-            className="text-[10px] font-mono text-interactive hover:underline"
+            className="text-[11px] text-interactive hover:underline"
           >
             Copy &amp; Dismiss
           </button>
@@ -105,7 +105,7 @@ export function ApiKeysPanel() {
       )}
 
       {keys.length === 0 ? (
-        <p className="text-xs text-foreground-muted font-mono">No API keys yet.</p>
+        <p className="text-xs text-foreground-muted">No API keys yet.</p>
       ) : (
         <div className="space-y-2">
           {keys.map((k) => (
@@ -113,17 +113,17 @@ export function ApiKeysPanel() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <code className="text-xs font-mono text-foreground">{k.key_prefix}...</code>
-                  <span className="text-[10px] text-foreground-muted font-mono">{k.label}</span>
-                  <span className="status-pill status-pill-accent text-[10px]">{k.tier}</span>
+                  <span className="text-[11px] text-foreground-muted">{k.label}</span>
+                  <span className="status-pill status-pill-accent text-[11px]">{k.tier}</span>
                 </div>
-                <p className="text-[10px] text-foreground-muted font-mono">
+                <p className="text-[11px] text-foreground-muted">
                   {k.daily_limit} req/day &middot; Created {new Date(k.created_at).toLocaleDateString()}
                   {k.last_used_at && ` \u00b7 Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
                 </p>
               </div>
               <button
                 onClick={() => handleRevoke(k.id)}
-                className="text-[10px] font-mono text-danger hover:underline"
+                className="text-[11px] text-danger hover:underline"
               >
                 Revoke
               </button>

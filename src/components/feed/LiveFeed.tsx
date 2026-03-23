@@ -44,11 +44,11 @@ export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
     >
       {/* Column Headers */}
       <div className="sticky top-0 z-10 hidden md:grid grid-cols-[120px_100px_100px_1fr_120px_auto_auto] gap-0 border-b border-border bg-surface px-4 py-2">
-        <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-widest">Timestamp</span>
-        <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-widest">Event Type</span>
-        <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-widest">Protocol</span>
-        <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-widest">Agent Identity</span>
-        <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-widest">Tx Hash</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Timestamp</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Event Type</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Protocol</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Agent Identity</span>
+        <span className="text-[11px] text-foreground-muted uppercase tracking-widest">Tx Hash</span>
         <span />
         <span />
       </div>
@@ -100,7 +100,7 @@ export function LiveFeed({ onAgentClick, filters, selectedAgentKey }: {
             })}
           </AnimatePresence>
           {filteredEvents.length > visibleEvents.length && (
-            <div className="border-t border-border px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-foreground-muted">
+            <div className="border-t border-border px-4 py-3 text-[11px] uppercase tracking-widest text-foreground-muted">
               Showing {visibleEvents.length} most recent events ({filteredEvents.length} total after filters)
             </div>
           )}

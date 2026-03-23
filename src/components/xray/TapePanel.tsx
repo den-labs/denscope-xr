@@ -81,7 +81,7 @@ export function TapePanel({ onSelectAgent }: TapePanelProps) {
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`px-2 py-1 text-[11px] font-mono uppercase border transition-colors ${
+                className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                   filter === key
                     ? 'border-text-primary bg-text-primary text-background'
                     : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
@@ -93,19 +93,19 @@ export function TapePanel({ onSelectAgent }: TapePanelProps) {
           </div>
           <button
             onClick={() => setPaused((p) => !p)}
-            className="px-2 py-1 text-[11px] font-mono uppercase border border-border text-foreground-secondary hover:text-foreground hover:border-border-bright transition-colors"
+            className="px-2 py-1 text-[11px] uppercase border border-border text-foreground-secondary hover:text-foreground hover:border-border-bright transition-colors"
           >
             {paused ? 'Resume' : 'Pause'}
           </button>
         </div>
-        <p className="font-mono text-[10px] text-foreground-muted">
+        <p className="text-[11px] text-foreground-muted">
           {paused ? `Paused • ${bufferedRef.current.length} buffered` : 'Live'}
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {visibleEvents.length === 0 ? (
-          <div className="px-4 py-6 font-mono text-xs text-foreground-muted">
+          <div className="px-4 py-6 text-xs text-foreground-muted">
             No feedback events yet.
           </div>
         ) : (

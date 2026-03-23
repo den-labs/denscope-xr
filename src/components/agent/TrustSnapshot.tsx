@@ -30,14 +30,14 @@ function MetricCard({
 }) {
   return (
     <div>
-      <div className="text-[10px] text-foreground-muted uppercase tracking-wider font-mono mb-2">
+      <div className="text-[11px] text-foreground-muted uppercase tracking-wider mb-2">
         {label}
       </div>
       <div className={`font-mono text-lg font-bold ${colorClass ?? 'text-foreground'}`}>
         {value}
       </div>
       {sub && (
-        <div className="text-[10px] text-foreground-muted font-mono mt-1">{sub}</div>
+        <div className="text-[11px] text-foreground-muted mt-1">{sub}</div>
       )}
     </div>
   )
@@ -80,7 +80,7 @@ export function TrustSnapshot({
 
   return (
     <section className="bg-surface border border-border p-5">
-      <h3 className="text-sm font-mono font-bold text-foreground mb-4">
+      <h3 className="text-sm font-bold text-foreground mb-4">
         Trust Snapshot
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">

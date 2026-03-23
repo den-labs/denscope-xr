@@ -32,7 +32,7 @@ function RuleToggle({
   return (
     <div className="flex items-center justify-between py-2">
       <div>
-        <p className="text-xs font-mono text-foreground">{label.label}</p>
+        <p className="text-xs text-foreground">{label.label}</p>
         <p className="text-[10px] text-foreground-muted">{label.description}</p>
       </div>
       <button
@@ -146,7 +146,7 @@ export function AlertsPanel() {
   if (rules.length === 0) {
     return (
       <div className="bg-surface border border-border p-5">
-        <p className="text-xs text-foreground-muted font-mono">
+        <p className="text-xs text-foreground-muted">
           Claim an agent to configure alerts.
         </p>
       </div>
@@ -155,7 +155,7 @@ export function AlertsPanel() {
 
   return (
     <div className="bg-surface border border-border p-5 space-y-4">
-      <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono">
+      <h2 className="text-xs text-foreground-muted uppercase tracking-wider">
         Alert Rules
       </h2>
 
@@ -166,7 +166,7 @@ export function AlertsPanel() {
       </div>
 
       <div className="pt-4 border-t border-border space-y-3">
-        <label className="text-xs text-foreground-muted font-mono block">
+        <label className="text-xs text-foreground-muted block">
           Webhook URL
         </label>
         <input
@@ -180,19 +180,19 @@ export function AlertsPanel() {
           <button
             onClick={handleSaveWebhook}
             disabled={saving}
-            className="border border-interactive/30 bg-interactive/5 px-3 py-1.5 text-xs font-mono text-interactive hover:bg-interactive/10 transition-colors disabled:opacity-50"
+            className="border border-interactive/30 bg-interactive/5 px-3 py-1.5 text-xs text-interactive hover:bg-interactive/10 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>
           <button
             onClick={handleTestWebhook}
             disabled={testing || !webhookUrl}
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors disabled:opacity-50"
+            className="border border-border bg-surface px-3 py-1.5 text-xs text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors disabled:opacity-50"
           >
             {testing ? 'Sending...' : 'Test'}
           </button>
           {testResult && (
-            <span className="text-[10px] font-mono text-foreground-muted">{testResult}</span>
+            <span className="text-[11px] text-foreground-muted">{testResult}</span>
           )}
         </div>
       </div>

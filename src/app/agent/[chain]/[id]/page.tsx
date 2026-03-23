@@ -83,21 +83,21 @@ function AgentUriDisplay({ uri }: { uri: string }) {
       <div className="mt-1 space-y-1.5">
         {parsed.name && (
           <div className="flex items-baseline gap-2">
-            <span className="text-[10px] text-foreground-muted uppercase">name</span>
-            <span className="font-mono text-xs text-foreground-secondary">{parsed.name}</span>
+            <span className="text-[11px] text-foreground-muted uppercase">name</span>
+            <span className="text-xs text-foreground-secondary">{parsed.name}</span>
           </div>
         )}
         {parsed.description && (
           <div>
-            <span className="text-[10px] text-foreground-muted uppercase">desc</span>
-            <p className="font-mono text-xs text-foreground-secondary mt-0.5 line-clamp-2">
+            <span className="text-[11px] text-foreground-muted uppercase">desc</span>
+            <p className="text-xs text-foreground-secondary mt-0.5 line-clamp-2">
               {parsed.description}
             </p>
           </div>
         )}
         {parsed.image && (
           <div className="mt-1">
-            <span className="text-[10px] text-foreground-muted uppercase">image</span>
+            <span className="text-[11px] text-foreground-muted uppercase">image</span>
             <a href={parsed.image} target="_blank" rel="noopener noreferrer" className="block mt-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -108,13 +108,13 @@ function AgentUriDisplay({ uri }: { uri: string }) {
             </a>
           </div>
         )}
-        <span className="status-pill status-pill-accent text-[10px]">Inline JSON</span>
+        <span className="status-pill status-pill-accent text-[11px]">Inline JSON</span>
       </div>
     )
   } catch {
     // Not JSON, not URL — render as plain text
     return (
-      <p className="font-mono text-xs text-foreground-secondary break-all mt-0.5">
+      <p className="text-xs text-foreground-secondary break-all mt-0.5">
         {uri}
       </p>
     )
@@ -214,7 +214,7 @@ export default async function AgentPage({ params }: Props) {
               </p>
             )}
 
-            <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs font-mono text-foreground-muted">
+            <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs text-foreground-muted">
               <span>Agent #{agentId}</span>
               <span>Last seen: {formatRelativeTime(dossier.lastSeen)}</span>
               <span>{dossier.totalEvents} events</span>
@@ -230,14 +230,14 @@ export default async function AgentPage({ params }: Props) {
                   {trustScore.score}
                 </span>
                 <div className="md:mt-1">
-                  <span className="text-xs text-foreground-muted font-mono block">/ 100</span>
-                  <span className={`status-pill ${confidencePill(trustScore.confidence)} text-[10px] mt-1`}>
+                  <span className="text-xs text-foreground-muted block">/ 100</span>
+                  <span className={`status-pill ${confidencePill(trustScore.confidence)} text-[11px] mt-1`}>
                     {trustScore.confidence.toUpperCase()}
                   </span>
                 </div>
               </div>
             ) : (
-              <div className="text-xs text-foreground-muted font-mono">
+              <div className="text-xs text-foreground-muted">
                 Awaiting first poll
               </div>
             )}
@@ -258,13 +258,13 @@ export default async function AgentPage({ params }: Props) {
             href={buildXIntentUrl(buildCertificateShareText({ chainId: chainConfig.id, agentId, name: metadata?.name }))}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
+            className="border border-border bg-surface px-3 py-1.5 text-xs text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
           >
             Share on X
           </a>
 
           <details className="relative">
-            <summary className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover cursor-pointer list-none">
+            <summary className="border border-border bg-surface px-3 py-1.5 text-xs text-foreground-secondary hover:bg-surface-hover cursor-pointer list-none">
               Embed
             </summary>
             <div className="absolute top-full mt-1 z-10">
@@ -276,7 +276,7 @@ export default async function AgentPage({ params }: Props) {
             href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
+            className="border border-border bg-surface px-3 py-1.5 text-xs text-foreground-secondary hover:bg-surface-hover hover:text-foreground hover:border-border-bright transition-colors"
           >
             Explorer
           </a>
@@ -300,14 +300,14 @@ export default async function AgentPage({ params }: Props) {
             <div className="bg-surface border border-border p-6 space-y-5">
               {/* ERC-8004 label */}
               <div className="flex items-center justify-end">
-                <span className="font-mono text-xs text-foreground-muted">
+                <span className="text-xs text-foreground-muted">
                   ERC-8004
                 </span>
               </div>
 
               {/* Agent ID */}
               <div>
-                <p className="text-xs text-foreground-muted uppercase tracking-wider font-mono">
+                <p className="text-xs text-foreground-muted uppercase tracking-wider">
                   Agent ID
                 </p>
                 <p className="font-display text-4xl font-bold text-foreground mt-1">
@@ -317,7 +317,7 @@ export default async function AgentPage({ params }: Props) {
 
               {/* Chain ID */}
               <div>
-                <p className="text-xs text-foreground-muted uppercase tracking-wider font-mono">
+                <p className="text-xs text-foreground-muted uppercase tracking-wider">
                   Chain ID
                 </p>
                 <p className="font-mono text-sm text-foreground-secondary mt-0.5">
@@ -327,27 +327,27 @@ export default async function AgentPage({ params }: Props) {
 
               {/* Owner */}
               <div>
-                <p className="text-xs text-foreground-muted uppercase tracking-wider font-mono">
+                <p className="text-xs text-foreground-muted uppercase tracking-wider">
                   Owner
                 </p>
                 <div className="mt-0.5">
                   {owner ? (
                     <AddressChip address={owner} chainId={chainConfig.id} />
                   ) : (
-                    <p className="font-mono text-xs text-foreground-secondary">unknown</p>
+                    <p className="text-xs text-foreground-secondary">unknown</p>
                   )}
                 </div>
               </div>
 
               {/* URI */}
               <div>
-                <p className="text-xs text-foreground-muted uppercase tracking-wider font-mono">
+                <p className="text-xs text-foreground-muted uppercase tracking-wider">
                   Agent URI
                 </p>
                 {uri ? (
                   <AgentUriDisplay uri={uri} />
                 ) : (
-                  <p className="font-mono text-xs text-foreground-secondary mt-0.5">
+                  <p className="text-xs text-foreground-secondary mt-0.5">
                     unknown
                   </p>
                 )}
@@ -355,7 +355,7 @@ export default async function AgentPage({ params }: Props) {
 
               {/* Storage Status */}
               <div>
-                <p className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-1">
+                <p className="text-xs text-foreground-muted uppercase tracking-wider mb-1">
                   Storage
                 </p>
                 <span className="status-pill status-pill-accent">
@@ -381,7 +381,7 @@ export default async function AgentPage({ params }: Props) {
 
             {/* Connected Protocols */}
             <div className="bg-surface border border-border p-5">
-              <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-4">
+              <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-4">
                 Connected Protocols
               </h2>
               <div className="space-y-2">

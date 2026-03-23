@@ -89,14 +89,14 @@ export function AgentEventTimeline({ chainId, agentId, explorerUrl }: Props) {
 
   return (
     <div className="bg-surface border border-border p-5">
-      <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-4">
+      <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-4">
         Event History
       </h2>
 
       {events === null ? (
         <Skeleton />
       ) : events.length === 0 ? (
-        <p className="text-xs text-foreground-muted font-mono">No events recorded</p>
+        <p className="text-xs text-foreground-muted">No events recorded</p>
       ) : (
         <div className="space-y-0">
           {events.map((event, i) => (
@@ -130,7 +130,7 @@ export function AgentEventTimeline({ chainId, agentId, explorerUrl }: Props) {
               </a>
 
               {/* Block */}
-              <span className="shrink-0 text-[10px] font-mono text-foreground-muted w-16 text-right">
+              <span className="shrink-0 text-[11px] font-mono text-foreground-muted w-16 text-right">
                 #{event.block.toLocaleString()}
               </span>
             </div>

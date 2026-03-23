@@ -63,14 +63,14 @@ export function LeadersPanel({ onSelectAgent }: LeadersPanelProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-4 py-3">
-        <p className="font-mono text-[10px] text-foreground-muted">Rolling window: last 10 minutes</p>
+        <p className="text-[11px] text-foreground-muted">Rolling window: last 10 minutes</p>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {groups.map((group) => (
           <section key={group.key} className="space-y-2">
-            <h3 className="font-mono text-[11px] uppercase text-foreground-secondary">{group.title}</h3>
+            <h3 className="text-[11px] uppercase text-foreground-secondary">{group.title}</h3>
             {group.rows.length === 0 ? (
-              <p className="font-mono text-xs text-foreground-muted">No events yet.</p>
+              <p className="text-xs text-foreground-muted">No events yet.</p>
             ) : (
               <div className="divide-y divide-border/60 border border-border">
                 {group.rows.map((row) => (

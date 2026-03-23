@@ -111,7 +111,7 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
         >
           <ShareIcon />
         </span>
-        <span className="text-[10px] tracking-wider uppercase border border-border px-2 py-0.5 text-foreground-muted group-hover:border-interactive group-hover:text-interactive transition-colors whitespace-nowrap">
+        <span className="text-[11px] tracking-wider uppercase border border-border px-2 py-0.5 text-foreground-muted group-hover:border-interactive group-hover:text-interactive transition-colors whitespace-nowrap">
           INSPECT
         </span>
       </div>
@@ -134,7 +134,7 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
             <ShareIcon />
           </span>
         </div>
-        <div className="flex items-center justify-between text-foreground-muted text-[10px]">
+        <div className="flex items-center justify-between text-foreground-muted text-[11px]">
           <span>{formatTime(event.timestamp)}</span>
           <span>{formatTxHash(event.txHash)}</span>
         </div>

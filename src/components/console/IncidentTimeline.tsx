@@ -38,15 +38,15 @@ function IncidentCard({ incident, onResolve }: { incident: Incident; onResolve: 
           <span className={`status-pill ${SEVERITY_STYLES[incident.severity] ?? 'status-pill-neutral'}`}>
             {incident.severity.toUpperCase()}
           </span>
-          <span className="font-mono text-xs text-foreground font-bold">
+          <span className="text-xs text-foreground font-bold">
             {incident.title}
           </span>
         </div>
-        <span className="text-[10px] text-foreground-muted font-mono">
+        <span className="text-[11px] text-foreground-muted font-mono">
           {new Date(incident.triggeredAt).toLocaleString()}
         </span>
       </div>
-      <p className="text-xs text-foreground-secondary font-mono">
+      <p className="text-xs text-foreground-secondary">
         {incident.description}
       </p>
       {incident.whyItMatters && (
@@ -55,19 +55,19 @@ function IncidentCard({ incident, onResolve }: { incident: Incident; onResolve: 
         </p>
       )}
       <div className="flex items-center justify-between pt-1">
-        <span className="text-[10px] text-foreground-muted font-mono">
+        <span className="text-[11px] text-foreground-muted">
           Agent #{incident.agentId} &middot; Chain {incident.chainId}
         </span>
         {!incident.resolvedAt ? (
           <button
             onClick={handleResolve}
             disabled={resolving}
-            className="text-[10px] font-mono text-interactive hover:underline disabled:opacity-50"
+            className="text-[11px] text-interactive hover:underline disabled:opacity-50"
           >
             {resolving ? 'Resolving...' : 'Mark Resolved'}
           </button>
         ) : (
-          <span className="text-[10px] font-mono text-success">Resolved</span>
+          <span className="text-[11px] text-success">Resolved</span>
         )}
       </div>
     </div>
@@ -105,7 +105,7 @@ export function IncidentTimeline() {
   }, [address, push])
 
   if (loading) {
-    return <p className="text-xs text-foreground-muted font-mono">Loading signals...</p>
+    return <p className="text-xs text-foreground-muted">Loading signals...</p>
   }
 
   if (incidents.length === 0) {

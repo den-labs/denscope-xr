@@ -17,7 +17,7 @@ export function AgentServices({ metadata }: { metadata?: AgentMetadata }) {
 
   return (
     <div className="space-y-2">
-      <h3 className="font-mono text-xs uppercase tracking-wider text-foreground-muted">Services</h3>
+      <h3 className="text-xs uppercase tracking-wider text-foreground-muted">Services</h3>
       <div className="flex flex-wrap gap-1.5">
         {badges.map((s, i) => (
           <span

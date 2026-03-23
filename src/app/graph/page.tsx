@@ -20,11 +20,11 @@ export default function GraphPage() {
       {/* Top-left: Title */}
       <div className="absolute top-4 left-4 z-10">
         <h1 className="font-display font-bold text-sm">DenScope</h1>
-        <p className="font-mono text-xs text-foreground-muted">Trust Graph Explorer</p>
+        <p className="text-xs text-foreground-muted">Trust Graph Explorer</p>
       </div>
 
       {/* Top-right: Legend */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-4 font-mono text-xs">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full bg-success" />
           Healthy

@@ -62,13 +62,13 @@ export function ClaimedAgentsList() {
               <span className="font-display text-lg font-bold text-foreground">
                 #{agent.agent_id}
               </span>
-              <span className="text-xs text-foreground-muted font-mono">
+              <span className="text-xs text-foreground-muted">
                 {chain?.name ?? `Chain ${agent.chain_id}`}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="status-pill status-pill-success">CLAIMED</span>
-              <span className="text-[10px] text-foreground-muted font-mono">
+              <span className="text-[11px] text-foreground-muted">
                 {new Date(agent.claimed_at).toLocaleDateString()}
               </span>
             </div>

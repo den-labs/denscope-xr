@@ -125,7 +125,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                 placeholder="Search agents..."
                 className="flex-1 bg-transparent font-mono text-sm text-foreground placeholder:text-foreground-muted outline-none"
               />
-              <kbd className="hidden shrink-0 border border-border px-1.5 py-0.5 font-mono text-[10px] text-foreground-muted sm:inline-block">
+              <kbd className="hidden shrink-0 border border-border px-1.5 py-0.5 font-mono text-[11px] text-foreground-muted sm:inline-block">
                 ESC
               </kbd>
             </div>
@@ -133,7 +133,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
             {/* Results */}
             <div className="max-h-80 overflow-y-auto">
               {results.length === 0 ? (
-                <div className="px-4 py-8 text-center font-mono text-xs text-foreground-muted">
+                <div className="px-4 py-8 text-center text-xs text-foreground-muted">
                   No agents found
                 </div>
               ) : (

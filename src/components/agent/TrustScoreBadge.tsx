@@ -24,7 +24,7 @@ export function TrustScoreBadge({ score }: { score: TrustScore }) {
         </span>
         <div className="pb-1 space-y-1">
           <span className="text-xs text-foreground-muted font-mono">/ 100</span>
-          <span className={`status-pill ${confidencePill(score.confidence)} text-[10px] block`}>
+          <span className={`status-pill ${confidencePill(score.confidence)} text-[11px] block`}>
             {score.confidence.toUpperCase()} CONFIDENCE
           </span>
         </div>
@@ -39,7 +39,7 @@ export function TrustScoreBadge({ score }: { score: TrustScore }) {
         )}
       </div>
 
-      <div className="flex gap-4 text-[10px] text-foreground-muted font-mono pt-1 border-t border-border">
+      <div className="flex gap-4 text-[11px] text-foreground-muted font-mono pt-1 border-t border-border">
         <span>{score.feedbackCount} feedbacks</span>
         <span>{score.positiveCount} positive</span>
         <span>{score.negativeCount} negative</span>
@@ -65,14 +65,14 @@ function BreakdownRow({
   const barWidth = Math.abs(value) * 100
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-foreground-muted font-mono w-28 shrink-0">{label}</span>
+      <span className="text-[11px] text-foreground-muted font-mono w-28 shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-background border border-border relative">
         <div
           className={`h-full ${negative ? 'bg-danger' : 'bg-interactive'}`}
           style={{ width: `${Math.min(barWidth, 100)}%` }}
         />
       </div>
-      <span className="text-[10px] font-mono text-foreground-secondary w-16 text-right">
+      <span className="text-[11px] font-mono text-foreground-secondary w-16 text-right">
         {negative ? '-' : ''}{(Math.abs(value) * weight * 100).toFixed(1)}pts
       </span>
     </div>

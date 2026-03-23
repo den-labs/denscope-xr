@@ -15,7 +15,7 @@ export default function ConsolePage() {
     <div className="h-full overflow-y-auto">
       <div className="bg-grid mx-auto max-w-4xl px-6 py-10">
         <ConsoleGuard>
-          <nav className="font-mono text-xs text-foreground-muted uppercase tracking-wider">
+          <nav className="text-xs text-foreground-muted uppercase tracking-wider">
             System / DenScope / Console
           </nav>
 
@@ -27,7 +27,7 @@ export default function ConsolePage() {
           </p>
 
           <div className="mt-8">
-            <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-1">
+            <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-1">
               Register Agent
             </h2>
             <p className="text-xs text-foreground-muted mb-4">
@@ -37,7 +37,7 @@ export default function ConsolePage() {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-1">
+            <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-1">
               Claimed Agents
             </h2>
             <p className="text-xs text-foreground-muted mb-4">
@@ -47,7 +47,7 @@ export default function ConsolePage() {
           </div>
 
           <div className="mt-10">
-            <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-1">
+            <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-1">
               Signals
             </h2>
             <p className="text-xs text-foreground-muted mb-4">
@@ -57,7 +57,7 @@ export default function ConsolePage() {
           </div>
 
           <div className="mt-10">
-            <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-1">
+            <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-1">
               Alert Rules
             </h2>
             <p className="text-xs text-foreground-muted mb-4">
@@ -67,7 +67,7 @@ export default function ConsolePage() {
           </div>
 
           <div className="mt-10">
-            <h2 className="text-xs text-foreground-muted uppercase tracking-wider font-mono mb-1">
+            <h2 className="text-xs text-foreground-muted uppercase tracking-wider mb-1">
               API Access
             </h2>
             <p className="text-xs text-foreground-muted mb-4">

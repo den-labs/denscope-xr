@@ -150,19 +150,19 @@ export function RegisterAgentPanel() {
       <h2 className="font-display text-lg font-bold uppercase tracking-wider text-foreground">
         Register Agent
       </h2>
-      <p className="text-xs text-foreground-muted font-mono">
+      <p className="text-xs text-foreground-muted">
         Register a new ERC-8004 agent on-chain. Metadata is uploaded to IPFS.
       </p>
 
       {status === 'success' ? (
         <div className="bg-background border border-interactive p-4 space-y-2">
-          <p className="text-sm font-mono text-interactive font-bold">
+          <p className="text-sm text-interactive font-bold">
             Agent registered successfully!
           </p>
           {agentId && (
             <Link
               href={`/agent/${selectedChainId}/${agentId}`}
-              className="inline-block text-xs font-mono text-interactive hover:underline"
+              className="inline-block text-xs text-interactive hover:underline"
             >
               View agent #{agentId} on {selectedChain.name}
             </Link>
@@ -178,7 +178,7 @@ export function RegisterAgentPanel() {
                 setAgentId(null)
                 setTxHash(undefined)
               }}
-              className="text-xs font-mono text-foreground-muted hover:underline mt-2"
+              className="text-xs text-foreground-muted hover:underline mt-2"
             >
               Register another
             </button>
@@ -188,7 +188,7 @@ export function RegisterAgentPanel() {
         <>
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] text-foreground-muted font-mono uppercase tracking-wider block mb-1">
+              <label className="text-[11px] text-foreground-muted uppercase tracking-wider block mb-1">
                 Name *
               </label>
               <input
@@ -201,7 +201,7 @@ export function RegisterAgentPanel() {
               />
             </div>
             <div>
-              <label className="text-[10px] text-foreground-muted font-mono uppercase tracking-wider block mb-1">
+              <label className="text-[11px] text-foreground-muted uppercase tracking-wider block mb-1">
                 Description *
               </label>
               <textarea
@@ -215,7 +215,7 @@ export function RegisterAgentPanel() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] text-foreground-muted font-mono uppercase tracking-wider">
+                <label className="text-[11px] text-foreground-muted uppercase tracking-wider">
                   Image <span className="normal-case">(optional)</span>
                 </label>
                 {!imagePreview && (
@@ -224,18 +224,18 @@ export function RegisterAgentPanel() {
                       type="button"
                       onClick={() => { setImageMode('upload'); setErrorMsg(''); setImage('') }}
                       disabled={isWorking}
-                      className={`text-[10px] font-mono transition-colors ${
+                      className={`text-[11px] transition-colors ${
                         imageMode === 'upload' ? 'text-interactive' : 'text-foreground-muted hover:text-foreground-secondary'
                       }`}
                     >
                       Upload
                     </button>
-                    <span className="text-[10px] text-foreground-muted">/</span>
+                    <span className="text-[11px] text-foreground-muted">/</span>
                     <button
                       type="button"
                       onClick={() => { setImageMode('url'); setErrorMsg('') }}
                       disabled={isWorking}
-                      className={`text-[10px] font-mono transition-colors ${
+                      className={`text-[11px] transition-colors ${
                         imageMode === 'url' ? 'text-interactive' : 'text-foreground-muted hover:text-foreground-secondary'
                       }`}
                     >
@@ -264,9 +264,9 @@ export function RegisterAgentPanel() {
                   />
                   <div className="flex-1 min-w-0">
                     {imageUploading ? (
-                      <p className="text-xs font-mono text-foreground-muted">Uploading to IPFS...</p>
+                      <p className="text-xs text-foreground-muted">Uploading to IPFS...</p>
                     ) : (
-                      <p className="text-xs font-mono text-interactive truncate">{image}</p>
+                      <p className="text-xs text-interactive truncate">{image}</p>
                     )}
                   </div>
                   <button
@@ -278,7 +278,7 @@ export function RegisterAgentPanel() {
                       if (fileInputRef.current) fileInputRef.current.value = ''
                     }}
                     disabled={isWorking}
-                    className="text-[10px] font-mono text-danger hover:underline disabled:opacity-50"
+                    className="text-[11px] text-danger hover:underline disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -314,20 +314,20 @@ export function RegisterAgentPanel() {
                     dragOver ? 'border-interactive text-interactive' : 'border-border text-foreground-muted'
                   } ${isWorking ? 'opacity-50 pointer-events-none' : 'hover:border-interactive hover:text-interactive'}`}
                 >
-                  <p className="text-xs font-mono">
+                  <p className="text-xs">
                     Drop image, paste, or click to browse
                   </p>
-                  <p className="text-[10px] font-mono mt-1">
+                  <p className="text-[11px] mt-1">
                     PNG, JPG, WebP, GIF, SVG &middot; Max 5 MB
                   </p>
                 </div>
               )}
               {errorMsg && status !== 'error' && (
-                <p className="text-xs font-mono text-danger mt-1">{errorMsg}</p>
+                <p className="text-xs text-danger mt-1">{errorMsg}</p>
               )}
             </div>
             <div>
-              <label className="text-[10px] text-foreground-muted font-mono uppercase tracking-wider block mb-1">
+              <label className="text-[11px] text-foreground-muted uppercase tracking-wider block mb-1">
                 Chain
               </label>
               <select
@@ -346,14 +346,14 @@ export function RegisterAgentPanel() {
           </div>
 
           {status === 'error' && (
-            <p className="text-xs font-mono text-danger">{errorMsg}</p>
+            <p className="text-xs text-danger">{errorMsg}</p>
           )}
 
           <div className="flex items-center gap-3">
             <button
               onClick={handleRegister}
               disabled={isWorking || !name.trim() || !description.trim()}
-              className="bg-interactive text-background px-4 py-1.5 text-xs font-mono font-bold hover:bg-interactive/90 transition-colors disabled:opacity-50"
+              className="bg-interactive text-background px-4 py-1.5 text-xs font-bold hover:bg-interactive/90 transition-colors disabled:opacity-50"
             >
               {status === 'uploading'
                 ? 'Uploading to IPFS...'
@@ -368,7 +368,7 @@ export function RegisterAgentPanel() {
                 href={`${selectedChain.explorer}/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] font-mono text-foreground-muted hover:underline"
+                className="text-[11px] text-foreground-muted hover:underline"
               >
                 View tx
               </a>

@@ -38,7 +38,7 @@ export function SignalCard({ signal }: { signal: DiscoverySignal }) {
 
       <p className="text-sm text-foreground-secondary mt-2">{signal.description}</p>
 
-      <time className="font-mono text-[10px] text-foreground-muted uppercase mt-3 block">
+      <time className="font-mono text-[11px] text-foreground-muted uppercase mt-3 block">
         {new Date(signal.timestamp).toLocaleTimeString()}
       </time>
 

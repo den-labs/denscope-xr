@@ -28,7 +28,7 @@ export function DiscoveryFeed({ severity, search }: Props) {
   if (signals.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-foreground-muted">
-        <div className="text-center font-mono max-w-md">
+        <div className="text-center max-w-md">
           <p className="text-lg">Listening for patterns...</p>
           <p className="mt-2 text-sm">
             Discovery detects signals like an agent&apos;s first interaction or unusual feedback spikes.
@@ -52,7 +52,7 @@ export function DiscoveryFeed({ severity, search }: Props) {
   if (filtered.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-foreground-muted">
-        <div className="text-center font-mono">
+        <div className="text-center">
           <p className="text-lg">No signals match filters</p>
           <p className="mt-1 text-sm">Try adjusting severity or search criteria</p>
         </div>

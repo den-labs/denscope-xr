@@ -92,10 +92,10 @@ export function Header() {
           {/* Search — desktop only */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="hidden md:flex items-center gap-2 border border-border bg-surface px-3 py-1 text-xs font-mono text-foreground-muted transition-colors hover:text-foreground-secondary"
+            className="hidden md:flex items-center gap-2 border border-border bg-surface px-3 py-1 text-xs text-foreground-muted transition-colors hover:text-foreground-secondary"
           >
             Search
-            <kbd className="border border-border px-1 py-0.5 text-[10px]">
+            <kbd className="border border-border px-1 py-0.5 text-[11px]">
               {'\u2318'}K
             </kbd>
           </button>
@@ -105,7 +105,7 @@ export function Header() {
           {/* Status — desktop only */}
           <div className="hidden md:flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            <span className="text-[10px] uppercase tracking-widest text-foreground-muted">
+            <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
               Mainnet
             </span>
           </div>
@@ -159,10 +159,10 @@ export function Header() {
                   setMenuOpen(false)
                   setSearchOpen(true)
                 }}
-                className="flex w-full items-center gap-2 border border-border bg-surface px-3 py-2.5 text-xs font-mono text-foreground-muted transition-colors hover:text-foreground-secondary"
+                className="flex w-full items-center gap-2 border border-border bg-surface px-3 py-2.5 text-xs text-foreground-muted transition-colors hover:text-foreground-secondary"
               >
                 Search
-                <kbd className="ml-auto border border-border px-1 py-0.5 text-[10px]">
+                <kbd className="ml-auto border border-border px-1 py-0.5 text-[11px]">
                   {'\u2318'}K
                 </kbd>
               </button>
@@ -200,7 +200,7 @@ export function Header() {
             {/* Status */}
             <div className="flex items-center gap-2 px-6 py-3">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              <span className="text-[10px] uppercase tracking-widest text-foreground-muted">
+              <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
                 Mainnet
               </span>
             </div>

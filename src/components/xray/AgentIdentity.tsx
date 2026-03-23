@@ -21,11 +21,11 @@ export function AgentIdentity({ agent }: { agent: AgentSummary }) {
 
       <div className="space-y-1">
         <div className="flex justify-between">
-          <span className="text-foreground-muted font-mono text-xs uppercase tracking-wider">Owner</span>
+          <span className="text-foreground-muted text-xs uppercase tracking-wider">Owner</span>
           <AddressChip address={agent.owner} chainId={agent.chainId} />
         </div>
         <div className="flex justify-between">
-          <span className="text-foreground-muted font-mono text-xs uppercase tracking-wider">Feedback</span>
+          <span className="text-foreground-muted text-xs uppercase tracking-wider">Feedback</span>
           <span className="text-foreground-secondary font-mono text-sm">
             {agent.feedbackCount} (<span className="text-success">{agent.positiveFeedback}+</span> / <span className="text-danger">{agent.negativeFeedback}-</span>)
           </span>

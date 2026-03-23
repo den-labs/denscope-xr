@@ -20,7 +20,7 @@ export default function DiscoveryPage() {
             <h1 className="font-display text-2xl font-bold uppercase tracking-wider">
               Signals Feed
             </h1>
-            <p className="text-foreground-secondary text-xs uppercase tracking-widest font-mono mt-1">
+            <p className="text-foreground-secondary text-xs uppercase tracking-widest mt-1">
               Live Monitoring / Anomaly Detection
             </p>
           </div>
@@ -42,7 +42,7 @@ export default function DiscoveryPage() {
           <select
             value={severity}
             onChange={(e) => setSeverity(e.target.value)}
-            className="bg-surface border border-border text-foreground text-xs font-mono px-3 py-1.5 appearance-none cursor-pointer focus:outline-none focus:border-border-bright"
+            className="bg-surface border border-border text-foreground text-xs px-3 py-1.5 appearance-none cursor-pointer focus:outline-none focus:border-border-bright"
           >
             <option value="">All Severities</option>
             <option value="critical">Critical</option>
@@ -54,7 +54,7 @@ export default function DiscoveryPage() {
             placeholder="Search signals..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-surface border border-border text-foreground text-xs font-mono px-3 py-1.5 flex-1 placeholder:text-foreground-muted focus:outline-none focus:border-border-bright"
+            className="bg-surface border border-border text-foreground text-xs px-3 py-1.5 flex-1 placeholder:text-foreground-muted focus:outline-none focus:border-border-bright"
           />
         </div>
       </header>
