@@ -26,15 +26,15 @@ export default function GraphPage() {
       {/* Top-right: Legend */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-4 font-mono text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: '#34c759' }} />
+          <span className="inline-block h-2 w-2 rounded-full bg-success" />
           Healthy
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: '#ffcc00' }} />
+          <span className="inline-block h-2 w-2 rounded-full bg-warning" />
           Warning
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: '#ff3b30' }} />
+          <span className="inline-block h-2 w-2 rounded-full bg-critical" />
           Critical
         </span>
       </div>
