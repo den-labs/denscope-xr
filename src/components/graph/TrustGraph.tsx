@@ -237,12 +237,12 @@ export function TrustGraph({
     fxCtx2.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     const styles = getComputedStyle(document.documentElement)
-    const colorSuccess = styles.getPropertyValue('--color-success').trim() || '#2ebd56'
-    const colorWarning = styles.getPropertyValue('--color-warning').trim() || '#f0c040'
-    const colorDanger = styles.getPropertyValue('--color-danger').trim() || '#ff453a'
-    const colorForeground = styles.getPropertyValue('--color-foreground').trim() || '#e8e8e6'
-    const colorBackground = styles.getPropertyValue('--color-background').trim() || '#151718'
-    const colorBorder = styles.getPropertyValue('--color-border').trim() || '#2a2c2e'
+    const colorSuccess = styles.getPropertyValue('--color-success').trim() || '#34c759'
+    const colorWarning = styles.getPropertyValue('--color-warning').trim() || '#ffcc00'
+    const colorDanger = styles.getPropertyValue('--color-danger').trim() || '#ff3b30'
+    const colorForeground = styles.getPropertyValue('--color-foreground').trim() || '#ffffff'
+    const colorBackground = styles.getPropertyValue('--color-background').trim() || '#000000'
+    const colorBorder = styles.getPropertyValue('--color-border').trim() || '#222222'
 
     const prevPositions = nodeByIdRef.current
     const nodes: SimNode[] = Array.from(nodesMap.values()).map((n) => {

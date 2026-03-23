@@ -56,8 +56,8 @@
   --color-card-foreground: #1a1a1a;
   --color-panel: #f6f5f1;
   --color-panel-foreground: #1a1a1a;
-  --color-border: #e2e1dc;
-  --color-border-bright: #cccbc5;
+  --color-border: #f0efeb;
+  --color-border-bright: #e8e7e2;
   --color-input: #f0efeb;
   --color-ring: #1a7a8a;
   --color-primary: #2d7a4f;
@@ -78,39 +78,39 @@
   --color-score-low: #c0392b;
 }
 
-/* ── DARK THEME ────────────────────────────────────────── */
+/* ── DARK THEME (original identity) ───────────────────── */
 .dark {
-  --color-background: #151718;
-  --color-foreground: #e8e8e6;
-  --color-foreground-secondary: #9a9a98;
-  --color-foreground-muted: #87877f;
-  --color-surface: #1c1e20;
-  --color-surface-hover: #242628;
-  --color-elevated: #282a2d;
-  --color-card: #1c1e20;
-  --color-card-foreground: #e8e8e6;
-  --color-panel: #1a1c1e;
-  --color-panel-foreground: #e8e8e6;
-  --color-border: #2a2c2e;
-  --color-border-bright: #3a3c3e;
-  --color-input: #1c1e20;
-  --color-ring: #5ac8d8;
-  --color-primary: #2ebd56;
-  --color-primary-foreground: #0a1a10;
-  --color-interactive: #5ac8d8;
-  --color-interactive-foreground: #0a1a1e;
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-foreground-secondary: #888888;
+  --color-foreground-muted: #555555;
+  --color-surface: #0a0a0a;
+  --color-surface-hover: #111111;
+  --color-elevated: #111111;
+  --color-card: #0a0a0a;
+  --color-card-foreground: #ffffff;
+  --color-panel: #050505;
+  --color-panel-foreground: #ffffff;
+  --color-border: #222222;
+  --color-border-bright: #333333;
+  --color-input: #0a0a0a;
+  --color-ring: #0df2f2;
+  --color-primary: #34c759;
+  --color-primary-foreground: #000000;
+  --color-interactive: #0df2f2;
+  --color-interactive-foreground: #000000;
   --color-accent: #c4a44a;
-  --color-accent-foreground: #e8e8e6;
-  --color-muted: #242628;
-  --color-muted-foreground: #87877f;
-  --color-success: #2ebd56;
-  --color-warning: #f0c040;
-  --color-danger: #ff453a;
-  --color-info: #5ac8d8;
-  --color-verified: #2ebd56;
-  --color-score-high: #2ebd56;
-  --color-score-medium: #f0c040;
-  --color-score-low: #ff453a;
+  --color-accent-foreground: #ffffff;
+  --color-muted: #111111;
+  --color-muted-foreground: #555555;
+  --color-success: #34c759;
+  --color-warning: #ffcc00;
+  --color-danger: #ff3b30;
+  --color-info: #0df2f2;
+  --color-verified: #34c759;
+  --color-score-high: #34c759;
+  --color-score-medium: #ffcc00;
+  --color-score-low: #ff3b30;
 }
 
 /* ── BASE STYLES ───────────────────────────────────────── */
@@ -118,6 +118,35 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Scanline overlay (dark only) */
+.dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.015) 2px,
+    rgba(255, 255, 255, 0.015) 4px
+  );
+}
+
+/* Noise overlay (dark only) */
+.dark body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
 }
 
 /* ── SCROLLBAR ─────────────────────────────────────────── */
@@ -215,8 +244,8 @@ body {
 /* ── GRID BACKGROUND ───────────────────────────────────── */
 .bg-grid {
   background-image:
-    linear-gradient(color-mix(in srgb, var(--color-foreground) 4%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--color-foreground) 4%, transparent) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--color-foreground) 2%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-foreground) 2%, transparent) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 .dark .bg-grid {
