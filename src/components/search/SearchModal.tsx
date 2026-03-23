@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAgentStore } from '@/stores/agents'
+import { searchAgents } from '@/lib/supabase/search-agents'
 import { SearchResult } from './SearchResult'
+import type { AgentSummary } from '@/types/agents'
 
 const MAX_RESULTS = 20
 
@@ -18,9 +20,11 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
+  const [remoteResults, setRemoteResults] = useState<AgentSummary[]>([])
+  const [searching, setSearching] = useState(false)
   const agents = useAgentStore((s) => s.agents)
 
-  const results = useMemo(() => {
+  const localResults = useMemo(() => {
     const all = Array.from(agents.values())
     if (!query.trim()) return all.slice(0, MAX_RESULTS)
     const q = query.toLowerCase()
@@ -33,6 +37,26 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
       )
       .slice(0, MAX_RESULTS)
   }, [agents, query])
+
+  // Fallback to Supabase when local search has no results
+  useEffect(() => {
+    const q = query.trim()
+    if (!q || localResults.length > 0) {
+      setRemoteResults([])
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      setSearching(true)
+      const results = await searchAgents(q, MAX_RESULTS)
+      setRemoteResults(results)
+      setSearching(false)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [query, localResults.length])
+
+  const results = localResults.length > 0 ? localResults : remoteResults
 
   useEffect(() => {
     setActiveIndex(0)
@@ -134,7 +158,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
             <div className="max-h-80 overflow-y-auto">
               {results.length === 0 ? (
                 <div className="px-4 py-8 text-center font-mono text-xs text-text-muted">
-                  No agents found
+                  {searching ? 'Searching...' : query.trim() ? 'No agents found' : 'Type to search'}
                 </div>
               ) : (
                 results.map((agent, i) => (
