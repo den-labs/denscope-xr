@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SearchModal } from '@/components/search/SearchModal'
 import { ConnectButton } from '@/components/auth/ConnectButton'
 import { IncidentBadge } from '@/components/console/IncidentBadge'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 
 const navItems = [
   { href: '/', label: 'Live Feed' },
@@ -99,6 +100,8 @@ export function Header() {
               {'\u2318'}K
             </kbd>
           </button>
+
+          <ThemeToggle />
 
           <ConnectButton />
 
@@ -198,11 +201,14 @@ export function Header() {
             <div className="border-t border-border" />
 
             {/* Status */}
-            <div className="flex items-center gap-2 px-6 py-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
-                Mainnet
-              </span>
+            <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                <span className="text-[11px] uppercase tracking-widest text-foreground-muted">
+                  Mainnet
+                </span>
+              </div>
+              <ThemeToggle />
             </div>
           </motion.div>
         )}
