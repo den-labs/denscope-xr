@@ -1,6 +1,21 @@
 @import "tailwindcss";
 
-@theme inline {
+:root {
+  --color-bg: #f7f7f5;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f0f0ee;
+  --color-border: #e0e0dc;
+  --color-border-bright: #d0d0cc;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #9a9a9a;
+  --color-accent: #2d6a4f;
+  --color-success: #2d6a4f;
+  --color-warning: #b8860b;
+  --color-critical: #c0392b;
+}
+
+.dark {
   --color-bg: #000000;
   --color-surface: #0a0a0a;
   --color-surface-hover: #111111;
@@ -13,6 +28,21 @@
   --color-success: #34c759;
   --color-warning: #ffcc00;
   --color-critical: #ff3b30;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-border: var(--color-border);
+  --color-border-bright: var(--color-border-bright);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-critical: var(--color-critical);
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -24,8 +54,8 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Scanline overlay */
-body::before {
+/* Scanline overlay — dark only */
+.dark body::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -40,8 +70,8 @@ body::before {
   );
 }
 
-/* Noise overlay */
-body::after {
+/* Noise overlay — dark only */
+.dark body::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -116,7 +146,7 @@ body::after {
 /* Grid background utility */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--color-border) 30%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 30%, transparent) 1px, transparent 1px);
   background-size: 40px 40px;
 }

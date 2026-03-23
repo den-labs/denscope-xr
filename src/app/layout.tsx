@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { PipelineProvider } from '@/components/providers/PipelineProvider'
 import { WalletProvider } from '@/components/providers/WalletProvider'
 
@@ -40,15 +41,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} flex h-screen flex-col bg-bg text-text-primary antialiased`}>
-        <WalletProvider>
-          <PipelineProvider>
-            <Header />
-            <main className="flex-1 overflow-hidden">{children}</main>
-            <StatusBar />
-          </PipelineProvider>
-        </WalletProvider>
+        <ThemeProvider>
+          <WalletProvider>
+            <PipelineProvider>
+              <Header />
+              <main className="flex-1 overflow-hidden">{children}</main>
+              <StatusBar />
+            </PipelineProvider>
+          </WalletProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
