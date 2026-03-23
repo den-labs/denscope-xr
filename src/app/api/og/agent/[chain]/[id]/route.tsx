@@ -67,7 +67,7 @@ export async function GET(_req: Request, { params }: Props) {
         <div
           style={{
             display: 'flex',
-            background: '#151718',
+            background: '#050505',
             width: '100%',
             height: '100%',
             alignItems: 'center',
@@ -124,9 +124,9 @@ export async function GET(_req: Request, { params }: Props) {
           display: 'flex',
           width: '100%',
           height: '100%',
-          background: '#151718',
+          background: '#050505',
           fontFamily: 'Inter',
-          color: '#e8e8e6',
+          color: '#F0F0F0',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -223,7 +223,7 @@ export async function GET(_req: Request, { params }: Props) {
             </div>
 
             {/* Agent name */}
-            <span style={{ fontSize: 18, color: '#e8e8e6', letterSpacing: '0.05em', fontWeight: 400 }}>
+            <span style={{ fontSize: 18, color: '#F0F0F0', letterSpacing: '0.05em', fontWeight: 400 }}>
               {name}
             </span>
 
@@ -322,12 +322,12 @@ export async function GET(_req: Request, { params }: Props) {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               border: '1px solid rgba(255,255,255,0.20)', padding: '12px 24px',
-              background: '#1c1e20',
+              background: '#000000',
             }}>
               <span style={{ fontSize: 14, color: '#d1d5db', fontWeight: 400 }}>
                 Chain:{' '}
               </span>
-              <span style={{ fontSize: 14, color: '#e8e8e6', fontWeight: 700 }}>
+              <span style={{ fontSize: 14, color: '#F0F0F0', fontWeight: 700 }}>
                 {chainConfig.badge.label}
               </span>
             </div>
