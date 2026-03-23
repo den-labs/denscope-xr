@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SearchModal } from '@/components/search/SearchModal'
 import { ConnectButton } from '@/components/auth/ConnectButton'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { IncidentBadge } from '@/components/console/IncidentBadge'
 
 const navItems = [
@@ -49,7 +50,7 @@ export function Header() {
               alt="DenScope"
               width={28}
               height={28}
-              className="invert"
+              className="dark:invert"
             />
             <span className="font-display text-sm font-bold uppercase tracking-widest text-text-primary">
               Denscope
@@ -100,6 +101,7 @@ export function Header() {
             </kbd>
           </button>
 
+          <ThemeToggle />
           <ConnectButton />
 
           {/* Status — desktop only */}
