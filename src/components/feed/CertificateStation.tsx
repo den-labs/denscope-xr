@@ -51,11 +51,11 @@ function StationContent({
 
   if (!agent) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <p className="font-display text-base font-bold text-foreground">
+      <div className="raw-signal-texture flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <p className="relative z-10 font-display text-base font-bold text-foreground">
           Select an agent to generate a Trust Certificate
         </p>
-        <p className="mt-2 text-xs text-foreground-muted">
+        <p className="relative z-10 mt-2 text-xs text-foreground-muted">
           Click any row in the feed.
         </p>
       </div>

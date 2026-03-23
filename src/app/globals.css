@@ -225,6 +225,30 @@ body {
     linear-gradient(90deg, color-mix(in srgb, var(--color-foreground) 3%, transparent) 1px, transparent 1px);
 }
 
+/* ── RAW SIGNAL TEXTURE (brand background) ─────────────── */
+.raw-signal-texture {
+  position: relative;
+}
+.raw-signal-texture::before {
+  content: '{"type":"feedback","agent":"0x4a2e...","score":92,"hash":"0xab3f...","block":58396724,"chain":"celo","timestamp":"2026-03-22T14:30:00Z"}';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--color-foreground);
+  opacity: 0.04;
+  filter: blur(1.5px);
+  overflow: hidden;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+.dark .raw-signal-texture::before {
+  opacity: 0.03;
+}
+
 /* ── CORNER FRAMES (brand decoration) ──────────────────── */
 .corner-framed {
   position: relative;
