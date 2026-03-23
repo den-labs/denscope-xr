@@ -24,7 +24,7 @@ export function ShareButton({ agent }: { agent: AgentSummary }) {
       <div className="flex gap-2">
         <button
           onClick={() => setOpen(!open)}
-          className="border border-text-primary bg-text-primary px-4 py-1.5 text-xs font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
+          className="border border-foreground bg-foreground px-4 py-1.5 text-xs font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
         >
           Share Certificate
         </button>

@@ -16,7 +16,7 @@ export function IncidentBadge() {
   if (count === 0) return null
 
   return (
-    <span className="inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-critical text-white rounded-full">
+    <span className="inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-danger text-white rounded-full">
       {count > 9 ? '9+' : count}
     </span>
   )

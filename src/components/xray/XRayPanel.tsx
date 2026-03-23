@@ -211,7 +211,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             {/* Primary CTA — Share Certificate (direct X intent) */}
             <button
               onClick={handleShare}
-              className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
+              className="w-full border border-foreground bg-foreground px-4 py-3 text-sm font-bold text-background hover:bg-transparent hover:text-foreground transition-colors"
             >
               Share Certificate
             </button>
@@ -295,7 +295,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             onClick={() => setTab('inspector')}
             className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
               tab === 'inspector'
-                ? 'border-text-primary bg-text-primary text-background'
+                ? 'border-foreground bg-foreground text-background'
                 : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
             }`}
           >
@@ -305,7 +305,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             onClick={() => setTab('tape')}
             className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
               tab === 'tape'
-                ? 'border-text-primary bg-text-primary text-background'
+                ? 'border-foreground bg-foreground text-background'
                 : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
             }`}
           >
@@ -315,7 +315,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             onClick={() => setTab('leaders')}
             className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
               tab === 'leaders'
-                ? 'border-text-primary bg-text-primary text-background'
+                ? 'border-foreground bg-foreground text-background'
                 : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
             }`}
           >
@@ -352,7 +352,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
               onClick={() => setTab('inspector')}
               className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                 tab === 'inspector'
-                  ? 'border-text-primary bg-text-primary text-background'
+                  ? 'border-foreground bg-foreground text-background'
                   : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
               }`}
             >
@@ -362,7 +362,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
               onClick={() => setTab('tape')}
               className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                 tab === 'tape'
-                  ? 'border-text-primary bg-text-primary text-background'
+                  ? 'border-foreground bg-foreground text-background'
                   : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
               }`}
             >
@@ -372,7 +372,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
               onClick={() => setTab('leaders')}
               className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                 tab === 'leaders'
-                  ? 'border-text-primary bg-text-primary text-background'
+                  ? 'border-foreground bg-foreground text-background'
                   : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
               }`}
             >

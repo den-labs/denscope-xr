@@ -83,7 +83,7 @@ export function TapePanel({ onSelectAgent }: TapePanelProps) {
                 onClick={() => setFilter(key)}
                 className={`px-2 py-1 text-[11px] uppercase border transition-colors ${
                   filter === key
-                    ? 'border-text-primary bg-text-primary text-background'
+                    ? 'border-foreground bg-foreground text-background'
                     : 'border-border text-foreground-secondary hover:text-foreground hover:border-border-bright'
                 }`}
               >
