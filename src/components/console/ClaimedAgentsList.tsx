@@ -37,7 +37,7 @@ export function ClaimedAgentsList() {
 
   if (agents.length === 0) {
     return (
-      <div className="bg-surface border border-border p-8 text-center">
+      <div className="bg-surface border border-border p-8 text-center shadow-sm dark:shadow-none">
         <p className="text-sm text-foreground-secondary">
           No claimed agents yet.
         </p>

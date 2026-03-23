@@ -146,7 +146,7 @@ export function RegisterAgentPanel() {
   const isWorking = status === 'uploading' || status === 'signing' || status === 'confirming' || isConfirming
 
   return (
-    <div className="bg-surface border border-border p-6 space-y-4">
+    <div className="bg-surface border border-border p-6 space-y-4 shadow-sm dark:shadow-none">
       <h2 className="font-display text-lg font-bold uppercase tracking-wider text-foreground">
         Register Agent
       </h2>

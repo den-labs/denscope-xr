@@ -9,6 +9,7 @@ import { eventsFromEdges } from '@/lib/firehose/fromEdges'
 import { PacketAnimator } from '@/lib/firehose/packetAnimator'
 import type { DenEvent } from '@/lib/firehose/types'
 import { GraphTooltip } from './GraphTooltip'
+import { useTheme } from '@/hooks/useTheme'
 import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom'
 import { select } from 'd3-selection'
 
@@ -54,6 +55,7 @@ export function TrustGraph({
   const selectedAgentKeyRef = useRef<string | null>(null)
   const drawRef = useRef<(() => void) | null>(null)
   const selectionLastFrameAtRef = useRef(0)
+  const { theme } = useTheme()
   const nodesMap = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
@@ -393,7 +395,7 @@ export function TrustGraph({
       baseCtxRef.current = null
       fxCtxRef.current = null
     }
-  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop, stopSelectionLoop])
+  }, [nodesMap, edges, fitToView, startFxLoop, stopFxLoop, stopSelectionLoop, theme])
 
   useEffect(() => {
     if (edges.length === 0) {

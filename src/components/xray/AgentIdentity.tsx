@@ -4,7 +4,7 @@ import { AddressChip } from '@/components/shared/AddressChip'
 
 export function AgentIdentity({ agent }: { agent: AgentSummary }) {
   return (
-    <div className="bg-surface border border-border p-4">
+    <div className="bg-surface border border-border p-4 shadow-sm dark:shadow-none">
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-display font-bold text-foreground">

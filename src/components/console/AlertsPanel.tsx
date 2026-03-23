@@ -145,7 +145,7 @@ export function AlertsPanel() {
 
   if (rules.length === 0) {
     return (
-      <div className="bg-surface border border-border p-5">
+      <div className="bg-surface border border-border p-5 shadow-sm dark:shadow-none">
         <p className="text-xs text-foreground-muted">
           Claim an agent to configure alerts.
         </p>
@@ -154,7 +154,7 @@ export function AlertsPanel() {
   }
 
   return (
-    <div className="bg-surface border border-border p-5 space-y-4">
+    <div className="bg-surface border border-border p-5 space-y-4 shadow-sm dark:shadow-none">
       <h2 className="text-xs text-foreground-muted uppercase tracking-wider">
         Alert Rules
       </h2>

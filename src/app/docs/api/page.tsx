@@ -276,15 +276,15 @@ function Section({ title, id, children }: { title: string; id?: string; children
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="bg-background border border-border p-4 mt-2 overflow-x-auto">
-      <code className="text-xs font-mono text-foreground whitespace-pre">{children}</code>
+    <pre className="dark rounded-md bg-[#111315] border border-[#2a2c2e] p-4 mt-2 overflow-x-auto">
+      <code className="text-xs font-mono text-[#e8e8e6] whitespace-pre">{children}</code>
     </pre>
   )
 }
 
 function Endpoint({ method, path, desc }: { method: string; path: string; desc: string }) {
   return (
-    <div className="bg-background border border-border p-4 mt-3">
+    <div className="bg-surface border border-border p-4 mt-3 shadow-sm dark:shadow-none">
       <div className="flex items-center gap-2">
         <span className="status-pill status-pill-accent text-[10px]">{method}</span>
         <code className="text-xs font-mono text-foreground">{path}</code>

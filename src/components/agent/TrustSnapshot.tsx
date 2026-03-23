@@ -79,7 +79,7 @@ export function TrustSnapshot({
     : undefined
 
   return (
-    <section className="bg-surface border border-border p-5">
+    <section className="bg-surface border border-border p-5 shadow-sm dark:shadow-none">
       <h3 className="text-sm font-bold text-foreground mb-4">
         Trust Snapshot
       </h3>

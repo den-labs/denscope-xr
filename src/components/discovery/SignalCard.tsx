@@ -17,7 +17,7 @@ const severityPill = {
 export function SignalCard({ signal }: { signal: DiscoverySignal }) {
   return (
     <div
-      className={`bg-surface border border-border border-l-2 p-4 ${severityBorder[signal.severity]}`}
+      className={`bg-surface border border-border border-l-2 p-4 shadow-sm dark:shadow-none ${severityBorder[signal.severity]}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">

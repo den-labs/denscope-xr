@@ -32,7 +32,7 @@ function IncidentCard({ incident, onResolve }: { incident: Incident; onResolve: 
   }
 
   return (
-    <div className="bg-surface border border-border p-4 space-y-2">
+    <div className="bg-surface border border-border p-4 space-y-2 shadow-sm dark:shadow-none">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`status-pill ${SEVERITY_STYLES[incident.severity] ?? 'status-pill-neutral'}`}>
@@ -110,7 +110,7 @@ export function IncidentTimeline() {
 
   if (incidents.length === 0) {
     return (
-      <div className="bg-surface border border-border p-8 text-center">
+      <div className="bg-surface border border-border p-8 text-center shadow-sm dark:shadow-none">
         <p className="text-sm text-foreground-secondary">No signals detected yet.</p>
         <p className="mt-2 text-xs text-foreground-muted">
           Signals appear when your agents receive feedback, reputation changes, or validation events.
