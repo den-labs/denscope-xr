@@ -115,7 +115,7 @@ export async function fetchHistoricalEvents(): Promise<number> {
   const { data, error } = await supabase
     .from('scope_events')
     .select('*')
-    .order('block_number', { ascending: true })
+    .order('block_number', { ascending: false })
     .limit(5000)
 
   if (error || !data) {
@@ -123,7 +123,12 @@ export async function fetchHistoricalEvents(): Promise<number> {
     return 0
   }
 
-  for (const row of data as DbEvent[]) {
+  // Reverse so events are processed oldest-first (chronological order).
+  // This ensures discovery rules fire correctly (e.g., first_blood on the
+  // actual first feedback). The store's push() prepends + slices to
+  // MAX_FEED_EVENTS, so the final state has the newest events at front.
+  const rows = (data as DbEvent[]).reverse()
+  for (const row of rows) {
     processEvent(toScopeEvent(row))
   }
 
