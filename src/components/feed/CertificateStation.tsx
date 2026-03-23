@@ -126,7 +126,7 @@ function StationContent({
         ) : (
           <>
             {/* 2) Certificate Preview */}
-            <div className="border border-border bg-surface overflow-hidden">
+            <div className="corner-framed border border-border bg-surface overflow-hidden shadow-sm dark:shadow-none" style={{ '--corner-size': '60px' } as React.CSSProperties}>
               <img
                 src={certUrl}
                 alt={`Trust Certificate for ${name}`}
