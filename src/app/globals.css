@@ -290,3 +290,18 @@ body {
 .animate-pulse-bg {
   animation: pulse-bg 0.8s ease-out forwards;
 }
+
+/* ── THEME TRANSITIONS ────────────────────────────────── */
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+/* ── SHADOW SYSTEM (light mode only) ───────────────────── */
+.shadow-card { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+.shadow-card-hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04); }
+.shadow-certificate { box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06); }
+.dark .shadow-card,
+.dark .shadow-card-hover,
+.dark .shadow-certificate { box-shadow: none; }

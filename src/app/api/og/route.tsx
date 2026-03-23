@@ -24,9 +24,9 @@ export async function GET() {
           display: 'flex',
           width: '100%',
           height: '100%',
-          background: '#050505',
+          background: '#151718',
           fontFamily: 'Inter',
-          color: '#F0F0F0',
+          color: '#e8e8e6',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -62,7 +62,7 @@ export async function GET() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 4, background: '#22C55E', display: 'flex' }} />
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: '#2ebd56', display: 'flex' }} />
                 <span style={{ fontSize: 12, color: '#9ca3af', letterSpacing: '0.1em', fontWeight: 400 }}>
                   ERC-8004
                 </span>
@@ -144,9 +144,9 @@ export async function GET() {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               border: '1px solid rgba(255,255,255,0.20)', padding: '12px 24px',
-              background: '#000000',
+              background: '#1c1e20',
             }}>
-              <span style={{ fontSize: 14, color: '#F0F0F0', fontWeight: 700 }}>
+              <span style={{ fontSize: 14, color: '#e8e8e6', fontWeight: 700 }}>
                 denscope.vercel.app
               </span>
             </div>
