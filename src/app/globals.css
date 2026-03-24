@@ -143,6 +143,19 @@ body {
   border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
 }
 
+/* Theme transition — circle expand from toggle button */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
 /* Grid background utility */
 .bg-grid {
   background-image:

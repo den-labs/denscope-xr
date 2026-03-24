@@ -25,9 +25,47 @@ export function ThemeToggle() {
 
   const isDark = resolvedTheme === 'dark'
 
+  function handleToggle(e: React.MouseEvent<HTMLButtonElement>) {
+    const nextTheme = isDark ? 'light' : 'dark'
+
+    // View Transition API: circle expand from button
+    if (!document.startViewTransition) {
+      setTheme(nextTheme)
+      return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top + rect.height / 2
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    )
+
+    const transition = document.startViewTransition(() => {
+      setTheme(nextTheme)
+    })
+
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`,
+          ],
+        },
+        {
+          duration: 500,
+          easing: 'ease-in-out',
+          pseudoElement: '::view-transition-new(root)',
+        },
+      )
+    })
+  }
+
   return (
     <button
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      onClick={handleToggle}
       className="flex h-8 w-8 items-center justify-center text-text-muted transition-colors hover:text-text-primary"
       aria-label="Toggle theme"
     >

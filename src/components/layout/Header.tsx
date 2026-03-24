@@ -101,7 +101,9 @@ export function Header() {
             </kbd>
           </button>
 
-          <ThemeToggle />
+          <span className="hidden md:flex">
+            <ThemeToggle />
+          </span>
           <ConnectButton />
 
           {/* Status — desktop only */}
@@ -199,12 +201,15 @@ export function Header() {
 
             <div className="border-t border-border" />
 
-            {/* Status */}
-            <div className="flex items-center gap-2 px-6 py-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              <span className="text-[10px] uppercase tracking-widest text-text-muted">
-                Mainnet
-              </span>
+            {/* Theme + Status */}
+            <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                <span className="text-[10px] uppercase tracking-widest text-text-muted">
+                  Mainnet
+                </span>
+              </div>
+              <ThemeToggle />
             </div>
           </motion.div>
         )}

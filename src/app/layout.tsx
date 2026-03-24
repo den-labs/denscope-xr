@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { PipelineProvider } from '@/components/providers/PipelineProvider'
 import { WalletProvider } from '@/components/providers/WalletProvider'
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </PipelineProvider>
           </WalletProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
