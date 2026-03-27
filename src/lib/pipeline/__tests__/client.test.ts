@@ -8,6 +8,7 @@ vi.mock('viem', () => ({
 vi.mock('viem/chains', () => ({
   celo: { id: 42220, name: 'Celo' },
   celoSepolia: { id: 11142220, name: 'Celo Sepolia' },
+  skaleBase: { id: 1187947933, name: 'SKALE Base' },
 }))
 
 import { createPublicClient, http } from 'viem'
@@ -36,6 +37,20 @@ describe('createChainClient', () => {
     expect(http).toHaveBeenCalledWith('https://forno.celo-sepolia.org')
     expect(createPublicClient).toHaveBeenCalledWith({
       chain: { id: 11142220, name: 'Celo Sepolia' },
+      transport: 'mock-transport',
+    })
+  })
+
+  it('creates client with SKALE Base chain', () => {
+    vi.mocked(createPublicClient).mockClear()
+    vi.mocked(http).mockClear()
+
+    const config = { id: 1187947933, rpc: { http: 'https://skale-base.skalenodes.com/v1/base' } }
+    createChainClient(config as never)
+
+    expect(http).toHaveBeenCalledWith('https://skale-base.skalenodes.com/v1/base')
+    expect(createPublicClient).toHaveBeenCalledWith({
+      chain: { id: 1187947933, name: 'SKALE Base' },
       transport: 'mock-transport',
     })
   })

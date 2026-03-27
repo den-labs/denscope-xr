@@ -18,6 +18,17 @@ describe('chains', () => {
     expect(chain!.contracts.reputation).toMatch(/^0x/)
   })
 
+  it('has SKALE Base configured', () => {
+    const chain = getChain(1187947933)
+    expect(chain).toBeDefined()
+    expect(chain!.name).toBe('SKALE Base')
+    expect(chain!.contracts.identity).toMatch(/^0x/)
+    expect(chain!.contracts.reputation).toMatch(/^0x/)
+    expect(chain!.badge.label).toBe('SKALE Base')
+    expect(chain!.badge.color).toBe('#4FC3F7')
+    expect(chain!.backfillWindow).toBe(2000)
+  })
+
   it('returns undefined for unknown chain', () => {
     expect(getChain(99999)).toBeUndefined()
   })
