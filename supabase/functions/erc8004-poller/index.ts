@@ -32,6 +32,13 @@ const CHAINS = [
     identity: '0x8004A818BFB912233c491871b3d84c89A494BD9e' as `0x${string}`,
     reputation: '0x8004B663056A597Dffe9eCcC1965A193B7388713' as `0x${string}`,
   },
+  {
+    id: 1187947933,
+    name: 'SKALE Base',
+    rpc: 'https://skale-base.skalenodes.com/v1/base',
+    identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432' as `0x${string}`,
+    reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63' as `0x${string}`,
+  },
 ] as const
 
 const celoSepolia: Chain = {
@@ -42,7 +49,15 @@ const celoSepolia: Chain = {
   blockExplorers: { default: { name: 'Celoscan', url: 'https://sepolia.celoscan.io' } },
 }
 
-const VIEM_CHAINS: Record<number, Chain> = { 42220: celo, 11142220: celoSepolia }
+const skaleBase: Chain = {
+  id: 1187947933,
+  name: 'SKALE Base',
+  nativeCurrency: { name: 'CREDIT', symbol: 'CREDIT', decimals: 18 },
+  rpcUrls: { default: { http: ['https://skale-base.skalenodes.com/v1/base'] } },
+  blockExplorers: { default: { name: 'Blockscout', url: 'https://skale-base-explorer.skalenodes.com' } },
+}
+
+const VIEM_CHAINS: Record<number, Chain> = { 42220: celo, 11142220: celoSepolia, 1187947933: skaleBase }
 
 // --- ABIs (events only) ---
 

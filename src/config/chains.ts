@@ -53,6 +53,26 @@ export const chains: ChainConfig[] = [
     confirmations: 1,
     pollingInterval: 5000,
   },
+  {
+    id: 1187947933,
+    name: 'SKALE Base',
+    rpc: {
+      http:
+        process.env.NEXT_PUBLIC_SKALE_BASE_RPC_URL ??
+        'https://skale-base.skalenodes.com/v1/base',
+      ws: 'wss://skale-base.skalenodes.com/v1/ws/base',
+    },
+    contracts: {
+      identity: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+      reputation: '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63',
+    },
+    explorer: 'https://skale-base-explorer.skalenodes.com',
+    badge: { label: 'SKALE Base', color: '#4FC3F7' },
+    backfillWindow: 2000,
+    backfillChunkSize: 10,
+    confirmations: 1,
+    pollingInterval: 5000,
+  },
 ]
 
 export function getChain(chainId: number): ChainConfig | undefined {
