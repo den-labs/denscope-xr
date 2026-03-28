@@ -505,8 +505,20 @@ async function pollChain(db: DB, chain: typeof CHAINS[number]) {
     transport: http(chain.rpc),
   })
 
-  const { data: cursor } = await db.from('indexer_cursors').select('last_block').eq('chain_id', chain.id).single()
-  if (!cursor) return { events: 0, fromBlock: 0, toBlock: 0 }
+  let { data: cursor } = await db.from('indexer_cursors').select('last_block').eq('chain_id', chain.id).single()
+  if (!cursor) {
+    const { data: deploy } = await db.from('deploy_blocks').select('block_number').eq('chain_id', chain.id).single()
+    if (!deploy) return { events: 0, fromBlock: 0, toBlock: 0 }
+
+    const seedBlock = deploy.block_number - 1
+    const { data: seeded } = await db.from('indexer_cursors').upsert(
+      { chain_id: chain.id, last_block: seedBlock, last_block_hash: '', last_log_index: 0, updated_at: new Date().toISOString() },
+      { onConflict: 'chain_id', ignoreDuplicates: true }
+    ).select('last_block').single()
+
+    cursor = seeded ?? { last_block: seedBlock }
+    console.log(`[${chain.name}] Bootstrapped cursor from deploy_blocks (block ${deploy.block_number})`)
+  }
 
   const fromBlock = cursor.last_block + 1
   const latestBlock = Number(await client.getBlockNumber())
