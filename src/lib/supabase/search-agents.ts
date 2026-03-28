@@ -26,29 +26,31 @@ function toAgentSummary(row: DbAgent): AgentSummary {
   }
 }
 
-export async function searchAgents(query: string, limit = 20): Promise<AgentSummary[]> {
+export async function searchAgents(query: string, limit = 20, chainId?: number | null): Promise<AgentSummary[]> {
   if (!supabase || !query.trim()) return []
 
   const q = query.trim()
   const isNumeric = /^\d+$/.test(q)
 
   if (isNumeric) {
-    const { data, error } = await supabase
+    let qb = supabase
       .from('agents')
       .select('*')
       .eq('agent_id', Number(q))
-      .limit(limit)
+    if (chainId != null) qb = qb.eq('chain_id', chainId)
+    const { data, error } = await qb.limit(limit)
 
     if (error || !data) return []
     return (data as DbAgent[]).map(toAgentSummary)
   }
 
   // Text search: try owner address prefix or use ilike on metadata
-  const { data, error } = await supabase
+  let qb = supabase
     .from('agents')
     .select('*')
     .or(`owner.ilike.%${q}%,uri.ilike.%${q}%`)
-    .limit(limit)
+  if (chainId != null) qb = qb.eq('chain_id', chainId)
+  const { data, error } = await qb.limit(limit)
 
   if (error || !data) return []
   return (data as DbAgent[]).map(toAgentSummary)

@@ -115,7 +115,7 @@ export async function fetchHistoricalEvents(): Promise<number> {
   const { data, error } = await supabase
     .from('scope_events')
     .select('*')
-    .order('block_number', { ascending: false })
+    .order('event_timestamp', { ascending: false, nullsFirst: false })
     .limit(5000)
 
   if (error || !data) {

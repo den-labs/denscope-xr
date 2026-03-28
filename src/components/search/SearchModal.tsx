@@ -10,12 +10,23 @@ import type { AgentSummary } from '@/types/agents'
 
 const MAX_RESULTS = 20
 
+function getChainIdFromURL(): number | null {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  const v = params.get('chain')
+  return v ? Number(v) : null
+}
+
 type SearchModalProps = {
   open: boolean
   onClose: () => void
 }
 
 export function SearchModal({ open, onClose }: SearchModalProps) {
+  const [chainId, setChainId] = useState<number | null>(null)
+  useEffect(() => {
+    if (open) setChainId(getChainIdFromURL())
+  }, [open])
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
@@ -25,7 +36,8 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const agents = useAgentStore((s) => s.agents)
 
   const localResults = useMemo(() => {
-    const all = Array.from(agents.values())
+    let all = Array.from(agents.values())
+    if (chainId != null) all = all.filter((a) => a.chainId === chainId)
     if (!query.trim()) return all.slice(0, MAX_RESULTS)
     const q = query.toLowerCase()
     return all
@@ -36,7 +48,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
           a.owner.toLowerCase().includes(q)
       )
       .slice(0, MAX_RESULTS)
-  }, [agents, query])
+  }, [agents, query, chainId])
 
   // Fallback to Supabase when local search has no results
   useEffect(() => {
@@ -48,7 +60,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
 
     const timer = setTimeout(async () => {
       setSearching(true)
-      const results = await searchAgents(q, MAX_RESULTS)
+      const results = await searchAgents(q, MAX_RESULTS, chainId)
       setRemoteResults(results)
       setSearching(false)
     }, 300)
