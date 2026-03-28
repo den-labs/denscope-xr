@@ -27,9 +27,14 @@ function resolveStableId(
   return `${edge.target}|${edge.source}|${ts}|feedback|${edge.value}`
 }
 
+function extractChainId(nodeKey: string): number {
+  const sep = nodeKey.indexOf(':')
+  return sep === -1 ? 0 : Number(nodeKey.slice(0, sep))
+}
+
 export function eventsFromEdges(
   edges: TrustEdge[],
-  chainId: number,
+  chainId: number | null,
   nowMs: number,
 ): DenEvent[] {
   const ids = new Set<string>()
@@ -37,6 +42,8 @@ export function eventsFromEdges(
 
   for (const rawEdge of edges) {
     if (rawEdge.kind !== 'feedback') continue
+    const edgeChainId = extractChainId(rawEdge.target)
+    if (chainId != null && chainId !== 0 && edgeChainId !== chainId) continue
     const edge = rawEdge as EdgeWithOptionalMeta
     const ts = resolveTs(edge, nowMs)
     const id = resolveStableId(edge, ts)
@@ -46,7 +53,7 @@ export function eventsFromEdges(
     out.push({
       id,
       ts,
-      chainId,
+      chainId: edgeChainId,
       kind: 'feedback',
       sourceId: edge.source,
       targetId: edge.target,

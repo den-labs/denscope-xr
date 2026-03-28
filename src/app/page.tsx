@@ -36,19 +36,45 @@ export default function FeedPage() {
   const dismissedRef = useRef(false)
   const events = useEventStore((s) => s.events)
   const agents = useAgentStore((s) => s.agents)
-  const agentCount = agents.size
-  const headBlock = events.length > 0 ? events[0].block : 0
   const { filters, setFilters } = useFeedFilters()
   const layout = useLayout()
+
+  const agentCount = useMemo(() => {
+    if (filters.chainId == null) return agents.size
+    let count = 0
+    for (const a of agents.values()) {
+      if (a.chainId === filters.chainId) count++
+    }
+    return count
+  }, [agents, filters.chainId])
+
+  const headBlock = useMemo(() => {
+    if (events.length === 0) return 0
+    if (filters.chainId == null) return events[0].block
+    const match = events.find((e) => e.chainId === filters.chainId)
+    return match?.block ?? 0
+  }, [events, filters.chainId])
+
+  // Clear selection when chain filter changes and selected agent is from a different chain
+  useEffect(() => {
+    if (!selectedAgent || filters.chainId == null) return
+    const selectedChain = Number(selectedAgent.split(':')[0])
+    if (selectedChain !== filters.chainId) {
+      setSelectedAgent(null)
+    }
+  }, [filters.chainId, selectedAgent])
 
   // Auto-select first agent when events arrive and no selection yet
   useEffect(() => {
     if (selectedAgent) return
     if (dismissedRef.current) return
     if (events.length === 0) return
-    const first = events[0]
-    setSelectedAgent(`${first.chainId}:${first.agentId}`)
-  }, [events, selectedAgent])
+    const match = filters.chainId != null
+      ? events.find((e) => e.chainId === filters.chainId)
+      : events[0]
+    if (!match) return
+    setSelectedAgent(`${match.chainId}:${match.agentId}`)
+  }, [events, selectedAgent, filters.chainId])
 
   const handleAgentClick = useCallback((key: string) => {
     dismissedRef.current = false

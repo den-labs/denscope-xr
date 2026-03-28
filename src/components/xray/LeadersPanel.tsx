@@ -8,6 +8,7 @@ import { buildFeedbackAggregates, type AgentAggregate } from '@/lib/firehose/agg
 
 type LeadersPanelProps = {
   onSelectAgent: (agentKey: string) => void
+  chainId?: number | null
 }
 
 const WINDOW_MS = 10 * 60 * 1000
@@ -30,7 +31,16 @@ function metric(
   return `${row.ratePerMin.toFixed(2)}/min`
 }
 
-export function LeadersPanel({ onSelectAgent }: LeadersPanelProps) {
+function getChainIdFromURL(): number | null {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  const v = params.get('chain')
+  return v ? Number(v) : null
+}
+
+export function LeadersPanel({ onSelectAgent, chainId: chainIdProp }: LeadersPanelProps) {
+  const chainId = chainIdProp ?? getChainIdFromURL()
+
   const edges = useGraphStore((s) => s.edges)
   const agents = useAgentStore((s) => s.agents)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -40,7 +50,7 @@ export function LeadersPanel({ onSelectAgent }: LeadersPanelProps) {
     return () => window.clearInterval(id)
   }, [])
 
-  const denEvents = useMemo(() => eventsFromEdges(edges, 0, nowMs), [edges, nowMs])
+  const denEvents = useMemo(() => eventsFromEdges(edges, chainId, nowMs), [edges, chainId, nowMs])
   const agg = useMemo(
     () => buildFeedbackAggregates(denEvents, { windowMs: WINDOW_MS, nowMs }),
     [denEvents, nowMs],
