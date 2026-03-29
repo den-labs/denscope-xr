@@ -28,6 +28,16 @@ function CodeSnippet({
         {'\n'}
         <span className="text-text-muted">{'  '}</span>
         <span className="text-emerald-400/80">{`'${url}'`}</span>
+        <span className="text-text-muted">,</span>
+        {'\n'}
+        <span className="text-text-muted">{'  '}</span>
+        <span className="text-text-muted">{'{ '}</span>
+        <span className="text-text-primary">headers</span>
+        <span className="text-text-muted">: {'{ '}</span>
+        <span className="text-emerald-400/80">{`'X-API-Key'`}</span>
+        <span className="text-text-muted">: </span>
+        <span className="text-text-primary">apiKey</span>
+        <span className="text-text-muted">{' } }'}</span>
         {'\n'}
         <span className="text-text-muted">)</span>
         {'\n'}
@@ -43,7 +53,7 @@ function CodeSnippet({
         <span className="text-text-muted">()</span>
         {'\n'}
         <span className="text-text-muted/60">
-          {'// score.value, score.confidence, score.breakdown'}
+          {'// score.value → 82, score.confidence → "high"'}
         </span>
       </code>
     </pre>
