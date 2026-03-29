@@ -14,7 +14,7 @@ type CertificateJoinRow = {
   agent_id: number
   hash: string
   issued_at: string
-  trust_scores: { score: number } | null
+  trust_scores: { score: number } | { score: number }[] | null
 }
 
 function mapRow(
@@ -25,7 +25,9 @@ function mapRow(
     chainId: row.chain_id,
     agentId: row.agent_id,
     hash: row.hash,
-    score: row.trust_scores?.score ?? 0,
+    score: Array.isArray(row.trust_scores)
+      ? (row.trust_scores[0]?.score ?? 0)
+      : (row.trust_scores?.score ?? 0),
     issuedAt: row.issued_at,
     group,
   }
