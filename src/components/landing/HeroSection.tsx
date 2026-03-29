@@ -1,9 +1,11 @@
 import { ScoreLookup } from './ScoreLookup'
 
-const EXAMPLE_CHAIN = 42220
-const EXAMPLE_AGENT_ID = 5
+type HeroSectionProps = {
+  exampleChain: number
+  exampleAgentId: number
+}
 
-export function HeroSection() {
+export function HeroSection({ exampleChain, exampleAgentId }: HeroSectionProps) {
   return (
     <section className="flex flex-col items-center text-center px-6 pt-[72px] pb-14 md:pt-[100px] md:pb-[76px]">
       <h1 className="font-display text-[28px] md:text-[40px] font-bold text-text-primary tracking-[-0.02em] max-w-[600px]">
@@ -14,8 +16,8 @@ export function HeroSection() {
         through APIs and certificates.
       </p>
       <ScoreLookup
-        exampleChain={EXAMPLE_CHAIN}
-        exampleAgentId={EXAMPLE_AGENT_ID}
+        exampleChain={exampleChain}
+        exampleAgentId={exampleAgentId}
       />
     </section>
   )
