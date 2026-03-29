@@ -24,18 +24,21 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'DenScope — ERC-8004 Agent Explorer',
-  description: 'Real-time trust scores, signals, and reputation for ERC-8004 agents',
+  title: 'DenScope — Trust Infrastructure for Autonomous Agents',
+  description:
+    'Compute trust signals, verify agent behavior, and expose the results through APIs and certificates.',
   openGraph: {
-    title: 'DenScope — Trust Layer for Autonomous Agents',
-    description: 'Real-time trust scores, signals, and reputation for ERC-8004 agents on Celo',
+    title: 'DenScope — Trust Infrastructure for Autonomous Agents',
+    description:
+      'Compute trust signals, verify agent behavior, and expose the results through APIs and certificates.',
     images: [{ url: '/api/og', width: 1200, height: 630 }],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DenScope — Trust Layer for Autonomous Agents',
-    description: 'Real-time trust scores, signals, and reputation for ERC-8004 agents on Celo',
+    title: 'DenScope — Trust Infrastructure for Autonomous Agents',
+    description:
+      'Compute trust signals, verify agent behavior, and expose the results through APIs and certificates.',
     images: ['/api/og'],
   },
 }

@@ -65,7 +65,8 @@ pnpm run indexer:backfill     # One-shot backfill only
 
 | Route | Type | Description |
 |-------|------|-------------|
-| `/` | Client | Live Feed (event stream) |
+| `/` | Server | Trust-first landing page |
+| `/explore` | Client | Live Feed (event stream) |
 | `/graph` | Client | Trust Graph (d3-force canvas) |
 | `/discovery` | Client | Discovery Signals |
 | `/console` | Client | Owner Console (wallet-gated, claimed agents) |

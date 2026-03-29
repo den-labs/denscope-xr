@@ -11,7 +11,7 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { IncidentBadge } from '@/components/console/IncidentBadge'
 
 const navItems = [
-  { href: '/', label: 'Live Feed' },
+  { href: '/explore', label: 'Explore' },
   { href: '/discovery', label: 'Discovery' },
   { href: '/console', label: 'Console' },
 ]
