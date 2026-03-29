@@ -29,7 +29,8 @@ function parseFiltersFromURL(): FeedFilters {
   )
 
   const chainParam = params.get('chain')
-  const chainId = chainParam ? Number(chainParam) : null
+  const chainRaw = chainParam ? Number(chainParam) : null
+  const chainId = chainRaw != null && Number.isFinite(chainRaw) ? chainRaw : null
 
   const agentId = params.get('agent') ?? ''
 

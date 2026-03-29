@@ -35,7 +35,9 @@ function getChainIdFromURL(): number | null {
   if (typeof window === 'undefined') return null
   const params = new URLSearchParams(window.location.search)
   const v = params.get('chain')
-  return v ? Number(v) : null
+  if (!v) return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
 }
 
 export function LeadersPanel({ onSelectAgent, chainId: chainIdProp }: LeadersPanelProps) {
