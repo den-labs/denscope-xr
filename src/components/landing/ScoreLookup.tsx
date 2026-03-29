@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { chains, getChain } from '@/config/chains'
 import Link from 'next/link'
-import { ChainBadge } from '@/components/shared/ChainBadge'
 
 type ExampleAgent = { chainId: number; agentId: number }
 
@@ -21,6 +20,8 @@ function isValidAgentId(value: string): boolean {
   if (trimmed === '') return false
   return /^\d+$/.test(trimmed)
 }
+
+const MAINNET_CHAINS = chains.filter((c) => c.name !== 'Celo Sepolia')
 
 export function ScoreLookup({ exampleAgents }: ScoreLookupProps) {
   const router = useRouter()
@@ -89,30 +90,45 @@ export function ScoreLookup({ exampleAgents }: ScoreLookupProps) {
         </button>
       </div>
 
-      <div className="mt-3 text-sm text-text-muted">
-        <p>
-          Try it:{' '}
+      <div className="mt-4 space-y-2">
+        <p className="text-xs text-text-muted text-center">
+          Try high-trust agents:{' '}
           {exampleAgents.map((agent, i) => (
             <span key={`${agent.chainId}-${agent.agentId}`}>
-              {i > 0 && <span className="mx-1">·</span>}
+              {i > 0 && <span className="mx-1 text-border">·</span>}
               <Link
                 href={`/agent/${agent.chainId}/${agent.agentId}`}
                 className="text-text-secondary underline underline-offset-2 hover:text-accent transition-colors"
               >
                 Agent #{agent.agentId} on{' '}
-                {getChain(agent.chainId)?.badge.label ?? `Chain ${agent.chainId}`}
+                {getChain(agent.chainId)?.badge.label ??
+                  `Chain ${agent.chainId}`}
               </Link>
             </span>
           ))}
         </p>
-        <p className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">
-          <span className="text-text-muted text-xs">Supported chains:</span>
-          {chains
-            .filter((c) => c.name !== 'Celo Sepolia')
-            .map((c) => (
-              <ChainBadge key={c.id} chainId={c.id} />
-            ))}
-        </p>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <span className="text-[11px] text-text-muted tracking-wide uppercase">
+            Supported chains
+          </span>
+          {MAINNET_CHAINS.map((c) => (
+            <span
+              key={c.id}
+              className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-wide"
+              style={{
+                borderColor: `${c.badge.color}30`,
+                backgroundColor: `${c.badge.color}08`,
+                color: c.badge.color,
+              }}
+            >
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: c.badge.color }}
+              />
+              {c.badge.label}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   )

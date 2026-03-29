@@ -75,6 +75,7 @@ describe('ScoreLookup', () => {
 
   it('renders example agent links for all chains', () => {
     render(<ScoreLookup exampleAgents={exampleAgents} />)
+    expect(screen.getByText(/try high-trust agents/i)).toBeInTheDocument()
     const celoLink = screen.getByText(/agent #5 on celo/i)
     expect(celoLink.closest('a')).toHaveAttribute('href', '/agent/42220/5')
     const skaleLink = screen.getByText(/agent #1 on skale base/i)
@@ -83,10 +84,10 @@ describe('ScoreLookup', () => {
 
   it('shows supported chains badges', () => {
     render(<ScoreLookup exampleAgents={exampleAgents} />)
-    expect(screen.getByText('Supported chains:')).toBeInTheDocument()
+    expect(screen.getByText('Supported chains')).toBeInTheDocument()
     // "Celo" appears in both the select options and the badge — use getAllByText
-    expect(screen.getAllByText('Celo').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('SKALE Base').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Celo').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('SKALE Base').length).toBeGreaterThanOrEqual(2)
   })
 
   it('trims whitespace and strips leading zeros from input', () => {
