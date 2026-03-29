@@ -13,7 +13,7 @@ import { startPipeline, type PipelineHandle } from '@/lib/pipeline/ingest'
 
 function shouldRunPipelineForPath(pathname: string | null): boolean {
   if (!pathname) return false
-  return pathname === '/' || pathname.startsWith('/discovery') || pathname.startsWith('/graph')
+  return pathname === '/explore' || pathname.startsWith('/discovery') || pathname.startsWith('/graph')
 }
 
 function getChainIdFromURL(): number | null {
