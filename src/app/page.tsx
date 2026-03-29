@@ -12,7 +12,7 @@ export default async function LandingPage() {
   const { topScore, recent } = await fetchFeaturedCertificates()
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-y-auto h-full">
       <HeroSection
         exampleChain={EXAMPLE_CHAIN}
         exampleAgentId={EXAMPLE_AGENT_ID}
