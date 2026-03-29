@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "indexer": "tsx scripts/indexer.ts",
     "indexer:backfill": "tsx scripts/indexer.ts --backfill-only",
+    "metrics": "tsx scripts/metrics.ts",
     "og:candidates": "tsx scripts/og-review-candidates.ts",
     "og:fetch": "tsx scripts/fetch-og-cards.ts",
     "perf:review": "tsx scripts/perf-review-template.ts",
