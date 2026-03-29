@@ -52,7 +52,7 @@ function CodeSnippet({
         <span className="text-text-secondary">json</span>
         <span className="text-text-muted">()</span>
         {'\n'}
-        <span className="text-text-muted/60">
+        <span className="text-emerald-400">
           {'// score.value → 82, score.confidence → "high"'}
         </span>
       </code>
