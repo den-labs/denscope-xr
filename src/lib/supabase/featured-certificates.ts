@@ -41,33 +41,37 @@ export async function fetchFeaturedCertificates(): Promise<{
     return { topScore: [], recent: [] }
   }
 
-  const { data: topRows } = await supabase
-    .from('certificate_snapshots')
-    .select('chain_id, agent_id, hash, issued_at, trust_scores(score)')
-    .not('hash', 'is', null)
-    .order('trust_scores(score)', { ascending: false })
-    .limit(3)
+  try {
+    const { data: topRows } = await supabase
+      .from('certificate_snapshots')
+      .select('chain_id, agent_id, hash, issued_at, trust_scores(score)')
+      .not('hash', 'is', null)
+      .order('trust_scores(score)', { ascending: false })
+      .limit(3)
 
-  const topScore = (topRows ?? []).map((r) =>
-    mapRow(r as CertificateJoinRow, 'top-score')
-  )
+    const topScore = (topRows ?? []).map((r) =>
+      mapRow(r as CertificateJoinRow, 'top-score')
+    )
 
-  // Build a Set of "chainId:agentId" keys to exclude duplicates across chains.
-  // PostgREST doesn't support compound NOT IN, so we fetch extra rows and filter
-  // in application code to handle same agent_id on different chains correctly.
-  const topKeys = new Set(topScore.map((c) => `${c.chainId}:${c.agentId}`))
+    // Build a Set of "chainId:agentId" keys to exclude duplicates across chains.
+    // PostgREST doesn't support compound NOT IN, so we fetch extra rows and filter
+    // in application code to handle same agent_id on different chains correctly.
+    const topKeys = new Set(topScore.map((c) => `${c.chainId}:${c.agentId}`))
 
-  const { data: recentRows } = await supabase
-    .from('certificate_snapshots')
-    .select('chain_id, agent_id, hash, issued_at, trust_scores(score)')
-    .not('hash', 'is', null)
-    .order('issued_at', { ascending: false })
-    .limit(9)
+    const { data: recentRows } = await supabase
+      .from('certificate_snapshots')
+      .select('chain_id, agent_id, hash, issued_at, trust_scores(score)')
+      .not('hash', 'is', null)
+      .order('issued_at', { ascending: false })
+      .limit(9)
 
-  const recent = (recentRows ?? [])
-    .map((r) => mapRow(r as CertificateJoinRow, 'recent'))
-    .filter((c) => !topKeys.has(`${c.chainId}:${c.agentId}`))
-    .slice(0, 3)
+    const recent = (recentRows ?? [])
+      .map((r) => mapRow(r as CertificateJoinRow, 'recent'))
+      .filter((c) => !topKeys.has(`${c.chainId}:${c.agentId}`))
+      .slice(0, 3)
 
-  return { topScore, recent }
+    return { topScore, recent }
+  } catch {
+    return { topScore: [], recent: [] }
+  }
 }

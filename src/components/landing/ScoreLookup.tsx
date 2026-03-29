@@ -56,6 +56,7 @@ export function ScoreLookup({ exampleChain, exampleAgentId }: ScoreLookupProps) 
           <input
             type="text"
             inputMode="numeric"
+            maxLength={20}
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
             onBlur={() => setTouched(true)}
@@ -63,12 +64,15 @@ export function ScoreLookup({ exampleChain, exampleAgentId }: ScoreLookupProps) 
               if (e.key === 'Enter') handleSubmit()
             }}
             placeholder="Agent ID (e.g. 5)"
+            aria-label="Agent ID"
+            aria-invalid={hasError || undefined}
+            aria-describedby={hasError ? 'agent-id-error' : undefined}
             className={`h-10 w-full rounded-lg border bg-bg px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent ${
               hasError ? 'border-critical' : 'border-border'
             }`}
           />
           {hasError && (
-            <p className="mt-1 text-xs text-critical">
+            <p id="agent-id-error" className="mt-1 text-xs text-critical">
               Agent ID must be a number
             </p>
           )}

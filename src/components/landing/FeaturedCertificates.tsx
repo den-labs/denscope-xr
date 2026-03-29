@@ -11,6 +11,7 @@ function timeAgo(dateStr: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(dateStr).getTime()) / 1000
   )
+  if (seconds < 0) return 'just now'
   if (seconds < 60) return 'just now'
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `${minutes}m ago`
@@ -68,7 +69,7 @@ export function FeaturedCertificates({
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {topScore.map((cert) => (
-                <CertificateCard key={`${cert.chainId}-${cert.agentId}`} cert={cert} />
+                <CertificateCard key={cert.hash} cert={cert} />
               ))}
             </div>
           </div>
@@ -81,7 +82,7 @@ export function FeaturedCertificates({
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {recent.map((cert) => (
-                <CertificateCard key={`${cert.chainId}-${cert.agentId}`} cert={cert} />
+                <CertificateCard key={cert.hash} cert={cert} />
               ))}
             </div>
           </div>
