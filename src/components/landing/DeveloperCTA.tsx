@@ -5,6 +5,51 @@ type DeveloperCTAProps = {
   exampleAgentId: number
 }
 
+function CodeSnippet({
+  chain,
+  agentId,
+}: {
+  chain: number
+  agentId: number
+}) {
+  const url = `https://denscope.vercel.app/api/v1/agent/${chain}/${agentId}/score`
+
+  return (
+    <pre className="mt-8 rounded-lg border border-border bg-bg p-5 text-left text-sm font-mono leading-relaxed overflow-x-auto">
+      <code>
+        <span className="text-accent/70">const</span>
+        <span className="text-text-primary"> res </span>
+        <span className="text-accent/70">=</span>
+        <span className="text-text-primary"> </span>
+        <span className="text-accent/70">await</span>
+        <span className="text-text-primary"> </span>
+        <span className="text-text-secondary">fetch</span>
+        <span className="text-text-muted">(</span>
+        {'\n'}
+        <span className="text-text-muted">{'  '}</span>
+        <span className="text-emerald-400/80">{`'${url}'`}</span>
+        {'\n'}
+        <span className="text-text-muted">)</span>
+        {'\n'}
+        <span className="text-accent/70">const</span>
+        <span className="text-text-primary"> {'{ '}</span>
+        <span className="text-text-primary">score</span>
+        <span className="text-text-primary">{' }'}</span>
+        <span className="text-accent/70"> =</span>
+        <span className="text-text-primary"> </span>
+        <span className="text-accent/70">await</span>
+        <span className="text-text-primary"> res.</span>
+        <span className="text-text-secondary">json</span>
+        <span className="text-text-muted">()</span>
+        {'\n'}
+        <span className="text-text-muted/60">
+          {'// score.value, score.confidence, score.breakdown'}
+        </span>
+      </code>
+    </pre>
+  )
+}
+
 export function DeveloperCTA({ exampleChain, exampleAgentId }: DeveloperCTAProps) {
   return (
     <section className="px-6 py-14 md:py-20 bg-surface/50">
@@ -17,13 +62,7 @@ export function DeveloperCTA({ exampleChain, exampleAgentId }: DeveloperCTAProps
           agent intelligence through a simple developer-facing API.
         </p>
 
-        <pre className="mt-8 rounded-lg border border-border bg-bg p-4 text-left text-sm font-mono text-text-secondary overflow-x-auto">
-          <code>{`const res = await fetch(
-  'https://denscope.vercel.app/api/v1/agent/${exampleChain}/${exampleAgentId}/score'
-)
-const { score } = await res.json()
-// score.value, score.confidence, score.breakdown`}</code>
-        </pre>
+        <CodeSnippet chain={exampleChain} agentId={exampleAgentId} />
 
         <div className="mt-6 flex flex-col items-center gap-3">
           <Link
