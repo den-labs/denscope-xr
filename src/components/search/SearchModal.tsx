@@ -14,7 +14,9 @@ function getChainIdFromURL(): number | null {
   if (typeof window === 'undefined') return null
   const params = new URLSearchParams(window.location.search)
   const v = params.get('chain')
-  return v ? Number(v) : null
+  if (!v) return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
 }
 
 type SearchModalProps = {
@@ -66,7 +68,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [query, localResults.length])
+  }, [query, localResults.length, chainId])
 
   const results = localResults.length > 0 ? localResults : remoteResults
 
