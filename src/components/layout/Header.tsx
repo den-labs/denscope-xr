@@ -12,8 +12,8 @@ import { IncidentBadge } from '@/components/console/IncidentBadge'
 
 const navItems = [
   { href: '/explore', label: 'Explore' },
-  { href: '/discovery', label: 'Discovery' },
   { href: '/console', label: 'Console' },
+  { href: '/docs/api', label: 'Developers' },
 ]
 
 export function Header() {
