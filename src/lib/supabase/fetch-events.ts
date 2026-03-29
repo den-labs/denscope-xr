@@ -108,13 +108,16 @@ function processEvent(event: ScopeEvent) {
   runDiscoveryRules(event)
 }
 
-/** Fetch all historical events from Supabase and populate stores */
-export async function fetchHistoricalEvents(): Promise<number> {
+/** Fetch historical events from Supabase and populate stores.
+ *  When chainId is provided, only events for that chain are fetched. */
+export async function fetchHistoricalEvents(chainId?: number | null): Promise<number> {
   if (!supabase) return 0
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('scope_events')
     .select('*')
+  if (chainId != null) query = query.eq('chain_id', chainId)
+  const { data, error } = await query
     .order('event_timestamp', { ascending: false, nullsFirst: false })
     .limit(5000)
 
@@ -155,22 +158,30 @@ export async function fetchAgentEvents(chainId: number, agentId: number): Promis
   return (data as DbEvent[]).map(toScopeEvent)
 }
 
-/** Subscribe to realtime inserts on scope_events */
-export function subscribeToEvents(): (() => void) | null {
+/** Subscribe to realtime inserts on scope_events.
+ *  When chainId is provided, only inserts for that chain are received. */
+export function subscribeToEvents(chainId?: number | null): (() => void) | null {
   if (!supabase) return null
 
+  const channelName = chainId != null
+    ? `scope_events_realtime_${chainId}`
+    : 'scope_events_realtime'
+
+  const pgFilter: { event: 'INSERT'; schema: 'public'; table: 'scope_events'; filter?: string } = {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'scope_events',
+  }
+  if (chainId != null) pgFilter.filter = `chain_id=eq.${chainId}`
+
   const channel = supabase
-    .channel('scope_events_realtime')
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'scope_events' },
-      (payload) => {
-        const row = payload.new as DbEvent
-        const event = toScopeEvent(row)
-        event.timestamp = Date.now()
-        processEvent(event)
-      },
-    )
+    .channel(channelName)
+    .on('postgres_changes', pgFilter, (payload) => {
+      const row = payload.new as DbEvent
+      const event = toScopeEvent(row)
+      event.timestamp = Date.now()
+      processEvent(event)
+    })
     .subscribe()
 
   return () => { supabase!.removeChannel(channel) }
