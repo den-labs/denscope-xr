@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { CodeHighlight } from '@/components/shared/CodeHighlight'
 
 export const metadata: Metadata = {
   title: 'API Documentation — DenScope',
@@ -22,8 +23,8 @@ export default function ApiDocsPage() {
         </p>
 
         <Section title="Quick Start">
-          <CodeBlock>{`curl -H "Authorization: Bearer ds_YOUR_KEY" \\
-  https://denscope.vercel.app/api/v1/agent/42220/5/score`}</CodeBlock>
+          <CodeHighlight>{`curl -H "Authorization: Bearer ds_YOUR_KEY" \\
+  https://denscope.vercel.app/api/v1/agent/42220/5/score`}</CodeHighlight>
           <p className="text-xs text-text-muted font-mono mt-2">
             Get your API key from the Console &rarr; API Keys section.
           </p>
@@ -45,10 +46,10 @@ export default function ApiDocsPage() {
           </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Install</h4>
-          <CodeBlock>{`pnpm add @denlabs/trust-sdk
+          <CodeHighlight>{`pnpm add @denlabs/trust-sdk
 
 # For x402 payment mode (optional)
-pnpm add viem`}</CodeBlock>
+pnpm add viem`}</CodeHighlight>
           <p className="text-xs text-text-muted font-mono mt-2">
             Local SDK repo example (after cloning): <code className="text-xs">DENSCOPE_API_KEY=ds_xxx pnpm example:get-score</code>
           </p>
@@ -57,7 +58,7 @@ pnpm add viem`}</CodeBlock>
           </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">API Key Example</h4>
-          <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
+          <CodeHighlight>{`import { DenScope } from '@denlabs/trust-sdk'
 
 const ds = new DenScope({ apiKey: 'ds_...' })
 
@@ -65,10 +66,10 @@ const { score } = await ds.getScore(42220, 5)
 console.log(score.value, score.confidence)
 
 const { signals } = await ds.getSignals(42220, 5, { status: 'open' })
-const { agents } = await ds.search({ q: '0xabc', chainId: 42220, limit: 5 })`}</CodeBlock>
+const { agents } = await ds.search({ q: '0xabc', chainId: 42220, limit: 5 })`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">x402 Example (wallet/agent)</h4>
-          <CodeBlock>{`import { DenScope } from '@denlabs/trust-sdk'
+          <CodeHighlight>{`import { DenScope } from '@denlabs/trust-sdk'
 import { privateKeyToAccount } from 'viem/accounts'
 
 const account = privateKeyToAccount('0x...')
@@ -76,10 +77,10 @@ const ds = new DenScope({ account })
 
 // SDK handles: 402 -> decode PAYMENT-REQUIRED -> sign -> retry
 const { score } = await ds.getScore(42220, 5)
-const { signals } = await ds.getSignals(42220, 5)`}</CodeBlock>
+const { signals } = await ds.getSignals(42220, 5)`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Error Handling Example</h4>
-          <CodeBlock>{`import {
+          <CodeHighlight>{`import {
   DenScope,
   DenScopeError,
   AuthenticationError,
@@ -101,7 +102,7 @@ try {
   } else {
     console.error('Unexpected error', e)
   }
-}`}</CodeBlock>
+}`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Interpretation Guide (Portal-Aligned)</h4>
           <p className="text-sm text-text-secondary">
@@ -188,13 +189,13 @@ try {
             The trust score is a transparent, deterministic number between 0 and 100.
             It updates after every on-chain event.
           </p>
-          <CodeBlock>{`score = clamp(0, 100, round(
+          <CodeHighlight>{`score = clamp(0, 100, round(
   0.40 * positive_ratio        // positive_count / feedback_count
 + 0.20 * age_score             // min(days_since_first_seen / 90, 1.0)
 + 0.20 * activity_score        // min(feedback_count / (active_days * 2), 1.0)
 - 0.10 * incident_penalty      // min(critical*0.15 + warning*0.05, 1.0)
 - 0.10 * sybil_penalty         // 1.0 if open sybil_cluster, else 0.0
-) * 100)`}</CodeBlock>
+) * 100)`}</CodeHighlight>
           <div className="mt-4">
             <h4 className="text-xs text-text-muted uppercase font-mono mb-2">Confidence Levels</h4>
             <Table headers={['Level', 'Condition']}>
@@ -213,7 +214,7 @@ try {
           </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Flow</h4>
-          <CodeBlock>{`# 1. Call without auth -> get 402 with payment instructions
+          <CodeHighlight>{`# 1. Call without auth -> get 402 with payment instructions
 curl -i https://denscope.vercel.app/api/v1/agent/42220/5/score
 # HTTP/2 402
 # PAYMENT-REQUIRED: <base64-encoded JSON>
@@ -223,7 +224,7 @@ curl -i https://denscope.vercel.app/api/v1/agent/42220/5/score
 # 3. Retry with X-PAYMENT header
 curl -H "X-PAYMENT: <base64-encoded payment>" \\
   https://denscope.vercel.app/api/v1/agent/42220/5/score
-# HTTP/2 200 { score: { value: 85, ... } }`}</CodeBlock>
+# HTTP/2 200 { score: { value: 85, ... } }`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Pricing</h4>
           <Table headers={['Endpoint', 'Price (USDC)', 'micro-USDC']}>
@@ -271,14 +272,6 @@ function Section({ title, id, children }: { title: string; id?: string; children
       </h2>
       {children}
     </section>
-  )
-}
-
-function CodeBlock({ children }: { children: string }) {
-  return (
-    <pre className="bg-background border border-border p-4 mt-2 overflow-x-auto">
-      <code className="text-xs font-mono text-text-primary whitespace-pre">{children}</code>
-    </pre>
   )
 }
 
