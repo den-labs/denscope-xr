@@ -52,19 +52,22 @@ export async function fetchFeaturedCertificates(): Promise<{
     mapRow(r as CertificateJoinRow, 'top-score')
   )
 
-  const excludeIds = topScore.map((c) => c.agentId)
+  // Build a Set of "chainId:agentId" keys to exclude duplicates across chains.
+  // PostgREST doesn't support compound NOT IN, so we fetch extra rows and filter
+  // in application code to handle same agent_id on different chains correctly.
+  const topKeys = new Set(topScore.map((c) => `${c.chainId}:${c.agentId}`))
 
   const { data: recentRows } = await supabase
     .from('certificate_snapshots')
     .select('chain_id, agent_id, hash, issued_at, trust_scores(score)')
     .not('hash', 'is', null)
-    .not('agent_id', 'in', `(${excludeIds.join(',')})`)
     .order('issued_at', { ascending: false })
-    .limit(3)
+    .limit(9)
 
-  const recent = (recentRows ?? []).map((r) =>
-    mapRow(r as CertificateJoinRow, 'recent')
-  )
+  const recent = (recentRows ?? [])
+    .map((r) => mapRow(r as CertificateJoinRow, 'recent'))
+    .filter((c) => !topKeys.has(`${c.chainId}:${c.agentId}`))
+    .slice(0, 3)
 
   return { topScore, recent }
 }

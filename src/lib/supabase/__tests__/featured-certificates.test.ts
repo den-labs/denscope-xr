@@ -9,26 +9,12 @@ vi.mock('../client', () => ({
   },
 }))
 
-function mockQuery(data: unknown[] | null, error: unknown = null) {
+function mockQuery(data: unknown[] | null) {
   return {
     select: vi.fn().mockReturnValue({
       not: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({ data, error }),
-        }),
-      }),
-    }),
-  }
-}
-
-function mockQueryWithNotIn(data: unknown[] | null, error: unknown = null) {
-  return {
-    select: vi.fn().mockReturnValue({
-      not: vi.fn().mockReturnValue({
-        not: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data, error }),
-          }),
+          limit: vi.fn().mockResolvedValue({ data, error: null }),
         }),
       }),
     }),
@@ -55,7 +41,7 @@ describe('fetchFeaturedCertificates', () => {
   it('returns top-score and recent certificates', async () => {
     mockFrom
       .mockReturnValueOnce(mockQuery(topCerts))
-      .mockReturnValueOnce(mockQueryWithNotIn(recentCerts))
+      .mockReturnValueOnce(mockQuery(recentCerts))
 
     const result = await fetchFeaturedCertificates()
     expect(result.topScore).toHaveLength(3)
@@ -67,7 +53,7 @@ describe('fetchFeaturedCertificates', () => {
   it('returns empty arrays when no certificates exist', async () => {
     mockFrom
       .mockReturnValueOnce(mockQuery([]))
-      .mockReturnValueOnce(mockQueryWithNotIn([]))
+      .mockReturnValueOnce(mockQuery([]))
 
     const result = await fetchFeaturedCertificates()
     expect(result.topScore).toHaveLength(0)
@@ -77,19 +63,45 @@ describe('fetchFeaturedCertificates', () => {
   it('handles partial data gracefully', async () => {
     mockFrom
       .mockReturnValueOnce(mockQuery(topCerts.slice(0, 1)))
-      .mockReturnValueOnce(mockQueryWithNotIn(recentCerts.slice(0, 2)))
+      .mockReturnValueOnce(mockQuery(recentCerts.slice(0, 2)))
 
     const result = await fetchFeaturedCertificates()
     expect(result.topScore).toHaveLength(1)
     expect(result.recent).toHaveLength(2)
   })
 
-  it('excludes top-score agent IDs from recent query', async () => {
+  it('excludes top-score agents from recent results by chain+agent pair', async () => {
+    // Recent rows include an agent that also appeared in top-score (42220:1)
+    const recentWithOverlap = [
+      { chain_id: 42220, agent_id: 1, hash: 'h-dup', issued_at: '2026-03-29T13:00:00Z', trust_scores: { score: 92 } },
+      ...recentCerts,
+    ]
     mockFrom
       .mockReturnValueOnce(mockQuery(topCerts))
-      .mockReturnValueOnce(mockQueryWithNotIn(recentCerts))
+      .mockReturnValueOnce(mockQuery(recentWithOverlap))
 
-    await fetchFeaturedCertificates()
-    expect(mockFrom).toHaveBeenCalledTimes(2)
+    const result = await fetchFeaturedCertificates()
+    // Agent 42220:1 should be excluded from recent
+    const recentAgentKeys = result.recent.map((c) => `${c.chainId}:${c.agentId}`)
+    expect(recentAgentKeys).not.toContain('42220:1')
+    expect(result.recent).toHaveLength(3)
+    expect(result.recent[0].agentId).toBe(4)
+  })
+
+  it('allows same agent_id on different chains', async () => {
+    // Top has agent_id 1 on chain 42220
+    // Recent has agent_id 1 on chain 1187947933 (different chain = not a duplicate)
+    const recentCrossChain = [
+      { chain_id: 1187947933, agent_id: 1, hash: 'h-cross', issued_at: '2026-03-29T13:00:00Z', trust_scores: { score: 70 } },
+      ...recentCerts,
+    ]
+    mockFrom
+      .mockReturnValueOnce(mockQuery(topCerts))
+      .mockReturnValueOnce(mockQuery(recentCrossChain))
+
+    const result = await fetchFeaturedCertificates()
+    // Agent 1 on SKALE should NOT be excluded (different chain from top-score's 42220:1)
+    const recentAgentKeys = result.recent.map((c) => `${c.chainId}:${c.agentId}`)
+    expect(recentAgentKeys).toContain('1187947933:1')
   })
 })
