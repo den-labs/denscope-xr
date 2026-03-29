@@ -26,16 +26,20 @@ function mockQuery(result: {
     error: result.error ?? null,
     count: result.count ?? null,
   }
-  // Chainable: .select().eq().gte().limit() etc. — each returns itself
+  // Chainable AND thenable: .select().gte().not() etc. — each returns the proxy
+  // await resolves via .then() to terminal
   const chain: Record<string, unknown> = {}
-  const handler = {
+  const handler: ProxyHandler<Record<string, unknown>> = {
     get(_: unknown, prop: string) {
-      if (prop === 'then') return undefined // not a thenable
+      if (prop === 'then') {
+        // Make the proxy thenable so `await` resolves to terminal
+        return (resolve: (v: unknown) => void) => resolve(terminal)
+      }
       if (['data', 'error', 'count'].includes(prop)) {
         return terminal[prop as keyof typeof terminal]
       }
-      // Any chained method returns a promise-like that resolves to terminal
-      return (..._args: unknown[]) => Promise.resolve(terminal)
+      // Any chained method (.select, .gte, .not, .eq, etc.) returns the proxy itself
+      return (..._args: unknown[]) => new Proxy(chain, handler)
     },
   }
   return new Proxy(chain, handler)
