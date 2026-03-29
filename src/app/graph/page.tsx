@@ -1,14 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { TrustGraph } from '@/components/graph/TrustGraph'
 import { XRayPanel } from '@/components/xray/XRayPanel'
+import { ChainSelect } from '@/components/shared/ChainSelect'
 import { useGraphStore } from '@/stores/graph'
+import { useFeedFilters } from '@/hooks/useFeedFilters'
 
 export default function GraphPage() {
   const nodes = useGraphStore((s) => s.nodes)
   const edges = useGraphStore((s) => s.edges)
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
+  const { filters, setFilters } = useFeedFilters()
+
+  const handleChainChange = useCallback((chainId: number | null) => {
+    setFilters({ ...filters, chainId })
+    setSelectedAgent(null)
+  }, [filters, setFilters])
 
   return (
     <div className="relative h-full bg-grid">
@@ -17,10 +25,13 @@ export default function GraphPage() {
         <TrustGraph onNodeClick={setSelectedAgent} focusAgentKey={selectedAgent} />
       </div>
 
-      {/* Top-left: Title */}
-      <div className="absolute top-4 left-4 z-10">
-        <h1 className="font-display font-bold text-sm">DenScope</h1>
-        <p className="font-mono text-xs text-text-muted">Trust Graph Explorer</p>
+      {/* Top-left: Title + Chain selector */}
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-4">
+        <div>
+          <h1 className="font-display font-bold text-sm">DenScope</h1>
+          <p className="font-mono text-xs text-text-muted">Trust Graph Explorer</p>
+        </div>
+        <ChainSelect value={filters.chainId} onChange={handleChainChange} />
       </div>
 
       {/* Top-right: Legend */}
@@ -46,13 +57,9 @@ export default function GraphPage() {
       </div>
 
       {/* Corner crosshairs */}
-      {/* Top-left */}
       <div className="absolute top-0 left-0 z-0 h-4 w-4 border-t border-l border-accent/20" />
-      {/* Top-right */}
       <div className="absolute top-0 right-0 z-0 h-4 w-4 border-t border-r border-accent/20" />
-      {/* Bottom-left */}
       <div className="absolute bottom-0 left-0 z-0 h-4 w-4 border-b border-l border-accent/20" />
-      {/* Bottom-right */}
       <div className="absolute bottom-0 right-0 z-0 h-4 w-4 border-b border-r border-accent/20" />
 
       {/* XRay Panel */}
