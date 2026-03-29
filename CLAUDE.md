@@ -21,6 +21,7 @@ pnpm build            # Production build
 pnpm test             # Run vitest tests
 pnpm test:watch       # Watch mode
 pnpm lint             # ESLint
+pnpm metrics          # Print internal metrics to terminal (requires SUPABASE_SERVICE_ROLE_KEY)
 ```
 
 ### Edge Function (deployed to Supabase)
@@ -85,6 +86,7 @@ pnpm run indexer:backfill     # One-shot backfill only
 | `/api/v1/keys` | API | API key CRUD (GET/POST/DELETE) |
 | `/api/v1/search` | API | Search agents by ID, owner, or chain |
 | `/docs/api` | Client | Public API documentation page |
+| `/internal/metrics` | Server | Internal metrics dashboard (session-gated, force-dynamic) |
 
 ## Adding a Chain
 
