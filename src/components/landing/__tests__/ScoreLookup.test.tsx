@@ -7,32 +7,37 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
+const exampleAgents = [
+  { chainId: 42220, agentId: 5 },
+  { chainId: 1187947933, agentId: 1 },
+]
+
 describe('ScoreLookup', () => {
   beforeEach(() => {
     mockPush.mockClear()
   })
 
   it('renders chain select, agent input, and lookup button', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     expect(screen.getByRole('combobox')).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/agent id/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /lookup/i })).toBeInTheDocument()
   })
 
   it('disables lookup button when input is empty', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     expect(screen.getByRole('button', { name: /lookup/i })).toBeDisabled()
   })
 
   it('disables lookup button when input is non-numeric', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     const input = screen.getByPlaceholderText(/agent id/i)
     fireEvent.change(input, { target: { value: 'abc' } })
     expect(screen.getByRole('button', { name: /lookup/i })).toBeDisabled()
   })
 
   it('shows inline error for non-numeric input', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     const input = screen.getByPlaceholderText(/agent id/i)
     fireEvent.change(input, { target: { value: 'abc' } })
     fireEvent.blur(input)
@@ -40,7 +45,7 @@ describe('ScoreLookup', () => {
   })
 
   it('enables lookup button when chain selected and valid numeric input', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     const select = screen.getByRole('combobox')
     const input = screen.getByPlaceholderText(/agent id/i)
     fireEvent.change(select, { target: { value: '42220' } })
@@ -49,7 +54,7 @@ describe('ScoreLookup', () => {
   })
 
   it('navigates to /agent/[chain]/[id] on submit', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     const select = screen.getByRole('combobox')
     const input = screen.getByPlaceholderText(/agent id/i)
     fireEvent.change(select, { target: { value: '42220' } })
@@ -59,7 +64,7 @@ describe('ScoreLookup', () => {
   })
 
   it('submits on Enter key', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     const select = screen.getByRole('combobox')
     const input = screen.getByPlaceholderText(/agent id/i)
     fireEvent.change(select, { target: { value: '42220' } })
@@ -68,14 +73,24 @@ describe('ScoreLookup', () => {
     expect(mockPush).toHaveBeenCalledWith('/agent/42220/5')
   })
 
-  it('renders example agent link', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
-    const link = screen.getByText(/try it/i).closest('a') ?? screen.getByRole('link', { name: /try it/i })
-    expect(link).toHaveAttribute('href', '/agent/42220/5')
+  it('renders example agent links for all chains', () => {
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
+    const celoLink = screen.getByText(/agent #5 on celo/i)
+    expect(celoLink.closest('a')).toHaveAttribute('href', '/agent/42220/5')
+    const skaleLink = screen.getByText(/agent #1 on skale base/i)
+    expect(skaleLink.closest('a')).toHaveAttribute('href', '/agent/1187947933/1')
+  })
+
+  it('shows supported chains badges', () => {
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
+    expect(screen.getByText('Supported chains:')).toBeInTheDocument()
+    // "Celo" appears in both the select options and the badge — use getAllByText
+    expect(screen.getAllByText('Celo').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('SKALE Base').length).toBeGreaterThanOrEqual(1)
   })
 
   it('trims whitespace and strips leading zeros from input', () => {
-    render(<ScoreLookup exampleChain={42220} exampleAgentId={5} />)
+    render(<ScoreLookup exampleAgents={exampleAgents} />)
     const select = screen.getByRole('combobox')
     const input = screen.getByPlaceholderText(/agent id/i)
     fireEvent.change(select, { target: { value: '42220' } })

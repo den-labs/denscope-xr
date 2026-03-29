@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { chains } from '@/config/chains'
+import { chains, getChain } from '@/config/chains'
 import Link from 'next/link'
+import { ChainBadge } from '@/components/shared/ChainBadge'
+
+type ExampleAgent = { chainId: number; agentId: number }
 
 type ScoreLookupProps = {
-  exampleChain: number
-  exampleAgentId: number
+  exampleAgents: ExampleAgent[]
 }
 
 function normalizeAgentId(raw: string): string {
@@ -20,7 +22,7 @@ function isValidAgentId(value: string): boolean {
   return /^\d+$/.test(trimmed)
 }
 
-export function ScoreLookup({ exampleChain, exampleAgentId }: ScoreLookupProps) {
+export function ScoreLookup({ exampleAgents }: ScoreLookupProps) {
   const router = useRouter()
   const [chainId, setChainId] = useState<string>('')
   const [agentId, setAgentId] = useState('')
@@ -87,14 +89,31 @@ export function ScoreLookup({ exampleChain, exampleAgentId }: ScoreLookupProps) 
         </button>
       </div>
 
-      <p className="mt-3 text-sm text-text-muted">
-        <Link
-          href={`/agent/${exampleChain}/${exampleAgentId}`}
-          className="text-text-secondary underline underline-offset-2 hover:text-accent transition-colors"
-        >
-          Try it: Agent #{exampleAgentId} on {chains.find((c) => c.id === exampleChain)?.badge.label ?? `Chain ${exampleChain}`}
-        </Link>
-      </p>
+      <div className="mt-3 text-sm text-text-muted">
+        <p>
+          Try it:{' '}
+          {exampleAgents.map((agent, i) => (
+            <span key={`${agent.chainId}-${agent.agentId}`}>
+              {i > 0 && <span className="mx-1">·</span>}
+              <Link
+                href={`/agent/${agent.chainId}/${agent.agentId}`}
+                className="text-text-secondary underline underline-offset-2 hover:text-accent transition-colors"
+              >
+                Agent #{agent.agentId} on{' '}
+                {getChain(agent.chainId)?.badge.label ?? `Chain ${agent.chainId}`}
+              </Link>
+            </span>
+          ))}
+        </p>
+        <p className="mt-1.5 flex items-center justify-center gap-2 flex-wrap">
+          <span className="text-text-muted text-xs">Supported chains:</span>
+          {chains
+            .filter((c) => c.name !== 'Celo Sepolia')
+            .map((c) => (
+              <ChainBadge key={c.id} chainId={c.id} />
+            ))}
+        </p>
+      </div>
     </div>
   )
 }
