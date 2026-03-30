@@ -1,7 +1,7 @@
 import { SiweMessage } from 'siwe'
 
-const DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'denscope.vercel.app'
-const URI = process.env.NEXT_PUBLIC_APP_URL ?? 'https://denscope.vercel.app'
+const DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'localhost:3000'
+const URI = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 type CreateMessageParams = {
   address: string
