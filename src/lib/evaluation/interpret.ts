@@ -112,8 +112,7 @@ function deriveDecisionConfidence(
 
   const conflictingFlags = flags.filter((f) =>
     f === 'sybil_risk_high' ||
-    f === 'incident_open_critical' ||
-    f === 'reputation_declining'
+    f === 'incident_open_critical'
   )
 
   if (status === 'anomalous' && signal_strength === 'weak') return 'low'
