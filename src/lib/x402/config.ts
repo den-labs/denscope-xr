@@ -27,6 +27,7 @@ export const x402Config = {
   pricing: {
     score: parseFloat(process.env.X402_PRICE_SCORE ?? '0.001'),
     signals: parseFloat(process.env.X402_PRICE_SIGNALS ?? '0.0005'),
+    evaluate: parseFloat(process.env.X402_PRICE_EVALUATE ?? '0.001'),
   } as Record<string, number>,
 }
 
