@@ -6,7 +6,7 @@ vi.mock('siwe', () => {
   return {
     SiweMessage: class {
       address = '0xTestAddress'
-      domain = 'denscope.vercel.app'
+      domain = 'localhost:3000'
       verify = mockVerify
     },
   }

@@ -6,8 +6,8 @@ import { useEffect, useRef, useCallback } from 'react'
 import { useAuthStore } from '@/stores/auth'
 import { SiweMessage } from 'siwe'
 
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'denscope.vercel.app'
-const APP_URI = process.env.NEXT_PUBLIC_APP_URL ?? 'https://denscope.vercel.app'
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'localhost:3000'
+const APP_URI = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export function ConnectButton() {
   const { address, isConnected } = useAccount()

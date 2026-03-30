@@ -1,6 +1,6 @@
 import { SiweMessage } from 'siwe'
 
-const DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'denscope.vercel.app'
+const DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'localhost:3000'
 
 type VerifyResult =
   | { valid: true; address: string }

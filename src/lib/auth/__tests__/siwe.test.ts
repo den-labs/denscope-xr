@@ -22,7 +22,7 @@ describe('createSiweMessage', () => {
       chainId: 42220,
       nonce: 'testnonce123',
     })
-    expect(message).toContain('denscope.vercel.app')
+    expect(message).toContain('localhost:3000')
   })
 })
 
