@@ -7,6 +7,8 @@ import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { toTrustScore, type TrustScore } from '@/types/trust-score'
 import { getShareCardState } from '@/lib/trust/share-card-state'
+import { composeEvaluation } from '@/lib/evaluation/compose'
+import type { Evaluation } from '@/types/evaluation'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
 
@@ -90,6 +92,16 @@ export async function GET(_req: Request, { params }: Props) {
     readAgentURI(chainConfig, agentId),
     fetchTrustScoreForOg(chainId, agentId),
   ])
+  let evaluation: Evaluation | null = null
+  try {
+    const result = await composeEvaluation({
+      chainId, agentId, preset: 'default_safety',
+    })
+    evaluation = result.evaluation
+  } catch {
+    // Fallback to v1 card if evaluation fails
+  }
+
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
   const ownerTruncated = owner
@@ -116,6 +128,35 @@ export async function GET(_req: Request, { params }: Props) {
         ? 'Señal negativa, aún temprana'
         : 'Señal mixta, aún temprana'
     : null
+
+  const trustBandColors: Record<string, string> = {
+    high: '#059669',
+    medium: '#EA580C',
+    low: '#DC2626',
+    insufficient_signal: '#6b7280',
+  }
+  const trustBandLabels: Record<string, string> = {
+    high: 'HIGH TRUST',
+    medium: 'MEDIUM TRUST',
+    low: 'LOW TRUST',
+    insufficient_signal: 'INSUFFICIENT DATA',
+  }
+  const actionColors: Record<string, string> = {
+    allow: '#059669',
+    review: '#EA580C',
+    limit: '#DC2626',
+  }
+  const actionSymbols: Record<string, string> = {
+    allow: '\u2713 ALLOWED',
+    review: '\u26A0 REVIEW',
+    limit: '\u2715 LIMITED',
+  }
+
+  const evalBandColor = evaluation ? (trustBandColors[evaluation.trust_band] ?? '#6b7280') : null
+  const evalBandLabel = evaluation ? (trustBandLabels[evaluation.trust_band] ?? '') : null
+  const evalActionColor = evaluation ? (actionColors[evaluation.recommended_action] ?? '#6b7280') : null
+  const evalActionLabel = evaluation ? (actionSymbols[evaluation.recommended_action] ?? '') : null
+  const evalFlagsCount = evaluation?.flags?.length ?? 0
 
   return new ImageResponse(
     (
@@ -212,6 +253,22 @@ export async function GET(_req: Request, { params }: Props) {
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
           }}>
+            {/* v2: Trust band badge (above score) */}
+            {evaluation && evalBandColor && evalBandLabel && (
+              <div style={{
+                display: 'flex',
+                padding: '4px 16px',
+                background: evalBandColor,
+                color: '#ffffff',
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: '0.12em',
+                marginBottom: 10,
+              }}>
+                {evalBandLabel}
+              </div>
+            )}
+
             {/* ID row: horizontal flex, baseline-aligned */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 8 }}>
               <span style={{ fontSize: 24, color: '#6b7280', fontWeight: 400 }}>
@@ -287,6 +344,28 @@ export async function GET(_req: Request, { params }: Props) {
                 <span style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
                   {monitoringHint}
                 </span>
+              )}
+
+              {/* v2: Recommended action pill + flags */}
+              {evaluation && evalActionColor && evalActionLabel && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+                  <div style={{
+                    display: 'flex',
+                    padding: '3px 12px',
+                    background: evalActionColor,
+                    color: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                  }}>
+                    {evalActionLabel}
+                  </div>
+                  {evalFlagsCount > 0 && (
+                    <span style={{ fontSize: 11, color: '#9CA3AF' }}>
+                      {evalFlagsCount} flag{evalFlagsCount > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 

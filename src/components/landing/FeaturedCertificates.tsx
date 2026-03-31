@@ -21,14 +21,31 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
+function scoreToBand(score: number): { label: string; color: string } {
+  if (score >= 60) return { label: 'High Trust', color: '#059669' }
+  if (score >= 35) return { label: 'Medium Trust', color: '#EA580C' }
+  if (score >= 15) return { label: 'Low Trust', color: '#DC2626' }
+  return { label: 'Insufficient', color: '#6b7280' }
+}
+
 function CertificateCard({ cert }: { cert: FeaturedCertificate }) {
+  const band = scoreToBand(cert.score)
+
   return (
     <Link
       href={`/agent/${cert.chainId}/${cert.agentId}`}
       className="group block rounded-lg border border-border p-4 transition-colors hover:border-accent"
     >
-      <div className="text-3xl font-bold font-display text-text-primary">
-        {cert.score}
+      <div className="flex items-center gap-2">
+        <div className="text-3xl font-bold font-display text-text-primary">
+          {cert.score}
+        </div>
+        <span
+          className="rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase leading-tight text-white"
+          style={{ backgroundColor: band.color }}
+        >
+          {band.label}
+        </span>
       </div>
       <div className="mt-2 flex items-center gap-2">
         <ChainBadge chainId={cert.chainId} />
