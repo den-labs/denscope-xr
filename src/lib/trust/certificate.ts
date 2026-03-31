@@ -1,4 +1,5 @@
 import type { ShareCardStateKey } from './share-card-state'
+import type { TrustBand, RecommendedAction, RiskLevel, DecisionConfidence, PresetId } from '@/types/evaluation'
 
 export type CertificatePayload = {
   agentId: number
@@ -11,6 +12,13 @@ export type CertificatePayload = {
   signalCount: number
   positiveCount: number
   negativeCount: number
+  // v2 evaluation fields (optional for backward compat)
+  trust_band?: TrustBand
+  recommended_action?: RecommendedAction
+  risk_level?: RiskLevel
+  decision_confidence?: DecisionConfidence
+  preset?: PresetId
+  flags?: string[]
 }
 
 export type CertificatePalette = {
@@ -59,6 +67,12 @@ export function normalizeCertificatePayload(raw: {
   signalCount: number
   positiveCount: number
   negativeCount: number
+  trust_band?: TrustBand
+  recommended_action?: RecommendedAction
+  risk_level?: RiskLevel
+  decision_confidence?: DecisionConfidence
+  preset?: PresetId
+  flags?: string[]
 }): CertificatePayload {
   const normString = (v: string | null | undefined): string | null => {
     if (v == null) return null
@@ -66,7 +80,7 @@ export function normalizeCertificatePayload(raw: {
     return trimmed === '' ? null : trimmed
   }
 
-  return {
+  const result: CertificatePayload = {
     agentId: raw.agentId,
     chainId: raw.chainId,
     chainName: raw.chainName.toLowerCase().trim(),
@@ -78,11 +92,21 @@ export function normalizeCertificatePayload(raw: {
     positiveCount: raw.positiveCount,
     negativeCount: raw.negativeCount,
   }
+
+  // v2 evaluation fields — only include when present
+  if (raw.trust_band !== undefined) result.trust_band = raw.trust_band
+  if (raw.recommended_action !== undefined) result.recommended_action = raw.recommended_action
+  if (raw.risk_level !== undefined) result.risk_level = raw.risk_level
+  if (raw.decision_confidence !== undefined) result.decision_confidence = raw.decision_confidence
+  if (raw.preset !== undefined) result.preset = raw.preset
+  if (raw.flags !== undefined) result.flags = [...raw.flags].sort()
+
+  return result
 }
 
 /** Fixed-order JSON array for deterministic hashing */
 export function canonicalize(p: CertificatePayload): string {
-  return JSON.stringify([
+  const base: unknown[] = [
     p.agentId,
     p.chainId,
     p.chainName,
@@ -93,7 +117,17 @@ export function canonicalize(p: CertificatePayload): string {
     p.signalCount,
     p.positiveCount,
     p.negativeCount,
-  ])
+  ]
+
+  // v2 evaluation fields — appended only when present so v1 hashes stay stable
+  if (p.trust_band !== undefined) base.push(p.trust_band)
+  if (p.recommended_action !== undefined) base.push(p.recommended_action)
+  if (p.risk_level !== undefined) base.push(p.risk_level)
+  if (p.decision_confidence !== undefined) base.push(p.decision_confidence)
+  if (p.preset !== undefined) base.push(p.preset)
+  if (p.flags !== undefined) base.push(p.flags)
+
+  return JSON.stringify(base)
 }
 
 /** SHA-256 hash of canonicalized payload, returned as 64-char hex */

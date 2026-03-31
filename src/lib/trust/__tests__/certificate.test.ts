@@ -151,3 +151,73 @@ describe('getAppBaseUrl', () => {
     process.env.NEXT_PUBLIC_APP_URL = original
   })
 })
+
+const evalPayload: CertificatePayload = {
+  ...basePayload,
+  trust_band: 'high',
+  recommended_action: 'allow',
+  risk_level: 'minimal',
+  decision_confidence: 'high',
+  preset: 'default_safety',
+  flags: ['early_agent', 'low_activity'],
+}
+
+describe('certificate v2 — evaluation fields', () => {
+  describe('generateCertificateHash', () => {
+    it('produces a different hash when evaluation fields are present', async () => {
+      const v1Hash = await generateCertificateHash(basePayload)
+      const v2Hash = await generateCertificateHash(evalPayload)
+      expect(v1Hash).not.toBe(v2Hash)
+    })
+
+    it('is deterministic with evaluation fields', async () => {
+      const a = await generateCertificateHash(evalPayload)
+      const b = await generateCertificateHash({ ...evalPayload })
+      expect(a).toBe(b)
+    })
+  })
+
+  describe('normalizeCertificatePayload', () => {
+    it('sorts flags array', () => {
+      const result = normalizeCertificatePayload({
+        ...basePayload,
+        flags: ['low_activity', 'early_agent'],
+      })
+      expect(result.flags).toEqual(['early_agent', 'low_activity'])
+    })
+
+    it('passes through trust_band, recommended_action, risk_level', () => {
+      const result = normalizeCertificatePayload(evalPayload)
+      expect(result.trust_band).toBe('high')
+      expect(result.recommended_action).toBe('allow')
+      expect(result.risk_level).toBe('minimal')
+      expect(result.decision_confidence).toBe('high')
+      expect(result.preset).toBe('default_safety')
+    })
+
+    it('omits evaluation fields when not provided', () => {
+      const result = normalizeCertificatePayload(basePayload)
+      expect(result.trust_band).toBeUndefined()
+      expect(result.recommended_action).toBeUndefined()
+      expect(result.risk_level).toBeUndefined()
+      expect(result.flags).toBeUndefined()
+    })
+  })
+
+  describe('canonicalize', () => {
+    it('includes evaluation fields when present', () => {
+      const result = canonicalize(evalPayload)
+      const parsed = JSON.parse(result)
+      expect(parsed.length).toBeGreaterThan(10)
+      expect(parsed).toContain('high')
+      expect(parsed).toContain('allow')
+      expect(parsed).toContain('minimal')
+    })
+
+    it('excludes evaluation fields when absent (v1 compat)', () => {
+      const result = canonicalize(basePayload)
+      const parsed = JSON.parse(result)
+      expect(parsed).toHaveLength(10)
+    })
+  })
+})
