@@ -1,66 +1,72 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { requireSession } from '@/lib/auth/session'
+import { collectTrustOpsOverview } from '@/lib/trustops/collect'
+import type { TrustOpsOverview } from '@/lib/trustops/collect'
+import { RiskOverview } from '@/components/discovery/RiskOverview'
+import { EvaluationActivity } from '@/components/discovery/EvaluationActivity'
+import { TrustOpsSignals } from '@/components/discovery/TrustOpsSignals'
+import Link from 'next/link'
 
-import { useState } from 'react'
-import { useDiscoveryStore } from '@/stores/discovery'
-import { DiscoveryFeed } from '@/components/discovery/DiscoveryFeed'
+export const dynamic = 'force-dynamic'
 
-export default function DiscoveryPage() {
-  const signals = useDiscoveryStore((s) => s.signals)
-  const [severity, setSeverity] = useState<string>('')
-  const [search, setSearch] = useState('')
+export default async function TrustOpsPage() {
+  const session = await requireSession()
+  if (!session.ok) {
+    redirect('/')
+  }
 
-  const criticalCount = signals.filter((s) => s.severity === 'critical').length
-  const warningCount = signals.filter((s) => s.severity === 'warning').length
+  let overview: TrustOpsOverview | null = null
+  let error: string | null = null
+
+  try {
+    overview = await collectTrustOpsOverview()
+  } catch (e) {
+    console.error('Failed to collect TrustOps overview:', e)
+    error = 'Failed to load TrustOps data. Try again.'
+  }
 
   return (
-    <div className="h-full flex flex-col">
-      <header className="px-6 pt-6 pb-4 border-b border-border">
-        <div className="flex items-end justify-between">
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold uppercase tracking-wider">
-              Signals Feed
+            <h1 className="font-display text-2xl font-bold uppercase tracking-wider text-text-primary">
+              TrustOps
             </h1>
             <p className="text-text-secondary text-xs uppercase tracking-widest font-mono mt-1">
-              Live Monitoring / Anomaly Detection
+              Portfolio Risk Monitoring / Evaluation Dashboard
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {criticalCount > 0 && (
-              <span className="status-pill status-pill-critical">
-                {criticalCount} Critical
-              </span>
-            )}
-            {warningCount > 0 && (
-              <span className="status-pill status-pill-warning">
-                {warningCount} Warning
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 mt-4">
-          <select
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value)}
-            className="bg-surface border border-border text-text-primary text-xs font-mono px-3 py-1.5 appearance-none cursor-pointer focus:outline-none focus:border-border-bright"
+          <Link
+            href="/discovery"
+            className="text-xs text-text-muted underline underline-offset-2 hover:text-accent transition-colors"
           >
-            <option value="">All Severities</option>
-            <option value="critical">Critical</option>
-            <option value="warning">Warning</option>
-            <option value="info">Info</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Search signals..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-surface border border-border text-text-primary text-xs font-mono px-3 py-1.5 flex-1 placeholder:text-text-muted focus:outline-none focus:border-border-bright"
-          />
+            Refresh
+          </Link>
         </div>
-      </header>
 
-      <div className="flex-1 overflow-hidden">
-        <DiscoveryFeed severity={severity} search={search} />
+        {overview && (
+          <p className="mt-1 text-xs font-mono text-text-muted">
+            Collected at {new Date(overview.collectedAt).toLocaleTimeString()}
+          </p>
+        )}
+
+        {error && (
+          <div className="mt-8 border border-critical/30 bg-critical/5 p-4">
+            <p className="text-sm text-critical">{error}</p>
+          </div>
+        )}
+
+        {overview && (
+          <>
+            <RiskOverview overview={overview} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+              <TrustOpsSignals />
+              <EvaluationActivity evaluations={overview.recentEvaluations} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

@@ -9,8 +9,9 @@ import { SearchModal } from '@/components/search/SearchModal'
 import { ConnectButton } from '@/components/auth/ConnectButton'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { IncidentBadge } from '@/components/console/IncidentBadge'
+import { useAuthStore } from '@/stores/auth'
 
-const navItems = [
+const baseNavItems = [
   { href: '/explore', label: 'Explore' },
   { href: '/console', label: 'Console' },
   { href: '/docs/api', label: 'Developers' },
@@ -20,6 +21,11 @@ export function Header() {
   const pathname = usePathname()
   const [searchOpen, setSearchOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const isConnected = useAuthStore((s) => s.isConnected)
+
+  const navItems = isConnected
+    ? [...baseNavItems, { href: '/discovery', label: 'TrustOps' }]
+    : baseNavItems
 
   // Close mobile menu on route change
   useEffect(() => {

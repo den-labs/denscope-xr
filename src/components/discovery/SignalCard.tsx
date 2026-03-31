@@ -43,12 +43,18 @@ export function SignalCard({ signal }: { signal: DiscoverySignal }) {
       </time>
 
       {signal.agentIds[0] != null && (
-        <div className="mt-3">
+        <div className="mt-3 flex items-center gap-2">
           <Link
             href={`/agent/${signal.chainId}/${signal.agentIds[0]}`}
             className="text-xs border border-border px-3 py-1 text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors"
           >
             Open Agent
+          </Link>
+          <Link
+            href={`/agent/${signal.chainId}/${signal.agentIds[0]}`}
+            className="text-xs border border-accent/30 bg-accent/10 px-3 py-1 text-accent hover:bg-accent/20 transition-colors"
+          >
+            Evaluate
           </Link>
         </div>
       )}
