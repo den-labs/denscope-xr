@@ -12,49 +12,53 @@ function CodeSnippet({
   chain: number
   agentId: number
 }) {
-  const url = `https://denscope.vercel.app/api/v1/agent/${chain}/${agentId}/score`
-
   return (
     <pre className="mt-8 rounded-lg border border-border bg-bg p-5 text-left text-sm font-mono leading-relaxed overflow-x-auto">
       <code>
         <span className="text-accent/70">const</span>
-        <span className="text-text-primary"> res </span>
+        <span className="text-text-primary"> ds </span>
+        <span className="text-accent/70">=</span>
+        <span className="text-text-primary"> </span>
+        <span className="text-accent/70">new</span>
+        <span className="text-text-primary"> </span>
+        <span className="text-text-secondary">DenScope</span>
+        <span className="text-text-muted">{'({ '}</span>
+        <span className="text-text-primary">apiKey</span>
+        <span className="text-text-muted">: </span>
+        <span className="text-emerald-400/80">{`'ds_...'`}</span>
+        <span className="text-text-muted">{' })'}</span>
+        {'\n\n'}
+        <span className="text-accent/70">const</span>
+        <span className="text-text-primary"> result </span>
         <span className="text-accent/70">=</span>
         <span className="text-text-primary"> </span>
         <span className="text-accent/70">await</span>
-        <span className="text-text-primary"> </span>
-        <span className="text-text-secondary">fetch</span>
+        <span className="text-text-primary"> ds.</span>
+        <span className="text-text-secondary">evaluate</span>
         <span className="text-text-muted">(</span>
-        {'\n'}
-        <span className="text-text-muted">{'  '}</span>
-        <span className="text-emerald-400/80">{`'${url}'`}</span>
-        <span className="text-text-muted">,</span>
-        {'\n'}
-        <span className="text-text-muted">{'  '}</span>
+        <span className="text-emerald-400/80">{chain}</span>
+        <span className="text-text-muted">, </span>
+        <span className="text-emerald-400/80">{agentId}</span>
+        <span className="text-text-muted">, </span>
         <span className="text-text-muted">{'{ '}</span>
-        <span className="text-text-primary">headers</span>
-        <span className="text-text-muted">: {'{ '}</span>
-        <span className="text-emerald-400/80">{`'X-API-Key'`}</span>
+        <span className="text-text-primary">preset</span>
         <span className="text-text-muted">: </span>
-        <span className="text-text-primary">apiKey</span>
-        <span className="text-text-muted">{' } }'}</span>
-        {'\n'}
+        <span className="text-emerald-400/80">{`'default_safety'`}</span>
+        <span className="text-text-muted">{' }'}</span>
         <span className="text-text-muted">)</span>
+        {'\n\n'}
+        <span className="text-accent/70">if</span>
+        <span className="text-text-muted"> (</span>
+        <span className="text-text-primary">result.evaluation.</span>
+        <span className="text-text-secondary">recommended_action</span>
+        <span className="text-accent/70"> === </span>
+        <span className="text-emerald-400/80">{`'allow'`}</span>
+        <span className="text-text-muted">) {'{'}</span>
         {'\n'}
-        <span className="text-accent/70">const</span>
-        <span className="text-text-primary"> {'{ '}</span>
-        <span className="text-text-primary">score</span>
-        <span className="text-text-primary">{' }'}</span>
-        <span className="text-accent/70"> =</span>
-        <span className="text-text-primary"> </span>
-        <span className="text-accent/70">await</span>
-        <span className="text-text-primary"> res.</span>
-        <span className="text-text-secondary">json</span>
-        <span className="text-text-muted">()</span>
+        <span className="text-text-muted">{'  '}</span>
+        <span className="text-emerald-400">{'// trusted — proceed with interaction'}</span>
         {'\n'}
-        <span className="text-emerald-400">
-          {'// score.value → 82, score.confidence → "high"'}
-        </span>
+        <span className="text-text-muted">{'}'}</span>
       </code>
     </pre>
   )

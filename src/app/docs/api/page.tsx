@@ -182,6 +182,94 @@ try {
             path="/api/v1/search"
             desc="Search agents by ID or owner. Query params: ?q=5&chainId=42220&limit=20"
           />
+          <Endpoint
+            method="POST"
+            path="/api/v1/trust/evaluate"
+            desc="Contextual trust evaluation with configurable presets. Returns a structured judgment including trust band, risk level, recommended action, and human-readable rationale. Auth: API Key or x402 ($0.001)."
+          />
+        </Section>
+
+        <Section title="Trust Evaluation" id="trust-evaluation">
+          <p className="text-sm text-text-secondary">
+            The <code className="text-xs font-mono">/evaluate</code> endpoint goes beyond raw scores.
+            It applies a preset-driven evaluation that returns a structured judgment:
+            trust band, risk level, recommended action, and a human-readable rationale.
+          </p>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Request Body</h4>
+          <Table headers={['Field', 'Type', 'Required', 'Description']}>
+            <Row cells={['chainId', 'number', 'Yes', 'Chain ID (42220, 1187947933, etc.)']} />
+            <Row cells={['agentId', 'number', 'Yes', 'Agent ID']} />
+            <Row cells={['preset', 'string', 'Yes', 'Evaluation preset']} />
+            <Row cells={['context', 'string', 'No', 'Free-text context hint (v0: logged, not used in logic)']} />
+            <Row cells={['sensitivity', 'string', 'No', 'low, normal, high (v0: defaults to normal, reserved)']} />
+            <Row cells={['objective', 'string', 'No', 'Free-text objective hint (v0: logged, not used in logic)']} />
+          </Table>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Presets</h4>
+          <Table headers={['Preset', 'For', 'Philosophy']}>
+            <Row cells={['default_safety', 'Apps needing a basic trust gate', 'Permissive with minimal signal, conservative without']} />
+            <Row cells={['agent_to_agent', 'Agents evaluating other agents', 'Sensitive to recent activity and sybil patterns']} />
+            <Row cells={['defi_counterparty', 'DeFi protocols evaluating counterparties', 'Demands strong proof, assumes no trust']} />
+          </Table>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Response Schema</h4>
+          <p className="text-sm text-text-secondary mb-2">
+            The response contains an <code className="text-xs font-mono">evaluation</code> object with:
+          </p>
+          <Table headers={['Field', 'Type', 'Description']}>
+            <Row cells={['trust_band', 'high | medium | low | insufficient_signal', 'Overall trust classification']} />
+            <Row cells={['status', 'active | stale | dormant | anomalous', 'Agent activity status']} />
+            <Row cells={['signal_strength', 'strong | moderate | weak | none', 'Strength of available evidence']} />
+            <Row cells={['risk_level', 'minimal | moderate | elevated | critical', 'Risk assessment']} />
+            <Row cells={['decision_confidence', 'low | medium | high', 'Confidence in the evaluation']} />
+            <Row cells={['recommended_action', 'allow | review | limit', 'Suggested action for the caller']} />
+            <Row cells={['flags', 'string[]', 'e.g. insufficient_signal, sybil_risk_high, incident_open_critical']} />
+            <Row cells={['rationale', 'string', 'Human-readable explanation of the judgment']} />
+            <Row cells={['evidence', 'object', 'score, score_confidence, feedbackCount, positiveRatio, openIncidents, lastActivityDays, ageDays']} />
+            <Row cells={['preset', 'string', 'Preset used for this evaluation']} />
+            <Row cells={['evaluatedAt', 'string', 'ISO 8601 timestamp']} />
+            <Row cells={['chainId', 'number', 'Chain ID']} />
+            <Row cells={['agentId', 'number', 'Agent ID']} />
+          </Table>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Example Request</h4>
+          <CodeHighlight>{`curl -X POST https://denscope.vercel.app/api/v1/trust/evaluate \\
+  -H "Authorization: Bearer ds_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"chainId": 42220, "agentId": 5, "preset": "default_safety"}'`}</CodeHighlight>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Example Response</h4>
+          <CodeHighlight>{`{
+  "evaluation": {
+    "trust_band": "high",
+    "status": "active",
+    "signal_strength": "strong",
+    "risk_level": "minimal",
+    "decision_confidence": "high",
+    "recommended_action": "allow",
+    "flags": [],
+    "rationale": "Agent scores 78/100 with high confidence (42 feedbacks, 88% positive). No open incidents. Active within last 3 days. All indicators consistent. Recommended action: allow.",
+    "evidence": {
+      "score": 78,
+      "score_confidence": "high",
+      "feedbackCount": 42,
+      "positiveRatio": 0.88,
+      "openIncidents": 0,
+      "lastActivityDays": 3,
+      "ageDays": 120
+    },
+    "preset": "default_safety",
+    "evaluatedAt": "2026-03-29T18:30:00Z",
+    "chainId": 42220,
+    "agentId": 5
+  }
+}`}</CodeHighlight>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">SDK Example</h4>
+          <CodeHighlight>{`const result = await ds.evaluate(42220, 5, { preset: 'default_safety' })
+console.log(result.evaluation.recommended_action) // "allow"
+console.log(result.evaluation.rationale)`}</CodeHighlight>
         </Section>
 
         <Section title="Trust Score Formula" id="trust-score-formula">
