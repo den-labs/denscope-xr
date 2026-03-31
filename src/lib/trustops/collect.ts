@@ -49,6 +49,11 @@ export async function collectTrustOpsOverview(): Promise<TrustOpsOverview> {
       .limit(20),
   ])
 
+  const queryError = agentsResult.error ?? scoresResult.error ?? incidentsResult.error ?? evaluationsResult.error
+  if (queryError) {
+    throw new Error(`Supabase query failed: ${queryError.message}`)
+  }
+
   const totalAgents = agentsResult.count ?? 0
   const scores = scoresResult.data ?? []
   const openIncidents = incidentsResult.count ?? 0

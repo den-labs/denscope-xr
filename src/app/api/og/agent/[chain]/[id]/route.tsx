@@ -86,21 +86,14 @@ export async function GET(_req: Request, { params }: Props) {
     )
   }
 
-  const [assets, owner, uri, trustScore] = await Promise.all([
+  const [assets, owner, uri, trustScore, evaluationResult] = await Promise.all([
     loadAssets(),
     readAgentOwner(chainConfig, agentId),
     readAgentURI(chainConfig, agentId),
     fetchTrustScoreForOg(chainId, agentId),
+    composeEvaluation({ chainId, agentId, preset: 'default_safety' }).catch(() => null),
   ])
-  let evaluation: Evaluation | null = null
-  try {
-    const result = await composeEvaluation({
-      chainId, agentId, preset: 'default_safety',
-    })
-    evaluation = result.evaluation
-  } catch {
-    // Fallback to v1 card if evaluation fails
-  }
+  const evaluation = evaluationResult?.evaluation ?? null
 
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
   const name = metadata?.name ?? `Agent #${agentId}`
