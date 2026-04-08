@@ -191,28 +191,29 @@ function StationContent({
         )}
         <div className="flex items-center gap-2">
           <button
+            onClick={handleShareX}
+            disabled={!agent}
+            className="flex-1 bg-accent px-4 py-2.5 text-sm font-mono font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Share on X
+          </button>
+          <button
             onClick={handleShare}
             disabled={!agent}
-            className="flex-1 border border-text-primary bg-text-primary px-4 py-2.5 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="border border-border px-3 py-2.5 text-sm font-mono text-text-secondary hover:text-text-primary hover:border-border-bright transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Share"
           >
-            Share Certificate
+            Share
           </button>
           <button
             onClick={handleDownload}
             disabled={!agent}
             className="border border-border px-3 py-2.5 text-sm text-text-muted hover:text-text-primary hover:border-text-primary transition-colors disabled:opacity-40"
-            title="Download PNG"
+            title="Download"
           >
             ⬇
           </button>
         </div>
-        <button
-          onClick={handleShareX}
-          disabled={!agent}
-          className="w-full mt-2 text-xs text-text-muted font-mono hover:text-accent transition-colors disabled:opacity-40"
-        >
-          Share on X →
-        </button>
       </div>
     </div>
   )
