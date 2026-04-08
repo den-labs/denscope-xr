@@ -65,7 +65,6 @@ function StationContent({
   const name = agent.metadata?.name ?? `Agent #${agent.agentId}`
   const shareInput = { chainId: agent.chainId, agentId: agent.agentId, name: agent.metadata?.name }
   const certUrl = `/api/certificate/${agent.chainId}/${agent.agentId}`
-  const reportUrl = `/agent/${agent.chainId}/${agent.agentId}`
 
   async function handleShare() {
     try {
@@ -142,15 +141,7 @@ function StationContent({
               </p>
             )}
 
-            {/* 4) Secondary CTA */}
-            <a
-              href={reportUrl}
-              className="text-xs text-accent font-mono hover:underline"
-            >
-              Open Full Report &rarr;
-            </a>
-
-            {/* 5) Micro-data (1 line) */}
+            {/* Micro-data (1 line) */}
             <p className="font-mono text-[10px] text-text-muted truncate">
               Owner {truncAddr(agent.owner)} | +{agent.positiveFeedback} / -{agent.negativeFeedback} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
             </p>
@@ -305,14 +296,25 @@ export function CertificateStation({ agentKey, layout, onClose }: CertificateSta
   }
 
   // ── Header (shared) ──
+  const agentUrl = agent ? `/agent/${agent.chainId}/${agent.agentId}` : null
   const header = (
     <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
       <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
         TRUST CERTIFICATE
       </span>
-      <button onClick={handleClose} className="text-text-muted hover:text-text-primary text-xs" aria-label="Close station">
-        ✕
-      </button>
+      <div className="flex items-center gap-3">
+        {agentUrl && (
+          <a
+            href={agentUrl}
+            className="font-mono text-xs text-accent hover:underline"
+          >
+            View Agent
+          </a>
+        )}
+        <button onClick={handleClose} className="text-text-muted hover:text-text-primary text-xs" aria-label="Close station">
+          ✕
+        </button>
+      </div>
     </div>
   )
 
