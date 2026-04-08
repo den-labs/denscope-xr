@@ -3,7 +3,6 @@ import { getChain } from '@/config/chains'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { EmbedSnippet } from '@/components/shared/EmbedSnippet'
-import { buildXIntentUrl, buildCertificateShareText } from '@/lib/share'
 import { findLatestSnapshot } from '@/lib/supabase/certificate-snapshots'
 import { getAppBaseUrl } from '@/lib/trust/certificate'
 import { AgentCertificateActions } from '@/components/agent/AgentCertificateActions'
@@ -251,17 +250,6 @@ export default async function AgentPage({ params }: Props) {
             agentId={agentId}
             agentName={metadata?.name ?? null}
           />
-
-          <span className="hidden md:inline-block border-l border-border h-5 mx-1" />
-
-          <a
-            href={buildXIntentUrl(buildCertificateShareText({ chainId: chainConfig.id, agentId, name: metadata?.name }))}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
-          >
-            Share on X
-          </a>
 
           <details className="relative">
             <summary className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover cursor-pointer list-none">
