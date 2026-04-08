@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { shareCertificate } from '@/lib/share'
+import { shareCertificate, buildXIntentUrl, buildCertificateShareText } from '@/lib/share'
 import type { ShareCardStateKey } from '@/lib/trust/share-card-state'
 
 type Props = {
@@ -34,6 +34,13 @@ export function AgentCertificateActions({ chainId, agentId, agentName }: Props) 
     } catch { /* silently fail */ }
   }
 
+  function handleShareX() {
+    window.open(
+      buildXIntentUrl(buildCertificateShareText({ chainId, agentId, name: agentName ?? undefined })),
+      '_blank',
+    )
+  }
+
   async function handleDownload() {
     try {
       const res = await fetch(certUrl)
@@ -56,10 +63,17 @@ export function AgentCertificateActions({ chainId, agentId, agentName }: Props) 
       )}
 
       <button
-        onClick={handleShare}
-        className="border border-text-primary bg-text-primary px-4 py-1.5 text-xs font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors"
+        onClick={handleShareX}
+        className="bg-accent px-4 py-1.5 text-xs font-mono font-bold text-white hover:opacity-90 transition-opacity"
       >
-        Share Certificate
+        Share on X
+      </button>
+
+      <button
+        onClick={handleShare}
+        className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+      >
+        Share
       </button>
 
       <button
