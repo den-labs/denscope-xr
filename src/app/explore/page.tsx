@@ -121,7 +121,7 @@ export default function FeedPage() {
         </div>
         <div className="bg-surface border-border px-4 py-2">
           <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Events</p>
-          <p className="text-sm font-mono text-text-primary">
+          <p className="text-sm font-mono text-text-primary" suppressHydrationWarning>
             {filteredCount !== null ? `${filteredCount} / ${events.length}` : events.length}
           </p>
         </div>

@@ -107,6 +107,7 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
           role="button"
           tabIndex={-1}
           onClick={handleShare}
+          title="Share on X"
           className="opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent px-2"
         >
           <ShareIcon />
@@ -129,6 +130,7 @@ export function FeedLine({ event, isSelected, onClick }: FeedLineProps) {
             role="button"
             tabIndex={-1}
             onClick={handleShare}
+            title="Share on X"
             className="text-text-muted hover:text-accent shrink-0"
           >
             <ShareIcon />

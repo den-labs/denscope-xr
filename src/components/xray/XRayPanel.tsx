@@ -16,8 +16,9 @@ import { getShareCardState } from '@/lib/trust/share-card-state'
 import {
   buildXIntentUrl,
   buildCertificateShareText,
-  buildOwnerShareText,
+  shareCertificate,
 } from '@/lib/share'
+import type { ShareCardStateKey } from '@/lib/trust/share-card-state'
 import type { AgentMetadata } from '@/types/agents'
 import type { TrustScore } from '@/types/trust-score'
 
@@ -40,7 +41,8 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
   const [metadataCache, setMetadataCache] = useState<{ key: string; value: AgentMetadata | null } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
-  const [shareMenuOpen, setShareMenuOpen] = useState(false)
+  const [shareStatus, setShareStatus] = useState<string | null>(null)
+  const [copyModalUrl, setCopyModalUrl] = useState<string | null>(null)
   const [tab, setTab] = useState<'inspector' | 'tape' | 'leaders'>('inspector')
   const [trustScoreCache, setTrustScoreCache] = useState<{ key: string; value: TrustScore | null } | null>(null)
 
@@ -125,8 +127,30 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
     window.open(buildXIntentUrl(buildCertificateShareText(shareInput)), '_blank')
   }
 
-  function toggleShareMenu() {
-    setShareMenuOpen(!shareMenuOpen)
+  async function handleNativeShare() {
+    if (!shareInput) return
+    try {
+      const certUrl = `/api/certificate/${shareInput.chainId}/${shareInput.agentId}`
+      const res = await fetch(`${certUrl}?format=json`)
+      if (!res.ok) return
+      const data = await res.json()
+      const hash = data.hash as string
+      const state = (data.payload?.state ?? 'insufficient_signal') as ShareCardStateKey
+
+      const result = await shareCertificate({
+        hash,
+        name: shareInput.name ?? null,
+        state,
+        lang: 'en',
+      })
+
+      if (result === 'copied') {
+        setShareStatus('Link copied!')
+        setTimeout(() => setShareStatus(null), 2000)
+      } else if (result === 'modal') {
+        setCopyModalUrl(`${window.location.origin}/verify/${hash}`)
+      }
+    } catch { /* silently fail */ }
   }
 
   // Empty state content
@@ -142,7 +166,7 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
         disabled
         className="mt-6 w-full border border-border bg-surface px-4 py-3 text-sm font-mono font-bold text-text-muted cursor-not-allowed"
       >
-        Share Certificate
+        Share on X
       </button>
     </div>
   )
@@ -208,36 +232,24 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
               </div>
             </div>
 
-            {/* Primary CTA — Share Certificate (direct X intent) */}
+            {/* Primary CTA — Share on X */}
             <button
               onClick={handleShare}
-              className="w-full border border-text-primary bg-text-primary px-4 py-3 text-sm font-mono font-bold text-bg hover:bg-transparent hover:text-text-primary transition-colors"
+              className="w-full bg-accent px-4 py-3 text-sm font-mono font-bold text-white hover:opacity-90 transition-opacity"
             >
-              Share Certificate
+              Share on X
             </button>
 
-            {/* Owner share option */}
-            <div className="relative">
-              <button
-                onClick={toggleShareMenu}
-                className="w-full text-center font-mono text-[11px] text-text-muted hover:text-text-secondary transition-colors"
-              >
-                More share options...
-              </button>
-              {shareMenuOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-50 flex flex-col border border-border-bright bg-surface shadow-lg">
-                  <a
-                    href={buildXIntentUrl(buildOwnerShareText(shareInput))}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setShareMenuOpen(false)}
-                    className="px-4 py-2.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors text-left"
-                  >
-                    I Own This Agent
-                  </a>
-                </div>
-              )}
-            </div>
+            {/* Secondary — Native Share */}
+            {shareStatus && (
+              <p className="text-xs text-accent font-mono text-center">{shareStatus}</p>
+            )}
+            <button
+              onClick={handleNativeShare}
+              className="w-full border border-border bg-surface px-4 py-2.5 text-sm font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+            >
+              Share
+            </button>
 
             {/* Secondary CTA */}
             <a
@@ -246,6 +258,24 @@ export function XRayPanel({ agentKey, onClose, isDocked, onSelectAgent }: XRayPa
             >
               View Full Report &rarr;
             </a>
+
+            {copyModalUrl && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setCopyModalUrl(null)}>
+                <div className="bg-bg border border-border p-4 rounded-lg max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-xs text-text-muted mb-2 font-mono">Copy this link:</p>
+                  <input
+                    type="text"
+                    readOnly
+                    value={copyModalUrl}
+                    className="w-full bg-surface border border-border px-3 py-2 text-sm font-mono text-text-primary rounded"
+                    onFocus={(e) => e.target.select()}
+                  />
+                  <button onClick={() => setCopyModalUrl(null)} className="mt-3 w-full text-xs text-text-muted hover:text-text-primary font-mono">
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Micro-data (1 line) */}
             <p className="font-mono text-[10px] text-text-muted truncate">
