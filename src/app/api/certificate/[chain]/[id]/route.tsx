@@ -3,8 +3,6 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { NextResponse } from 'next/server'
 import { getChain } from '@/config/chains'
-import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
-import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { toTrustScore } from '@/types/trust-score'
 import { getShareCardState } from '@/lib/trust/share-card-state'
@@ -109,34 +107,32 @@ export async function GET(req: Request, { params }: Props) {
   const lang = (url.searchParams.get('lang') === 'es' ? 'es' : 'en') as CertificateLang
   const format = url.searchParams.get('format') === 'json' ? 'json' : 'png'
 
-  // Fetch trust data
+  // Fetch trust data + agent profile from Supabase (no RPC/IPFS)
   let trustScore = null
-  try {
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { data } = await supabaseAdmin
-        .from('trust_scores')
-        .select('*')
-        .eq('chain_id', chainId)
-        .eq('agent_id', agentId)
-        .maybeSingle()
-      trustScore = data ? toTrustScore(data) : null
-    }
-  } catch { /* trust score unavailable — proceed with null */ }
-
-  // Fetch agent metadata
   let ownerAddress: string | null = null
   let agentName: string | null = null
   try {
-    const [owner, uri] = await Promise.all([
-      readAgentOwner(chainConfig, agentId),
-      readAgentURI(chainConfig, agentId),
-    ])
-    ownerAddress = owner
-    if (uri) {
-      const metadata = await fetchAgentMetadataServer(uri)
-      agentName = metadata?.name ?? null
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const agentKey = `${chainId}:${agentId}`
+      const [scoreResult, agentResult] = await Promise.all([
+        supabaseAdmin
+          .from('trust_scores')
+          .select('*')
+          .eq('chain_id', chainId)
+          .eq('agent_id', agentId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from('agents')
+          .select('owner, metadata')
+          .eq('id', agentKey)
+          .maybeSingle(),
+      ])
+      trustScore = scoreResult.data ? toTrustScore(scoreResult.data) : null
+      ownerAddress = agentResult.data?.owner ?? null
+      const meta = agentResult.data?.metadata as Record<string, unknown> | null
+      agentName = (meta?.name as string) ?? null
     }
-  } catch { /* metadata unavailable */ }
+  } catch { /* data unavailable — proceed with nulls */ }
 
   // Build & normalize payload
   const cardState = getShareCardState(trustScore)
