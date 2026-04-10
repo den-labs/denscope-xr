@@ -392,7 +392,9 @@ function computeTrustScoreInline(
     return { score: 0, positiveRatio: 0, activityScore: 0, ageScore: 0, incidentPenalty: 0, confidence: 'low' }
   }
 
-  const positiveRatio = positiveCount / feedbackCount
+  // Neutral feedbacks (value=0) should not dilute the positive ratio
+  const ratedCount = positiveCount + negativeCount
+  const positiveRatio = ratedCount > 0 ? positiveCount / ratedCount : 0
 
   let ageScore = 0
   if (firstSeen) {

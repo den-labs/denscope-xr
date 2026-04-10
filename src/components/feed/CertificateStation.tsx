@@ -143,7 +143,7 @@ function StationContent({
 
             {/* Micro-data (1 line) */}
             <p className="font-mono text-[10px] text-text-muted truncate">
-              Owner {truncAddr(agent.owner)} | +{agent.positiveFeedback} / -{agent.negativeFeedback} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
+              Owner {agent.owner ? truncAddr(agent.owner) : 'Unknown'} | +{agent.positiveFeedback} / -{agent.negativeFeedback} | Snapshot {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC
             </p>
 
             {error && (
