@@ -24,6 +24,7 @@ export function computeTrustScore(input: TrustScoreInput): ComputedScore {
   const {
     feedbackCount,
     positiveCount,
+    negativeCount,
     firstSeen,
     lastSeen,
     openCriticalIncidents,
@@ -42,7 +43,9 @@ export function computeTrustScore(input: TrustScoreInput): ComputedScore {
     }
   }
 
-  const positiveRatio = positiveCount / feedbackCount
+  // Neutral feedbacks (value=0) should not dilute the positive ratio
+  const ratedCount = positiveCount + negativeCount
+  const positiveRatio = ratedCount > 0 ? positiveCount / ratedCount : 0
 
   let ageScore = 0
   if (firstSeen) {
