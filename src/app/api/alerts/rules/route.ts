@@ -103,7 +103,18 @@ export async function PATCH(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }
     if (typeof enabled === 'boolean') updates.enabled = enabled
-    if (typeof webhookUrl === 'string') updates.webhook_url = webhookUrl || null
+    if (typeof webhookUrl === 'string') {
+      if (webhookUrl) {
+        const { validateWebhookUrl } = await import('@/lib/security/url-validator')
+        const check = validateWebhookUrl(webhookUrl)
+        if (!check.safe) {
+          return NextResponse.json({ error: check.reason }, { status: 400 })
+        }
+        updates.webhook_url = check.url
+      } else {
+        updates.webhook_url = null
+      }
+    }
 
     const { data, error } = await supabaseAdmin
       .from('alert_rules')

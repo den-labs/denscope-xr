@@ -5,8 +5,8 @@ const SESSION_COOKIE = 'denscope_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
 function getSecret(): string {
-  const key = process.env.SESSION_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw new Error('Missing SESSION_SECRET (or SUPABASE_SERVICE_ROLE_KEY fallback) for session signing')
+  const key = process.env.SESSION_SECRET
+  if (!key) throw new Error('SESSION_SECRET env var is required for session signing')
   return key
 }
 

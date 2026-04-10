@@ -45,10 +45,14 @@ export async function searchAgents(query: string, limit = 20, chainId?: number |
   }
 
   // Text search: try owner address prefix or use ilike on metadata
+  // Sanitize input to prevent PostgREST filter injection
+  const sanitized = q.replace(/[^a-zA-Z0-9x]/g, '')
+  if (!sanitized) return []
+
   let qb = supabase
     .from('agents')
     .select('*')
-    .or(`owner.ilike.%${q}%,uri.ilike.%${q}%`)
+    .or(`owner.ilike.%${sanitized}%,uri.ilike.%${sanitized}%`)
   if (chainId != null) qb = qb.eq('chain_id', chainId)
   const { data, error } = await qb.limit(limit)
 
