@@ -7,7 +7,7 @@ export type AgentMetadata = {
   services: AgentService[]; x402?: boolean
 }
 export type AgentSummary = {
-  agentId: number; chainId: number; owner: string; agentURI: string;
+  agentId: number; chainId: number; owner: string | null; agentURI: string;
   metadata?: AgentMetadata; feedbackCount: number;
   positiveFeedback: number; negativeFeedback: number;
   lastEventBlock: number; registeredAt?: number

@@ -29,7 +29,8 @@ type XRayPanelProps = {
   onSelectAgent?: (agentKey: string) => void
 }
 
-function truncateAddress(addr: string): string {
+function truncateAddress(addr: string | null): string {
+  if (!addr) return 'Unknown'
   if (addr.length <= 10) return addr
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }

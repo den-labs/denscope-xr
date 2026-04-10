@@ -47,7 +47,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
         (a) =>
           a.agentId.toString().includes(q) ||
           a.metadata?.name?.toLowerCase().includes(q) ||
-          a.owner.toLowerCase().includes(q)
+          a.owner?.toLowerCase().includes(q)
       )
       .slice(0, MAX_RESULTS)
   }, [agents, query, chainId])
