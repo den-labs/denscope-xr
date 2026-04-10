@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { IPFS_GATEWAYS, METADATA_FETCH_TIMEOUT_MS } from '@/config/constants'
+import { validateWebhookUrl } from '@/lib/security/url-validator'
 
 function resolveIPFS(uri: string): string {
   if (uri.startsWith('ipfs://')) return `${IPFS_GATEWAYS[0]}${uri.replace('ipfs://', '')}`
   return uri
-}
-
-function isAllowedURL(url: string): boolean {
-  try {
-    const parsed = new URL(url)
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
-  } catch {
-    return false
-  }
 }
 
 export async function GET(req: NextRequest) {
@@ -22,8 +14,9 @@ export async function GET(req: NextRequest) {
   }
 
   const url = resolveIPFS(uri)
-  if (!isAllowedURL(url)) {
-    return NextResponse.json({ error: 'Invalid URI' }, { status: 400 })
+  const check = validateWebhookUrl(url)
+  if (!check.safe) {
+    return NextResponse.json({ error: 'Invalid or private URI' }, { status: 400 })
   }
 
   const controller = new AbortController()
