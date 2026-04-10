@@ -34,7 +34,7 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
   }
 
   // Connected but not the owner
-  if (address.toLowerCase() !== ownerAddress.toLowerCase()) {
+  if (!ownerAddress || address.toLowerCase() !== ownerAddress.toLowerCase()) {
     return (
       <p className="text-xs text-text-muted font-mono">
         Connected wallet does not match the on-chain owner of this agent.
