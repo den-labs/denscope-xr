@@ -11,6 +11,26 @@ describe('useAgentStore', () => {
     expect(useAgentStore.getState().agents.size).toBe(0)
   })
 
+  it('upsertFromEvents applies a batch with a single set call', () => {
+    const events: ScopeEvent[] = [
+      { chainId: 42220, block: 1, txHash: '0x1', logIndex: 0, kind: 'register', agentId: 1, data: { agentURI: 'u', owner: '0x1' } },
+      { chainId: 42220, block: 2, txHash: '0x2', logIndex: 0, kind: 'register', agentId: 2, data: { agentURI: 'u', owner: '0x2' } },
+      { chainId: 42220, block: 3, txHash: '0x3', logIndex: 0, kind: 'feedback', agentId: 1, data: { clientAddress: '0xc', feedbackIndex: BigInt(0), value: BigInt(10), valueDecimals: 0 } },
+    ]
+    useAgentStore.getState().upsertFromEvents(events)
+    const state = useAgentStore.getState().agents
+    expect(state.size).toBe(2)
+    expect(state.get('42220:1')!.feedbackCount).toBe(1)
+    expect(state.get('42220:1')!.positiveFeedback).toBe(1)
+    expect(state.get('42220:2')!.owner).toBe('0x2')
+  })
+
+  it('upsertFromEvents on empty array is a no-op', () => {
+    const before = useAgentStore.getState().agents
+    useAgentStore.getState().upsertFromEvents([])
+    expect(useAgentStore.getState().agents).toBe(before)
+  })
+
   it('upserts agent on register', () => {
     useAgentStore.getState().upsertFromEvent({
       chainId: 44787,
