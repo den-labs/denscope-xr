@@ -30,15 +30,19 @@ async function supabaseFetch(path: string): Promise<unknown> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-  const res = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-    },
-    next: { revalidate: 60 },
-  })
-
-  return res.json()
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
 }
 
 export async function fetchDossierData(
@@ -47,24 +51,34 @@ export async function fetchDossierData(
 ): Promise<DossierData> {
   const compositeId = encodeURIComponent(`${chainId}:${agentId}`)
 
-  const [agentRows, allEvents, feedbackEvents, openSybil, resolvedSybil] =
-    await Promise.all([
-      supabaseFetch(
-        `agents?id=eq.${compositeId}&select=first_seen,last_seen,feedback_count,positive_count,negative_count`
-      ),
-      supabaseFetch(
-        `scope_events?chain_id=eq.${chainId}&agent_id=eq.${agentId}&select=kind`
-      ),
-      supabaseFetch(
-        `scope_events?chain_id=eq.${chainId}&agent_id=eq.${agentId}&kind=eq.feedback&select=data`
-      ),
-      supabaseFetch(
-        `incidents?chain_id=eq.${chainId}&agent_id=eq.${agentId}&signal_kind=eq.sybil_cluster&resolved_at=is.null&select=id`
-      ),
-      supabaseFetch(
-        `incidents?chain_id=eq.${chainId}&agent_id=eq.${agentId}&signal_kind=eq.sybil_cluster&resolved_at=not.is.null&select=id`
-      ),
-    ])
+  let agentRows: unknown = []
+  let allEvents: unknown = []
+  let feedbackEvents: unknown = []
+  let openSybil: unknown = []
+  let resolvedSybil: unknown = []
+
+  try {
+    ;[agentRows, allEvents, feedbackEvents, openSybil, resolvedSybil] =
+      await Promise.all([
+        supabaseFetch(
+          `agents?id=eq.${compositeId}&select=first_seen,last_seen,feedback_count,positive_count,negative_count`
+        ),
+        supabaseFetch(
+          `scope_events?chain_id=eq.${chainId}&agent_id=eq.${agentId}&select=kind`
+        ),
+        supabaseFetch(
+          `scope_events?chain_id=eq.${chainId}&agent_id=eq.${agentId}&kind=eq.feedback&select=data`
+        ),
+        supabaseFetch(
+          `incidents?chain_id=eq.${chainId}&agent_id=eq.${agentId}&signal_kind=eq.sybil_cluster&resolved_at=is.null&select=id`
+        ),
+        supabaseFetch(
+          `incidents?chain_id=eq.${chainId}&agent_id=eq.${agentId}&signal_kind=eq.sybil_cluster&resolved_at=not.is.null&select=id`
+        ),
+      ])
+  } catch {
+    return { ...DEFAULTS }
+  }
 
   // Guard: if agent not found, return defaults
   if (!Array.isArray(agentRows) || agentRows.length === 0) {
