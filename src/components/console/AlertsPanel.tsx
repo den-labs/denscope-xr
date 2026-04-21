@@ -1,9 +1,11 @@
 // src/components/console/AlertsPanel.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { useAlertStore } from '@/stores/alerts'
+import { fetchOwnerAgents, type OwnerProfile } from '@/lib/supabase/owner-profiles'
+import { getChain } from '@/config/chains'
 import type { AlertRule } from '@/types/alerts'
 
 const RULE_LABELS: Record<string, { label: string; description: string }> = {
@@ -19,6 +21,10 @@ const RULE_LABELS: Record<string, { label: string; description: string }> = {
     label: 'Going Cold',
     description: 'Alert when no feedback in 7 days',
   },
+}
+
+function agentKey(agent: Pick<OwnerProfile, 'chain_id' | 'agent_id'>) {
+  return `${agent.chain_id}:${agent.agent_id}`
 }
 
 function RuleToggle({
@@ -53,22 +59,93 @@ function RuleToggle({
 
 export function AlertsPanel() {
   const { address } = useAccount()
-  const { rules, setRules, updateRule } = useAlertStore()
+  const { rules, setRules, updateRule, clear } = useAlertStore()
+  const [agents, setAgents] = useState<OwnerProfile[]>([])
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [webhookUrl, setWebhookUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loadingAgents, setLoadingAgents] = useState(true)
+  const [loadingRules, setLoadingRules] = useState(false)
 
-  // Fetch alert rules
+  const selected = useMemo(
+    () => agents.find((a) => agentKey(a) === selectedKey) ?? null,
+    [agents, selectedKey],
+  )
+
   useEffect(() => {
-    if (!address) return
-    fetch(`/api/alerts/rules?chainId=42220&agentId=0`)
+    if (!address) {
+      setAgents([])
+      setSelectedKey(null)
+      setLoadingAgents(false)
+      clear()
+      return
+    }
+    let cancelled = false
+    setLoadingAgents(true)
+    fetchOwnerAgents(address)
+      .then((data) => {
+        if (cancelled) return
+        setAgents(data)
+        setSelectedKey(data[0] ? agentKey(data[0]) : null)
+        setLoadingAgents(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setLoadingAgents(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [address, clear])
+
+  useEffect(() => {
+    if (!selected) {
+      clear()
+      setWebhookUrl('')
+      return
+    }
+    let cancelled = false
+    setLoadingRules(true)
+    setTestResult(null)
+
+    const qs = new URLSearchParams({
+      chainId: String(selected.chain_id),
+      agentId: String(selected.agent_id),
+    })
+
+    fetch(`/api/alerts/rules?${qs.toString()}`)
       .then((r) => r.json())
-      .then(({ rules: data }) => {
-        // Note: rules might not exist yet, that's OK
-        if (data && data.length > 0) {
-          setRules(data.map((r: Record<string, unknown>) => ({
+      .then(async ({ rules: data, error }) => {
+        if (cancelled) return
+        if (error) {
+          clear()
+          setWebhookUrl('')
+          setLoadingRules(false)
+          return
+        }
+
+        let rows = Array.isArray(data) ? data : []
+
+        if (rows.length === 0) {
+          const res = await fetch('/api/alerts/rules', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chainId: selected.chain_id,
+              agentId: selected.agent_id,
+            }),
+          })
+          if (res.ok) {
+            const created = await res.json()
+            rows = Array.isArray(created.rules) ? created.rules : []
+          }
+          if (cancelled) return
+        }
+
+        setRules(
+          rows.map((r: Record<string, unknown>) => ({
             id: r.id,
             ownerAddress: r.owner_address,
             chainId: r.chain_id,
@@ -78,34 +155,52 @@ export function AlertsPanel() {
             webhookUrl: r.webhook_url,
             createdAt: r.created_at,
             updatedAt: r.updated_at,
-          })))
-          const url = data.find((r: Record<string, unknown>) => r.webhook_url)?.webhook_url
-          if (url) setWebhookUrl(url as string)
-        }
-        setLoading(false)
+          })) as AlertRule[],
+        )
+        const existing = rows.find((r: Record<string, unknown>) => r.webhook_url)?.webhook_url
+        setWebhookUrl(typeof existing === 'string' ? existing : '')
+        setLoadingRules(false)
       })
-      .catch(() => setLoading(false))
-  }, [address, setRules])
+      .catch(() => {
+        if (cancelled) return
+        clear()
+        setLoadingRules(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selected, setRules, clear])
 
   async function handleToggle(ruleId: string, enabled: boolean) {
+    const previous = rules.find((r) => r.id === ruleId)?.enabled
     updateRule(ruleId, { enabled })
-    await fetch('/api/alerts/rules', {
+    const res = await fetch('/api/alerts/rules', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ruleId, enabled }),
     })
+    if (!res.ok && typeof previous === 'boolean') {
+      updateRule(ruleId, { enabled: previous })
+    }
   }
 
   async function handleSaveWebhook() {
+    if (!selected) return
     setSaving(true)
-    for (const rule of rules) {
-      await fetch('/api/alerts/rules', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ruleId: rule.id, webhookUrl }),
-      })
-    }
+    setTestResult(null)
+    const results = await Promise.all(
+      rules.map((rule) =>
+        fetch('/api/alerts/rules', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ruleId: rule.id, webhookUrl }),
+        }).then((r) => r.ok),
+      ),
+    )
+    const allOk = results.every(Boolean)
     setSaving(false)
+    setTestResult(allOk ? 'Webhook saved' : 'Save failed on one or more rules')
   }
 
   async function handleTestWebhook() {
@@ -126,7 +221,7 @@ export function AlertsPanel() {
     setTesting(false)
   }
 
-  if (loading) {
+  if (loadingAgents) {
     return (
       <div className="bg-surface border border-border p-5 space-y-4">
         <div className="h-3 w-24 bg-border rounded animate-pulse" />
@@ -143,7 +238,7 @@ export function AlertsPanel() {
     )
   }
 
-  if (rules.length === 0) {
+  if (agents.length === 0) {
     return (
       <div className="bg-surface border border-border p-5">
         <p className="text-xs text-text-muted font-mono">
@@ -155,15 +250,59 @@ export function AlertsPanel() {
 
   return (
     <div className="bg-surface border border-border p-5 space-y-4">
-      <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono">
-        Alert Rules
-      </h2>
-
-      <div className="divide-y divide-border">
-        {rules.map((rule) => (
-          <RuleToggle key={rule.id} rule={rule} onToggle={handleToggle} />
-        ))}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono">
+          Alert Rules
+        </h2>
+        {agents.length > 1 && (
+          <label className="flex items-center gap-2 text-[10px] font-mono text-text-muted">
+            <span className="uppercase tracking-wider">Agent</span>
+            <select
+              value={selectedKey ?? ''}
+              onChange={(e) => setSelectedKey(e.target.value)}
+              className="bg-bg border border-border px-2 py-1 text-xs font-mono text-text-primary focus:border-accent/50 focus:outline-none"
+            >
+              {agents.map((agent) => {
+                const chain = getChain(agent.chain_id)
+                return (
+                  <option key={agentKey(agent)} value={agentKey(agent)}>
+                    #{agent.agent_id} · {chain?.name ?? `Chain ${agent.chain_id}`}
+                  </option>
+                )
+              })}
+            </select>
+          </label>
+        )}
+        {agents.length === 1 && selected && (
+          <span className="text-[10px] font-mono text-text-muted">
+            #{selected.agent_id} · {getChain(selected.chain_id)?.name ?? `Chain ${selected.chain_id}`}
+          </span>
+        )}
       </div>
+
+      {loadingRules ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between py-2 animate-pulse">
+              <div className="space-y-1.5">
+                <div className="h-3 w-28 bg-border rounded" />
+                <div className="h-2.5 w-44 bg-border rounded" />
+              </div>
+              <div className="h-5 w-10 bg-border rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : rules.length === 0 ? (
+        <p className="text-xs text-text-muted font-mono">
+          No alert rules. They will be created the next time this panel loads.
+        </p>
+      ) : (
+        <div className="divide-y divide-border">
+          {rules.map((rule) => (
+            <RuleToggle key={rule.id} rule={rule} onToggle={handleToggle} />
+          ))}
+        </div>
+      )}
 
       <div className="pt-4 border-t border-border space-y-3">
         <label className="text-xs text-text-muted font-mono block">
@@ -179,7 +318,7 @@ export function AlertsPanel() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleSaveWebhook}
-            disabled={saving}
+            disabled={saving || rules.length === 0}
             className="border border-accent/30 bg-accent/5 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}

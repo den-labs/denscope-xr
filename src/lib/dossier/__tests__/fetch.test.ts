@@ -20,10 +20,10 @@ describe('fetchDossierData', () => {
       const url = typeof input === 'string' ? input : input.toString()
       for (const [pattern, data] of Object.entries(responses)) {
         if (url.includes(pattern)) {
-          return { json: async () => data } as Response
+          return { ok: true, json: async () => data } as Response
         }
       }
-      return { json: async () => [] } as Response
+      return { ok: true, json: async () => [] } as Response
     })
   }
 
@@ -149,5 +149,24 @@ describe('fetchDossierData', () => {
     const result = await fetchDossierData(42220, 3)
     expect(result.openSybilCount).toBe(3)
     expect(result.resolvedSybilCount).toBe(1)
+  })
+
+  it('returns defaults when Supabase fetch rejects (RPC down)', async () => {
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error('network down')
+    })
+    const result = await fetchDossierData(42220, 1)
+    expect(result.firstSeen).toBeNull()
+    expect(result.totalEvents).toBe(0)
+    expect(result.openSybilCount).toBe(0)
+  })
+
+  it('returns defaults when Supabase responds with 503', async () => {
+    globalThis.fetch = vi.fn(async () => {
+      return { ok: false, status: 503, json: async () => ({}) } as Response
+    })
+    const result = await fetchDossierData(42220, 1)
+    expect(result.firstSeen).toBeNull()
+    expect(result.totalEvents).toBe(0)
   })
 })
