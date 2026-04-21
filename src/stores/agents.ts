@@ -19,9 +19,50 @@ function toBigIntSafe(value: unknown): bigint | null {
   return null
 }
 
+function defaultSummary(event: ScopeEvent): AgentSummary {
+  return {
+    agentId: event.agentId,
+    chainId: event.chainId,
+    owner: '',
+    agentURI: '',
+    feedbackCount: 0,
+    positiveFeedback: 0,
+    negativeFeedback: 0,
+    lastEventBlock: 0,
+  }
+}
+
+function applyEventInPlace(summary: AgentSummary, event: ScopeEvent): void {
+  summary.lastEventBlock = event.block
+  switch (event.kind) {
+    case 'register': {
+      const d = event.data as { agentURI: string; owner: string }
+      summary.owner = d.owner
+      summary.agentURI = d.agentURI
+      summary.registeredAt = event.timestamp
+      break
+    }
+    case 'uri_update': {
+      const d = event.data as { newURI: string }
+      summary.agentURI = d.newURI
+      summary.metadata = undefined
+      break
+    }
+    case 'feedback': {
+      const d = event.data as FeedbackData
+      const feedbackValue = toBigIntSafe((d as { value?: unknown }).value)
+      summary.feedbackCount++
+      if (feedbackValue != null && feedbackValue > BigInt(0)) summary.positiveFeedback++
+      else if (feedbackValue != null && feedbackValue < BigInt(0)) summary.negativeFeedback++
+      break
+    }
+  }
+}
+
 type AgentStoreState = {
   agents: Map<string, AgentSummary>
   upsertFromEvent: (event: ScopeEvent) => void
+  upsertFromEvents: (events: ScopeEvent[]) => void
   cacheMetadata: (key: string, metadata: AgentMetadata) => void
   clear: () => void
 }
@@ -32,44 +73,21 @@ export const useAgentStore = create<AgentStoreState>()((set, get) => ({
   upsertFromEvent: (event) => {
     const key = `${event.chainId}:${event.agentId}`
     const agents = new Map(get().agents)
-    const existing = agents.get(key) ?? {
-      agentId: event.agentId,
-      chainId: event.chainId,
-      owner: '',
-      agentURI: '',
-      feedbackCount: 0,
-      positiveFeedback: 0,
-      negativeFeedback: 0,
-      lastEventBlock: 0,
+    const existing = { ...(agents.get(key) ?? defaultSummary(event)) }
+    applyEventInPlace(existing, event)
+    agents.set(key, existing)
+    set({ agents })
+  },
+
+  upsertFromEvents: (events) => {
+    if (events.length === 0) return
+    const agents = new Map(get().agents)
+    for (const event of events) {
+      const key = `${event.chainId}:${event.agentId}`
+      const existing = { ...(agents.get(key) ?? defaultSummary(event)) }
+      applyEventInPlace(existing, event)
+      agents.set(key, existing)
     }
-
-    existing.lastEventBlock = event.block
-
-    switch (event.kind) {
-      case 'register': {
-        const d = event.data as { agentURI: string; owner: string }
-        existing.owner = d.owner
-        existing.agentURI = d.agentURI
-        existing.registeredAt = event.timestamp
-        break
-      }
-      case 'uri_update': {
-        const d = event.data as { newURI: string }
-        existing.agentURI = d.newURI
-        existing.metadata = undefined
-        break
-      }
-      case 'feedback': {
-        const d = event.data as FeedbackData
-        const feedbackValue = toBigIntSafe((d as { value?: unknown }).value)
-        existing.feedbackCount++
-        if (feedbackValue != null && feedbackValue > BigInt(0)) existing.positiveFeedback++
-        else if (feedbackValue != null && feedbackValue < BigInt(0)) existing.negativeFeedback++
-        break
-      }
-    }
-
-    agents.set(key, { ...existing })
     set({ agents })
   },
 

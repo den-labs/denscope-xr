@@ -5,6 +5,7 @@ import { useGraphStore } from '@/stores/graph'
 import { runDiscoveryRules } from '@/lib/discovery/engine'
 import type { ScopeEvent, FeedbackData } from '@/types/events'
 import type { EventKind } from '@/types/events'
+import type { GraphNode, TrustEdge } from '@/types/graph'
 
 type DbEvent = {
   chain_id: number
@@ -127,12 +128,54 @@ export async function fetchHistoricalEvents(chainId?: number | null): Promise<nu
   }
 
   // Reverse so events are processed oldest-first (chronological order).
-  // This ensures discovery rules fire correctly (e.g., first_blood on the
-  // actual first feedback). The store's push() prepends + slices to
-  // MAX_FEED_EVENTS, so the final state has the newest events at front.
+  // Discovery rules depend on this (e.g., first_blood on the actual first
+  // feedback). Store writes are batched at the end so the backfill stays
+  // O(n) instead of the O(n^2) the per-event path created.
   const rows = (data as DbEvent[]).reverse()
-  for (const row of rows) {
-    processEvent(toScopeEvent(row))
+  const events: ScopeEvent[] = rows.map(toScopeEvent)
+
+  // Discovery rules need to see state at each step, so mutate the agent store
+  // incrementally via the batch method (one clone of the Map for the whole
+  // backfill) and run rules per event.
+  useAgentStore.getState().upsertFromEvents(events)
+
+  const graphNodes: GraphNode[] = []
+  const graphEdges: TrustEdge[] = []
+  const seenNodes = new Set<string>()
+
+  for (const event of events) {
+    const nodeId = `${event.chainId}:${event.agentId}`
+    if (!seenNodes.has(nodeId)) {
+      seenNodes.add(nodeId)
+      graphNodes.push({
+        id: nodeId,
+        agentId: event.agentId,
+        chainId: event.chainId,
+        label: `Agent #${event.agentId}`,
+        feedbackCount: useAgentStore.getState().agents.get(nodeId)?.feedbackCount ?? 0,
+      })
+    }
+    if (event.kind === 'feedback') {
+      const data = event.data as FeedbackData
+      graphEdges.push({
+        source: `${event.chainId}:${data.clientAddress}`,
+        target: nodeId,
+        kind: 'feedback',
+        value: Number(data.value),
+        timestamp: event.timestamp,
+        ts: event.timestamp,
+        txHash: event.txHash,
+        logIndex: event.logIndex,
+        eventId: `${event.txHash}:${event.logIndex}:feedback`,
+      })
+    }
+  }
+
+  useGraphStore.getState().addBatch({ nodes: graphNodes, edges: graphEdges })
+  useEventStore.getState().pushBatch(events)
+
+  for (const event of events) {
+    runDiscoveryRules(event)
   }
 
   return data.length
