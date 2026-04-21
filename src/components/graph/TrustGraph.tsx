@@ -487,6 +487,8 @@ export function TrustGraph({
     <div className="relative h-full w-full">
       <canvas
         ref={canvasRef}
+        role="img"
+        aria-label="Trust graph — interactive visualization of ERC-8004 agents and their feedback relationships. Use the agent list or search to select specific agents; hover for node details."
         className="absolute inset-0 h-full w-full cursor-grab active:cursor-grabbing"
         onClickCapture={handleClickCapture}
         onMouseMove={handleMouseMove}
@@ -494,11 +496,13 @@ export function TrustGraph({
       />
       <canvas
         ref={fxCanvasRef}
+        aria-hidden="true"
         className="pointer-events-none absolute inset-0 h-full w-full"
       />
       <button
         onClick={fitToView}
-        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
+        aria-label="Fit graph to view"
+        className="absolute bottom-4 right-4 border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
       >
         Fit to view
       </button>
