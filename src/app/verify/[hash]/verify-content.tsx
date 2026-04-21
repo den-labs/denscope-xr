@@ -53,17 +53,18 @@ export function VerifyContent({ hash, displayHash, payload, issuedAt, imageUrl, 
 
   return (
     <main className="min-h-screen bg-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="w-full max-w-lg bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div
           className="px-6 py-4 flex items-center gap-3"
           style={{ background: palette.titleBar }}
+          role="banner"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" />
             <path d="M8 12l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-white font-bold text-lg">VERIFIED CERTIFICATE</span>
+          <h1 className="text-white font-bold text-lg">VERIFIED CERTIFICATE</h1>
         </div>
 
         {/* Certificate image */}
@@ -72,14 +73,14 @@ export function VerifyContent({ hash, displayHash, payload, issuedAt, imageUrl, 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
-              alt="Trust Certificate"
-              className="w-full rounded border border-gray-200"
+              alt={`Trust certificate for ${payload.name ?? `agent #${payload.agentId}`} on ${payload.chainName}`}
+              className="w-full rounded border border-border"
             />
           </div>
         )}
 
         {/* Data */}
-        <div className="px-6 py-4 space-y-3">
+        <dl className="px-6 py-4 space-y-3">
           <Row label="Agent" value={`${truncateAddr(`0x${payload.agentId.toString(16).padStart(8, '0')}`)}${payload.name ? ` (${payload.name})` : ''}`} />
           <Row label="Chain" value={payload.chainName} />
           <Row label={labels.trustScore} value={`${payload.score} / 100`} />
@@ -95,34 +96,36 @@ export function VerifyContent({ hash, displayHash, payload, issuedAt, imageUrl, 
           <Row label="Issued" value={formatIssuedAt(issuedAt)} />
 
           {/* Hash with copy */}
-          <div className="flex items-center justify-between py-2 border-t border-gray-100">
+          <div className="flex items-center justify-between py-2 border-t border-border">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Hash:</span>
-              <code className="text-sm font-mono text-gray-700">{displayHash}</code>
+              <dt className="text-sm text-text-muted">Hash:</dt>
+              <dd>
+                <code className="text-sm font-mono text-text-secondary">{displayHash}</code>
+              </dd>
             </div>
             <button
               onClick={handleCopy}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-              title="Copy verify link"
+              aria-label={copied ? 'Verification link copied' : 'Copy verification link'}
+              className="text-xs text-text-muted hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded px-2 py-1"
             >
               {copied ? 'Copied!' : 'Copy link'}
             </button>
           </div>
-        </div>
+        </dl>
 
         {/* Action */}
         <div className="px-6 pb-4">
           <Link
             href={`/agent/${payload.chainId}/${payload.agentId}`}
-            className="block w-full text-center py-2 px-4 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="block w-full text-center py-2 px-4 bg-text-primary text-bg rounded-lg text-sm font-medium hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/70"
           >
             View Live Report →
           </Link>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-center">
-          <span className="text-xs text-gray-400">
+        <div className="px-6 py-3 bg-surface-hover border-t border-border text-center">
+          <span className="text-xs text-text-muted">
             This certificate was issued by DenScope on {formatIssuedAt(issuedAt)}
           </span>
         </div>
@@ -134,8 +137,8 @@ export function VerifyContent({ hash, displayHash, payload, issuedAt, imageUrl, 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-900">{value}</span>
+      <dt className="text-sm text-text-muted">{label}</dt>
+      <dd className="text-sm font-medium text-text-primary">{value}</dd>
     </div>
   )
 }
