@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { siteUrl } from '@/config/site'
 
 export function EmbedSnippet({ chainId, agentId }: { chainId: number; agentId: number }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const snippet = `<iframe src="https://denscope.vercel.app/embed/agent/${chainId}/${agentId}" width="420" height="260" frameborder="0"></iframe>`
+  const snippet = `<iframe src="${siteUrl()}/embed/agent/${chainId}/${agentId}" width="420" height="260" frameborder="0"></iframe>`
 
   function handleCopy() {
     navigator.clipboard.writeText(snippet)

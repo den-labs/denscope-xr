@@ -24,7 +24,7 @@ export default function ApiDocsPage() {
 
         <Section title="Quick Start">
           <CodeHighlight>{`curl -H "Authorization: Bearer ds_YOUR_KEY" \\
-  https://denscope.vercel.app/api/v1/agent/42220/5/score`}</CodeHighlight>
+  https://www.denscope.xyz/api/v1/agent/42220/5/score`}</CodeHighlight>
           <p className="text-xs text-text-muted font-mono mt-2">
             Get your API key from the Console &rarr; API Keys section.
           </p>
@@ -234,7 +234,7 @@ try {
           </Table>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Example Request</h4>
-          <CodeHighlight>{`curl -X POST https://denscope.vercel.app/api/v1/trust/evaluate \\
+          <CodeHighlight>{`curl -X POST https://www.denscope.xyz/api/v1/trust/evaluate \\
   -H "Authorization: Bearer ds_..." \\
   -H "Content-Type: application/json" \\
   -d '{"chainId": 42220, "agentId": 5, "preset": "default_safety"}'`}</CodeHighlight>
@@ -303,7 +303,7 @@ console.log(result.evaluation.rationale)`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Flow</h4>
           <CodeHighlight>{`# 1. Call without auth -> get 402 with payment instructions
-curl -i https://denscope.vercel.app/api/v1/agent/42220/5/score
+curl -i https://www.denscope.xyz/api/v1/agent/42220/5/score
 # HTTP/2 402
 # PAYMENT-REQUIRED: <base64-encoded JSON>
 
@@ -311,7 +311,7 @@ curl -i https://denscope.vercel.app/api/v1/agent/42220/5/score
 
 # 3. Retry with X-PAYMENT header
 curl -H "X-PAYMENT: <base64-encoded payment>" \\
-  https://denscope.vercel.app/api/v1/agent/42220/5/score
+  https://www.denscope.xyz/api/v1/agent/42220/5/score
 # HTTP/2 200 { score: { value: 85, ... } }`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Pricing</h4>

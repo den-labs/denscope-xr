@@ -7,7 +7,7 @@ vi.mock('../config', () => ({
     network: 'eip155:42220',
     assetAddress: '0xUSDC_ADDRESS',
     assetName: 'USD Coin',
-    baseUrl: 'https://denscope.vercel.app',
+    baseUrl: 'https://www.denscope.xyz',
     facilitatorUrl: 'https://facilitator.ultravioletadao.xyz',
     pricing: { score: 0.001, signals: 0.0005 },
   },
@@ -18,7 +18,7 @@ import { createPaymentRequired } from '../payment-required'
 describe('createPaymentRequired', () => {
   it('generates valid 402 body for score endpoint', () => {
     const { body, header } = createPaymentRequired({
-      resourceUrl: 'https://denscope.vercel.app/api/v1/agent/42220/5/score',
+      resourceUrl: 'https://www.denscope.xyz/api/v1/agent/42220/5/score',
       description: 'Trust score query',
       priceKey: 'score',
     })
@@ -39,7 +39,7 @@ describe('createPaymentRequired', () => {
 
   it('generates correct amount for signals pricing', () => {
     const { body } = createPaymentRequired({
-      resourceUrl: 'https://denscope.vercel.app/api/v1/agent/42220/5/signals',
+      resourceUrl: 'https://www.denscope.xyz/api/v1/agent/42220/5/signals',
       description: 'Signals query',
       priceKey: 'signals',
     })
@@ -59,7 +59,7 @@ describe('createPaymentRequired', () => {
 
   it('header decodes back to the body', () => {
     const { body, header } = createPaymentRequired({
-      resourceUrl: 'https://denscope.vercel.app/api/v1/agent/42220/5/score',
+      resourceUrl: 'https://www.denscope.xyz/api/v1/agent/42220/5/score',
       description: 'Trust score',
       priceKey: 'score',
     })

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { siteUrl } from '@/config/site'
 import { requireSession } from '@/lib/auth/session'
 import { validateWebhookUrl } from '@/lib/security/url-validator'
 
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       },
       agent: { chainId: 42220, agentId: 0 },
       timestamp: new Date().toISOString(),
-      consoleUrl: 'https://denscope.vercel.app/console',
+      consoleUrl: `${siteUrl()}/console`,
     }
 
     const res = await fetch(urlCheck.url, {

@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { siteHost } from '@/config/site'
 
 async function loadAssets() {
   const [interRegular, interBlack, wolfcilloRaw, logoRaw] = await Promise.all([
@@ -147,7 +148,7 @@ export async function GET() {
               background: '#000000',
             }}>
               <span style={{ fontSize: 14, color: '#F0F0F0', fontWeight: 700 }}>
-                denscope.vercel.app
+                {siteHost()}
               </span>
             </div>
 

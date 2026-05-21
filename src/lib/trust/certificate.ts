@@ -1,3 +1,4 @@
+import { siteUrl } from '@/config/site'
 import type { ShareCardStateKey } from './share-card-state'
 import type { TrustBand, RecommendedAction, RiskLevel, DecisionConfidence, PresetId } from '@/types/evaluation'
 
@@ -147,13 +148,9 @@ export function truncateHash(hash: string): string {
   return `${hash.slice(0, 4)}...${hash.slice(-4)}`
 }
 
-/** Get base URL from env, never hardcode domain */
+/** Get base URL — prefer current browser origin (preview-friendly) and fall
+ *  back to the canonical SITE_URL from env. Throws when both are unavailable. */
 export function getAppBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
-  }
-  if (typeof window !== 'undefined') {
-    return window.location.origin
-  }
-  return 'https://denscope.vercel.app'
+  if (typeof window !== 'undefined') return window.location.origin
+  return siteUrl()
 }

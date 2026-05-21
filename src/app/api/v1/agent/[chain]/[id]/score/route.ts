@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { siteUrl } from '@/config/site'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { authenticateHybrid, buildHybridHeaders } from '@/lib/x402/middleware'
 import { recordX402Payment } from '@/lib/x402/payments'
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         },
         updatedAt: score.updatedAt,
       },
-      formula: 'https://denscope.vercel.app/docs/api#trust-score-formula',
+      formula: `${siteUrl()}/docs/api#trust-score-formula`,
     }, { headers: buildHybridHeaders(auth) })
   }
 
@@ -85,6 +86,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       stats: { feedbackCount: 0, positiveCount: 0, negativeCount: 0, openIncidents: 0 },
       updatedAt: null,
     },
-    formula: 'https://denscope.vercel.app/docs/api#trust-score-formula',
+    formula: `${siteUrl()}/docs/api#trust-score-formula`,
   }, { headers: buildHybridHeaders(auth) })
 }

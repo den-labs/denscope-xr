@@ -144,11 +144,9 @@ describe('truncateHash', () => {
 })
 
 describe('getAppBaseUrl', () => {
-  it('strips trailing slash from env var', () => {
-    const original = process.env.NEXT_PUBLIC_APP_URL
-    process.env.NEXT_PUBLIC_APP_URL = 'https://example.com/'
-    expect(getAppBaseUrl()).toBe('https://example.com')
-    process.env.NEXT_PUBLIC_APP_URL = original
+  it('prefers window.location.origin in browser context', () => {
+    // jsdom test env exposes window.location.origin = http://localhost:3000
+    expect(getAppBaseUrl()).toBe(window.location.origin)
   })
 })
 
