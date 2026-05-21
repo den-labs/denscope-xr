@@ -2,9 +2,9 @@
 
 Real-time ERC-8004 agent explorer with trust scoring, signal detection, and x402 micropayments.
 
-[![Deploy](https://img.shields.io/badge/deploy-vercel-black)](https://denscope.vercel.app)
+[![Deploy](https://img.shields.io/badge/deploy-vercel-black)](https://www.denscope.xyz)
 
-**Live:** [https://denscope.vercel.app](https://denscope.vercel.app)
+**Live:** [https://www.denscope.xyz](https://www.denscope.xyz)
 
 ## Tech Stack
 
