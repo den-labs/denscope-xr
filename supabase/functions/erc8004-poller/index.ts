@@ -15,6 +15,15 @@ import { celo } from 'https://esm.sh/viem@2.23.2/chains'
 
 // --- Config ---
 
+// Canonical site URL for webhook payloads. Missing secret is non-fatal:
+// the poller keeps ingesting but webhook receivers won't get a consoleUrl.
+type DenoGlobal = { env: { get(name: string): string | undefined } }
+const denoRef = (globalThis as unknown as { Deno?: DenoGlobal }).Deno
+const SITE_URL = denoRef?.env.get('DENSCOPE_SITE_URL') ?? null
+if (!SITE_URL) {
+  console.warn('[erc8004-poller] DENSCOPE_SITE_URL secret missing — webhook payloads will omit consoleUrl')
+}
+
 const CHUNK_SIZE = 500
 
 const CHAINS = [
@@ -339,7 +348,7 @@ async function dispatchWebhooks(db: DB, signals: SignalResult[]) {
 
     for (const rule of rules) {
       if (!rule.webhook_url) continue
-      const payload = {
+      const payload: Record<string, unknown> = {
         incident: {
           signalKind: signal.signal_kind,
           severity: signal.severity,
@@ -349,8 +358,8 @@ async function dispatchWebhooks(db: DB, signals: SignalResult[]) {
         },
         agent: { chainId: signal.chain_id, agentId: signal.agent_id },
         timestamp: new Date().toISOString(),
-        consoleUrl: `https://denscope.vercel.app/console`,
       }
+      if (SITE_URL) payload.consoleUrl = `${SITE_URL}/console`
 
       try {
         const res = await fetch(rule.webhook_url, {

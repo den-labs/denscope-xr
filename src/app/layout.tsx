@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import { siteUrl } from '@/config/site'
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { Analytics } from '@vercel/analytics/next'
@@ -24,6 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: 'DenScope — Trust Infrastructure for Autonomous Agents',
   description:
     'Compute trust signals, verify agent behavior, and expose the results through APIs and certificates.',

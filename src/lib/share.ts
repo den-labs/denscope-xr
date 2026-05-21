@@ -1,4 +1,5 @@
 import { getChain } from '@/config/chains'
+import { siteUrl } from '@/config/site'
 import { getAppBaseUrl } from '@/lib/trust/certificate'
 import { getCertificateLabels, type CertificateLang } from '@/lib/trust/certificate-i18n'
 import type { ShareCardStateKey } from '@/lib/trust/share-card-state'
@@ -59,10 +60,7 @@ export async function shareCertificate(
 }
 
 export function buildAgentPageUrl(chainId: number, agentId: number): string {
-  const origin =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://denscope.vercel.app'
+  const origin = typeof window !== 'undefined' ? window.location.origin : siteUrl()
   return `${origin}/agent/${chainId}/${agentId}`
 }
 

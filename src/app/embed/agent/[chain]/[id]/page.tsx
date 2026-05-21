@@ -1,4 +1,5 @@
 import { getChain } from '@/config/chains'
+import { siteUrl } from '@/config/site'
 import { readAgentOwner, readAgentURI } from '@/lib/agent/read'
 import { fetchAgentMetadataServer } from '@/lib/agent/metadata'
 
@@ -40,7 +41,7 @@ export default async function EmbedAgentCard({ params }: Props) {
   return (
     <div className="flex h-screen items-center justify-center p-2">
       <a
-        href={`https://denscope.vercel.app/agent/${chainConfig.id}/${agentId}`}
+        href={`${siteUrl()}/agent/${chainConfig.id}/${agentId}`}
         target="_blank"
         rel="noopener noreferrer"
         className="block w-full max-w-[420px] border border-border bg-surface hover:border-border-bright transition-colors"

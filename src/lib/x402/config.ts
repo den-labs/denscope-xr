@@ -1,5 +1,7 @@
 /** x402 server config — reads from env vars with Celo mainnet defaults */
 
+import { siteUrl } from '@/config/site'
+
 export const x402Config = {
   /** Wallet that receives USDC payments */
   payTo: process.env.X402_PAY_TO ?? '',
@@ -16,7 +18,7 @@ export const x402Config = {
   assetName: process.env.X402_ASSET_NAME ?? 'USD Coin',
 
   /** Public base URL for resource field */
-  baseUrl: process.env.X402_BASE_URL ?? 'https://denscope.vercel.app',
+  baseUrl: process.env.X402_BASE_URL ?? siteUrl(),
 
   /** UltravioletaDAO facilitator URL */
   facilitatorUrl:
