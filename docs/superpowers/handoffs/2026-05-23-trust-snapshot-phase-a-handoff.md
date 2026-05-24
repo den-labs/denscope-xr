@@ -78,3 +78,9 @@ git log --oneline main..HEAD
 ```
 
 PR pendiente de abrir cuando Phase B/C/D estén listos. Branch ya pusheada a `origin`.
+
+## Resume prompt for next session
+
+Copy-paste this verbatim to pick up Phase B from a clean session:
+
+> Resume DenScope Issue #175 (Trust Snapshot / Coordination Layer). Branch `feat/trust-snapshot-coordination` is pushed with Phase A complete (78 derivation tests passing across `src/lib/trust-snapshot/`). Read the handoff at `denscope/docs/superpowers/handoffs/2026-05-23-trust-snapshot-phase-a-handoff.md` and the spec Rev 3 at `denscope/docs/superpowers/specs/2026-05-23-trust-snapshot-coordination-layer.md` (sections §4.10 orchestration order and §8 Phase B). Start Phase B: implement `fetchTrustSnapshotInputs(chainId, agentId)` in `src/lib/dossier/fetch.ts` aggregating in parallel via `Promise.all` (trustScore + dossier + metadata + claim flag + recentEventCount + validationEventCount + hasSybilHistory + hasRecentReputationDrop + open incidents). Create new helper `src/lib/supabase/open-incidents.ts` exporting `fetchOpenIncidents(chainId, agentId)` filtered by `resolved_at IS NULL`, returning `{id, severity, kind, openedAt}` sorted by severity desc then openedAt desc (N4 contract). Write fetcher tests with mocked Supabase responses (happy + null/empty). Atomic commit per logical unit. Do not start Phase C (UI components) until Phase B tests green + integration verified against a real agent like Toppa (`/agent/celo/1870`).
