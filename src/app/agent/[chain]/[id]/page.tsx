@@ -9,14 +9,28 @@ import { AgentCertificateActions } from '@/components/agent/AgentCertificateActi
 import { AddressChip } from '@/components/shared/AddressChip'
 import { AgentEventTimeline } from '@/components/agent/AgentEventTimeline'
 import { AgentClaimSection } from '@/components/agent/AgentClaimSection'
-import { StatusPill } from '@/components/agent/StatusPill'
-import { TrustSnapshot } from '@/components/agent/TrustSnapshot'
 import { WhatChanged } from '@/components/agent/WhatChanged'
 import { fetchDossierData } from '@/lib/dossier/fetch'
-import { getAgentStatus, getSybilRisk, formatRelativeTime } from '@/lib/dossier/helpers'
+import { formatRelativeTime } from '@/lib/dossier/helpers'
 import { toTrustScore } from '@/types/trust-score'
+import { buildTrustSnapshot, type TrustSnapshotInputs } from '@/lib/trust-snapshot/build'
+import {
+  fetchHasRecentReputationDrop,
+  fetchRecentEventCount,
+  fetchValidationEventCount,
+} from '@/lib/supabase/event-aggregates'
+import { fetchOpenIncidents } from '@/lib/supabase/open-incidents'
+import { HeroBlock } from '@/components/agent/trust-snapshot/HeroBlock'
+import { TrustRadar } from '@/components/agent/trust-snapshot/TrustRadar'
+import { StrengthsWatchouts } from '@/components/agent/trust-snapshot/StrengthsWatchouts'
+import { CoordinationMatrix } from '@/components/agent/trust-snapshot/CoordinationMatrix'
+import { ImprovementList } from '@/components/agent/trust-snapshot/ImprovementList'
+import { EvidenceDrawer } from '@/components/agent/trust-snapshot/EvidenceDrawer'
+import { MobileStickyHeader } from '@/components/agent/trust-snapshot/MobileStickyHeader'
 
 type Props = { params: Promise<{ chain: string; id: string }> }
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { chain, id } = await params
@@ -120,21 +134,6 @@ function AgentUriDisplay({ uri }: { uri: string }) {
   }
 }
 
-function scoreColor(score: number): string {
-  if (score >= 80) return 'text-success'
-  if (score >= 50) return 'text-accent'
-  if (score >= 25) return 'text-warning'
-  return 'text-critical'
-}
-
-function confidencePill(confidence: string): string {
-  switch (confidence) {
-    case 'high': return 'status-pill-success'
-    case 'medium': return 'status-pill-accent'
-    default: return 'status-pill-neutral'
-  }
-}
-
 export default async function AgentPage({ params }: Props) {
   const { chain, id } = await params
   const chainConfig = getChain(Number(chain))
@@ -148,281 +147,236 @@ export default async function AgentPage({ params }: Props) {
     )
   }
 
+  // On-chain identity + metadata (single read; reused by snapshot inputs + evidence).
   const [owner, uri] = await Promise.all([
     readAgentOwner(chainConfig, agentId),
     readAgentURI(chainConfig, agentId),
   ])
   const metadata = uri ? await fetchAgentMetadataServer(uri) : null
 
-  const claimStatusRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/owner_profiles?chain_id=eq.${chainConfig.id}&agent_id=eq.${agentId}&select=id`,
-    {
-      headers: {
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
-      },
-      next: { revalidate: 60 },
-    }
-  ).then(r => r.json()).catch(() => [])
+  const now = Date.now()
+  const sinceIso = new Date(now - THIRTY_DAYS_MS).toISOString()
+
+  // Aggregate everything the snapshot needs in parallel. Identity/metadata are
+  // already resolved above and passed straight into the inputs (no re-read).
+  const [
+    claimStatusRes,
+    trustScoreRes,
+    dossier,
+    recentEventCount,
+    validationEventCount,
+    hasRecentReputationDrop,
+    openIncidents,
+  ] = await Promise.all([
+    fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/owner_profiles?chain_id=eq.${chainConfig.id}&agent_id=eq.${agentId}&select=id`,
+      {
+        headers: {
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+        },
+        next: { revalidate: 60 },
+      }
+    ).then((r) => r.json()).catch(() => []),
+    fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/trust_scores?chain_id=eq.${chainConfig.id}&agent_id=eq.${agentId}&select=*`,
+      {
+        headers: {
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+        },
+        next: { revalidate: 60 },
+      }
+    ).then((r) => r.json()).catch(() => []),
+    fetchDossierData(chainConfig.id, agentId),
+    fetchRecentEventCount(chainConfig.id, agentId, sinceIso),
+    fetchValidationEventCount(chainConfig.id, agentId),
+    fetchHasRecentReputationDrop(chainConfig.id, agentId, sinceIso),
+    fetchOpenIncidents(chainConfig.id, agentId),
+  ])
+
   const isClaimed = Array.isArray(claimStatusRes) && claimStatusRes.length > 0
+  const trustScore =
+    Array.isArray(trustScoreRes) && trustScoreRes.length > 0 ? toTrustScore(trustScoreRes[0]) : null
 
-  const trustScoreRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/trust_scores?chain_id=eq.${chainConfig.id}&agent_id=eq.${agentId}&select=*`,
-    {
-      headers: {
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
-      },
-      next: { revalidate: 60 },
-    }
-  ).then(r => r.json()).catch(() => [])
-  const trustScore = Array.isArray(trustScoreRes) && trustScoreRes.length > 0
-    ? toTrustScore(trustScoreRes[0])
-    : null
+  const inputs: TrustSnapshotInputs = {
+    trustScore,
+    metadata,
+    uriPresent: uri != null,
+    ownerResolved: owner != null,
+    claimed: isClaimed,
+    firstSeen: dossier.firstSeen,
+    lastSeen: dossier.lastSeen,
+    totalEvents: dossier.totalEvents,
+    uriUpdateCount: dossier.uriUpdateCount,
+    feedbackCount: dossier.feedbackCount,
+    positiveCount: dossier.positiveCount,
+    recentEventCount,
+    validationEventCount,
+    openIncidents,
+    hasSybilHistory: dossier.openSybilCount + dossier.resolvedSybilCount > 0,
+    hasRecentReputationDrop,
+    now,
+  }
+  const snapshot = buildTrustSnapshot(inputs)
 
-  const dossier = await fetchDossierData(chainConfig.id, agentId)
-
-  const agentStatus = getAgentStatus(trustScore?.score ?? null)
-  const sybilRisk = getSybilRisk({ openSybil: dossier.openSybilCount, resolvedSybil: dossier.resolvedSybilCount })
-  const ageDays = dossier.firstSeen
-    ? Math.floor((Date.now() - new Date(dossier.firstSeen).getTime()) / (24 * 60 * 60 * 1000))
-    : null
-  const storageType = (uri && isUrl(uri)) ? 'Off-chain' as const : 'On-chain' as const
-
-  const services = metadata?.services?.map((s) => s.type.toUpperCase()) ?? []
-  const serviceTypes = new Set(services)
+  const agentName = metadata?.name ?? `Agent #${agentId}`
+  const storageType = uri && isUrl(uri) ? ('Off-chain' as const) : ('On-chain' as const)
+  const serviceTypes = new Set(metadata?.services?.map((s) => s.type.toUpperCase()) ?? [])
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="bg-grid mx-auto max-w-6xl px-6 py-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-              <h1 className="font-display text-2xl font-bold text-text-primary">
-                {metadata?.name ?? `Agent #${agentId}`}
-              </h1>
-              <span className="status-pill status-pill-accent">{chainConfig.name}</span>
-              <StatusPill status={agentStatus} />
-              {isClaimed && <span className="status-pill status-pill-success">CLAIMED</span>}
-            </div>
+      <MobileStickyHeader snapshot={snapshot} agentName={agentName} agentId={agentId} />
 
-            {metadata?.description && (
-              <p className="text-sm text-text-secondary max-w-2xl mb-3">
-                {metadata.description}
-              </p>
-            )}
+      <div className="bg-grid mx-auto max-w-4xl px-6 py-8 space-y-8">
+        {/* [1] Hero + footer actions row */}
+        <div className="space-y-4">
+          <HeroBlock
+            snapshot={snapshot}
+            agentName={agentName}
+            chainLabel={chainConfig.name}
+            agentId={agentId}
+            claimed={isClaimed}
+          />
 
-            <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs font-mono text-text-muted">
-              <span>Agent #{agentId}</span>
-              <span>Last seen: {formatRelativeTime(dossier.lastSeen)}</span>
-              <span>{dossier.totalEvents} events</span>
-              {owner && <AddressChip address={owner} chainId={chainConfig.id} />}
-            </div>
-          </div>
-
-          {/* Trust Score */}
-          <div className="text-left md:text-right shrink-0">
-            {trustScore ? (
-              <div className="flex md:block items-center gap-3">
-                <span className={`font-display text-5xl font-bold ${scoreColor(trustScore.score)}`}>
-                  {trustScore.score}
-                </span>
-                <div className="md:mt-1">
-                  <span className="text-xs text-text-muted font-mono block">/ 100</span>
-                  <span className={`status-pill ${confidencePill(trustScore.confidence)} text-[10px] mt-1`}>
-                    {trustScore.confidence.toUpperCase()}
-                  </span>
-                </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <AgentCertificateActions chainId={chainConfig.id} agentId={agentId} agentName={metadata?.name ?? null} />
+            <details className="relative">
+              <summary className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover cursor-pointer list-none">
+                Embed
+              </summary>
+              <div className="absolute top-full mt-1 z-10">
+                <EmbedSnippet chainId={chainConfig.id} agentId={agentId} />
               </div>
-            ) : (
-              <div className="text-xs text-text-muted font-mono">
-                Awaiting first poll
-              </div>
-            )}
+            </details>
+            <a
+              href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+            >
+              Explorer
+            </a>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <AgentCertificateActions
-            chainId={chainConfig.id}
-            agentId={agentId}
-            agentName={metadata?.name ?? null}
+        {/* [2] Trust Radar */}
+        <TrustRadar radar={snapshot.radar} />
+
+        {/* [3] Strengths · Watchouts */}
+        <StrengthsWatchouts strengths={snapshot.strengths} watchouts={snapshot.watchouts} />
+
+        {/* [4] Coordination Readiness Matrix */}
+        <CoordinationMatrix coordination={snapshot.coordination} />
+
+        {/* [5] Improvement Suggestions */}
+        <ImprovementList improvements={snapshot.improvements} claimed={isClaimed} />
+
+        {/* [6] Evidence drawer — identity, activity, protocols, timeline */}
+        <EvidenceDrawer>
+          {/* Identity Card */}
+          <div className="bg-surface border border-border p-6 space-y-5">
+            <div className="flex items-center justify-end">
+              <span className="font-mono text-xs text-text-muted">ERC-8004</span>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">Agent ID</p>
+              <p className="font-display text-4xl font-bold text-text-primary mt-1">#{agentId}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">Chain ID</p>
+              <p className="font-mono text-sm text-text-secondary mt-0.5">{chainConfig.id}</p>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">Owner</p>
+              <div className="mt-0.5">
+                {owner ? (
+                  <AddressChip address={owner} chainId={chainConfig.id} />
+                ) : (
+                  <p className="font-mono text-xs text-text-secondary">unknown</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono">Agent URI</p>
+              {uri ? (
+                <AgentUriDisplay uri={uri} />
+              ) : (
+                <p className="font-mono text-xs text-text-secondary mt-0.5">unknown</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider font-mono mb-1">Storage</p>
+              <span className="status-pill status-pill-accent">{storageType}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs font-mono text-text-muted pt-2 border-t border-border">
+              <span>Last seen: {formatRelativeTime(dossier.lastSeen)}</span>
+              <span>{dossier.totalEvents} events</span>
+            </div>
+          </div>
+
+          {/* What Changed */}
+          <WhatChanged
+            activity={{
+              firstSeen: dossier.firstSeen,
+              uriUpdateCount: dossier.uriUpdateCount,
+              feedbackCount: dossier.feedbackCount,
+              avgFeedback: dossier.avgFeedbackValue,
+              totalEvents: dossier.totalEvents,
+            }}
+            lastSeen={dossier.lastSeen}
           />
 
-          <details className="relative">
-            <summary className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover cursor-pointer list-none">
-              Embed
-            </summary>
-            <div className="absolute top-full mt-1 z-10">
-              <EmbedSnippet chainId={chainConfig.id} agentId={agentId} />
+          {/* Connected Protocols */}
+          <div className="bg-surface border border-border p-5">
+            <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
+              Connected Protocols
+            </h2>
+            <div className="space-y-2">
+              {KNOWN_PROTOCOLS.map((protocol) => {
+                const isConnected = serviceTypes.has(protocol)
+                return (
+                  <div key={protocol} className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-text-primary">{protocol}</span>
+                    <span
+                      className={`status-pill ${isConnected ? 'status-pill-success' : 'status-pill-neutral'}`}
+                    >
+                      {isConnected ? 'CONNECTED' : 'INACTIVE'}
+                    </span>
+                  </div>
+                )
+              })}
+              {metadata?.services
+                ?.filter(
+                  (s) =>
+                    !KNOWN_PROTOCOLS.includes(s.type.toUpperCase() as (typeof KNOWN_PROTOCOLS)[number])
+                )
+                .map((s, i) => (
+                  <div key={`extra-${i}`} className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-text-primary">
+                      {s.type}
+                      {s.version ? ` v${s.version}` : ''}
+                    </span>
+                    <span className="status-pill status-pill-success">CONNECTED</span>
+                  </div>
+                ))}
             </div>
-          </details>
+          </div>
+
+          {/* Event History */}
+          <AgentEventTimeline chainId={chainConfig.id} agentId={agentId} explorerUrl={chainConfig.explorer} />
 
           <a
             href={`${chainConfig.explorer}/address/${chainConfig.contracts.identity}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-border bg-surface px-3 py-1.5 text-xs font-mono text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:border-border-bright transition-colors"
+            className="inline-block font-mono text-xs text-accent hover:underline"
           >
-            Explorer
+            View raw on explorer ↗
           </a>
-        </div>
+        </EvidenceDrawer>
 
-        {/* Trust Snapshot — full width */}
-        <div className="mt-8">
-          <TrustSnapshot
-            trustScore={trustScore}
-            sybilRisk={sybilRisk}
-            uniqueInteractors={dossier.uniqueInteractors}
-            storageType={storageType}
-            ageDays={ageDays}
-          />
-        </div>
-
-        {/* 12-column grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-8">
-          {/* Left column: Identity Card */}
-          <div className="md:col-span-4">
-            <div className="bg-surface border border-border p-6 space-y-5">
-              {/* ERC-8004 label */}
-              <div className="flex items-center justify-end">
-                <span className="font-mono text-xs text-text-muted">
-                  ERC-8004
-                </span>
-              </div>
-
-              {/* Agent ID */}
-              <div>
-                <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
-                  Agent ID
-                </p>
-                <p className="font-display text-4xl font-bold text-text-primary mt-1">
-                  #{agentId}
-                </p>
-              </div>
-
-              {/* Chain ID */}
-              <div>
-                <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
-                  Chain ID
-                </p>
-                <p className="font-mono text-sm text-text-secondary mt-0.5">
-                  {chainConfig.id}
-                </p>
-              </div>
-
-              {/* Owner */}
-              <div>
-                <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
-                  Owner
-                </p>
-                <div className="mt-0.5">
-                  {owner ? (
-                    <AddressChip address={owner} chainId={chainConfig.id} />
-                  ) : (
-                    <p className="font-mono text-xs text-text-secondary">unknown</p>
-                  )}
-                </div>
-              </div>
-
-              {/* URI */}
-              <div>
-                <p className="text-xs text-text-muted uppercase tracking-wider font-mono">
-                  Agent URI
-                </p>
-                {uri ? (
-                  <AgentUriDisplay uri={uri} />
-                ) : (
-                  <p className="font-mono text-xs text-text-secondary mt-0.5">
-                    unknown
-                  </p>
-                )}
-              </div>
-
-              {/* Storage Status */}
-              <div>
-                <p className="text-xs text-text-muted uppercase tracking-wider font-mono mb-1">
-                  Storage
-                </p>
-                <span className="status-pill status-pill-accent">
-                  {storageType}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div className="md:col-span-8 space-y-6">
-            {/* What Changed */}
-            <WhatChanged
-              activity={{
-                firstSeen: dossier.firstSeen,
-                uriUpdateCount: dossier.uriUpdateCount,
-                feedbackCount: dossier.feedbackCount,
-                avgFeedback: dossier.avgFeedbackValue,
-                totalEvents: dossier.totalEvents,
-              }}
-              lastSeen={dossier.lastSeen}
-            />
-
-            {/* Connected Protocols */}
-            <div className="bg-surface border border-border p-5">
-              <h2 className="text-xs text-text-muted uppercase tracking-wider font-mono mb-4">
-                Connected Protocols
-              </h2>
-              <div className="space-y-2">
-                {KNOWN_PROTOCOLS.map((protocol) => {
-                  const isConnected = serviceTypes.has(protocol)
-                  return (
-                    <div
-                      key={protocol}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="font-mono text-sm text-text-primary">
-                        {protocol}
-                      </span>
-                      <span
-                        className={`status-pill ${
-                          isConnected
-                            ? 'status-pill-success'
-                            : 'status-pill-neutral'
-                        }`}
-                      >
-                        {isConnected ? 'CONNECTED' : 'INACTIVE'}
-                      </span>
-                    </div>
-                  )
-                })}
-                {/* Additional services not in KNOWN_PROTOCOLS */}
-                {metadata?.services
-                  ?.filter(
-                    (s) =>
-                      !KNOWN_PROTOCOLS.includes(
-                        s.type.toUpperCase() as (typeof KNOWN_PROTOCOLS)[number]
-                      )
-                  )
-                  .map((s, i) => (
-                    <div key={`extra-${i}`} className="flex items-center justify-between">
-                      <span className="font-mono text-sm text-text-primary">
-                        {s.type}
-                        {s.version ? ` v${s.version}` : ''}
-                      </span>
-                      <span className="status-pill status-pill-success">
-                        CONNECTED
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            {/* Event History */}
-            <AgentEventTimeline chainId={chainConfig.id} agentId={agentId} explorerUrl={chainConfig.explorer} />
-          </div>
-        </div>
-
-        {/* Claim */}
+        {/* [7] Claim */}
         <AgentClaimSection chainId={chainConfig.id} agentId={agentId} ownerAddress={owner} />
       </div>
     </div>

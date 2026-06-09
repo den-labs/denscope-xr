@@ -43,7 +43,9 @@ function MetricCard({
   )
 }
 
-export function TrustSnapshot({
+// Legacy pre-#175 trust panel. Superseded by src/components/agent/trust-snapshot/*.
+// Kept for reference / potential reuse; not rendered by the agent page.
+export function LegacyTrustSnapshot({
   trustScore,
   sybilRisk,
   uniqueInteractors,
