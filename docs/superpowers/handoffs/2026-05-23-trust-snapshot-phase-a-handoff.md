@@ -34,7 +34,38 @@ All TDD with vitest. **78 tests passing across 6 files.**
 - `.kilocode/node_modules/zod/...` and `.opencode/node_modules/zod/...` — vitest globs into untracked agent-config dirs. **Action:** add `.kilocode/`, `.opencode/`, and similar to `.gitignore` and `vitest.config.ts` test exclusions in a separate cleanup.
 - `src/lib/x402/__tests__/config.test.ts` — 3 failures pre-existing, unrelated to trust-snapshot work.
 
-## What's next — Phase B (server fetcher)
+## Phase B — server fetcher COMPLETE (2026-06-08)
+
+15 new TDD tests, all green. Typecheck + lint clean. 0 regressions (3406 pass; the 7 pre-existing failures in `.kilocode/`/`.opencode/` zod globs + `x402/config.test.ts` are unrelated).
+
+| File | Tests | What |
+|---|---|---|
+| `src/lib/supabase/open-incidents.ts` | 4 | `fetchOpenIncidents` — resolved_at IS NULL, OpenIncident map, N4 sort (severity desc, openedAt desc) |
+| `src/lib/supabase/event-aggregates.ts` | 5 | `fetchRecentEventCount` (30d), `fetchValidationEventCount` (validation_res), `fetchHasRecentReputationDrop` |
+| `src/lib/dossier/trust-snapshot-inputs.ts` | 6 | `fetchTrustSnapshotInputs` (parallel aggregator) + `getTrustSnapshot` (composes buildTrustSnapshot) |
+
+**Design note:** Put the aggregator in a NEW sibling `trust-snapshot-inputs.ts` (not inside `fetch.ts` as the original plan suggested) so `fetchDossierData` is mockable via `vi.mock('./fetch')`. 30d window derived from an injectable `now` for deterministic snapshots.
+
+Commits (pushed to `feat/trust-snapshot-coordination`): e7f8999, 2f2c1ea, 755bd80.
+
+## Phase C — UI components COMPLETE (2026-06-08)
+
+`pnpm build` baseline confirmed green first (DS v1.1 OK, A.0.1). 27 render tests, all green. Typecheck + lint clean. Commits 6e7968f, 973e740 (pushed).
+
+All under `src/components/agent/trust-snapshot/`:
+- `display.ts` — pure presentational maps (VERDICT_DISPLAY, INTENT_CLASS, scoreColor, BADGE_LABEL, DIMENSION_DISPLAY)
+- `HeroBlock.tsx` — identity strip + canonical score + verdict pill + summary + CTA anchor (server-renderable)
+- `TrustRadar.tsx` — `'use client'`, native SVG pentagon + data polygon, role=img aria-label, tap-to-expand, canonicality copy
+- `StrengthsWatchouts.tsx` — two columns, hide-empty (P1-1)
+- `CoordinationMatrix.tsx` — 8 badges, N7 solid-unknown vs dashed-pending, legend + canonicality, #coordination anchor
+- `ImprovementList.tsx` — `'use client'`, max 5 + Show all, expanded-by-default when not claimed (M-3)
+- `EvidenceDrawer.tsx` — `'use client'`, collapsed, #evidence anchor
+- `MobileStickyHeader.tsx` — score+verdict+CTA, no Share (P1-6), N8 hides CTA on insufficient-data
+
+### Phase D next (page integration — RISKIER, touches live page)
+Rewrite `src/app/agent/[chain]/[id]/page.tsx`: call `getTrustSnapshot()` server-side, render new layout in §3 order, PRESERVE `AgentClaimSection`, `AgentCertificateActions`, `EmbedSnippet`, `AgentEventTimeline`. Rename old `TrustSnapshot.tsx` → `LegacyTrustSnapshot` (D2). Verify SSR (radar SVG server-renderable, no window — already 'use client' island). Then E (instrumentation + Playwright e2e) and F (docs + PR + deploy verify vs Toppa /agent/celo/1870). A.0.3 certificate-snapshot policy still open — decide before F.
+
+## (Original) Phase B plan — server fetcher
 
 Goal: turn `TrustSnapshotInputs` into a real server-side data source.
 
