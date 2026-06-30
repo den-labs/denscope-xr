@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
-import { createSiweMessage } from '@/lib/auth/siwe'
+import { createSiweMessage, browserSiweOrigin } from '@/lib/auth/siwe'
 import { humanizeError } from '@/lib/errors/humanize'
 import { ConnectButton } from './ConnectButton'
 
@@ -61,7 +61,10 @@ export function ClaimButton({ chainId, agentId, ownerAddress, onClaimed }: Claim
       const { nonce } = await nonceRes.json()
 
       // 2. Create and sign SIWE message
+      const { domain, uri } = browserSiweOrigin()
       const message = createSiweMessage({
+        domain,
+        uri,
         address: address!,
         chainId,
         nonce,
