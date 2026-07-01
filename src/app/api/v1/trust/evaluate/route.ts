@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateHybrid, buildHybridHeaders } from '@/lib/x402/middleware'
 import { recordX402Payment } from '@/lib/x402/payments'
+import { recordEvaluation } from '@/lib/trustops/log'
 import { composeEvaluation } from '@/lib/evaluation/compose'
 import { isValidPreset } from '@/lib/evaluation/presets'
 import type { PresetId } from '@/types/evaluation'
@@ -45,6 +46,15 @@ export async function POST(req: NextRequest) {
       context: body.context as string | undefined,
       sensitivity: body.sensitivity as 'low' | 'normal' | 'high' | undefined,
       objective: body.objective as string | undefined,
+    })
+
+    // Record evaluation in the audit log (fire-and-forget)
+    recordEvaluation({
+      chainId,
+      agentId,
+      endpoint: ENDPOINT_PATH,
+      preset,
+      authMethod: auth.method === 'x402' ? 'x402' : 'api_key',
     })
 
     // Record x402 payment (fire-and-forget)
