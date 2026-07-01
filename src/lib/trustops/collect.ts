@@ -42,9 +42,8 @@ export async function collectTrustOpsOverview(): Promise<TrustOpsOverview> {
       .select('id, severity', { count: 'exact' })
       .is('resolved_at', null),
     supabaseAdmin
-      .from('api_usage_log')
+      .from('evaluation_log')
       .select('chain_id, agent_id, endpoint, called_at')
-      .like('endpoint', '%/trust/evaluate%')
       .order('called_at', { ascending: false })
       .limit(20),
   ])

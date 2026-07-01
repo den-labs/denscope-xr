@@ -32,8 +32,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify SIWE signature
-    const result = await verifySiweMessage(message, signature)
+    // Verify SIWE signature, bound to the origin that made this request
+    const expectedDomain =
+      req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? ''
+    const result = await verifySiweMessage(message, signature, expectedDomain)
     if (!result.valid) {
       return NextResponse.json(
         { error: result.error },

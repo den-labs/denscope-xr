@@ -6,6 +6,8 @@ const CHECKSUM_ADDRESS = '0x1234567890AbcdEF1234567890aBcdef12345678'
 describe('createSiweMessage', () => {
   it('creates a valid SIWE message string', () => {
     const message = createSiweMessage({
+      domain: 'www.denscope.xyz',
+      uri: 'https://www.denscope.xyz',
       address: CHECKSUM_ADDRESS,
       chainId: 42220,
       nonce: 'abc123def456',
@@ -16,13 +18,16 @@ describe('createSiweMessage', () => {
     expect(message).toContain('Claim agent ownership on DenScope')
   })
 
-  it('includes the domain and URI', () => {
+  it('includes the caller-provided domain and URI', () => {
     const message = createSiweMessage({
+      domain: 'www.denscope.xyz',
+      uri: 'https://www.denscope.xyz',
       address: CHECKSUM_ADDRESS,
       chainId: 42220,
       nonce: 'testnonce123',
     })
-    expect(message).toContain('localhost:3000')
+    expect(message).toContain('www.denscope.xyz')
+    expect(message).toContain('https://www.denscope.xyz')
   })
 })
 

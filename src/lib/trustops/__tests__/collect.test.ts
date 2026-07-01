@@ -2,9 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { collectTrustOpsOverview } from '../collect'
 
 const mockSelect = vi.fn()
+const fromCalls: string[] = []
 
 vi.mock('@/lib/supabase/admin', () => {
-  const mockFrom = vi.fn(() => ({ select: mockSelect }))
+  const mockFrom = vi.fn((table: string) => {
+    fromCalls.push(table)
+    return { select: mockSelect }
+  })
   return { supabaseAdmin: { from: mockFrom } }
 })
 
@@ -23,6 +27,7 @@ function chainable(data: unknown, count?: number) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  fromCalls.length = 0
 })
 
 describe('collectTrustOpsOverview', () => {
@@ -54,6 +59,8 @@ describe('collectTrustOpsOverview', () => {
     expect(result.elevatedRiskCount).toBe(1)
     expect(result.recentEvaluations).toEqual([])
     expect(result.collectedAt).toBeTruthy()
+    expect(fromCalls).toContain('evaluation_log')
+    expect(fromCalls).not.toContain('api_usage_log')
   })
 
   it('handles empty database', async () => {

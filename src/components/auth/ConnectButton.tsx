@@ -5,20 +5,22 @@ import { injected } from '@wagmi/connectors'
 import { useEffect, useRef, useCallback } from 'react'
 import { useAuthStore } from '@/stores/auth'
 import { SiweMessage } from 'siwe'
-
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'localhost:3000'
-const APP_URI = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+import { browserSiweOrigin } from '@/lib/auth/siwe'
 
 export function ConnectButton() {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-  const { connect } = useConnect()
+  const { connectAsync } = useConnect()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
   const setAddress = useAuthStore((s) => s.setAddress)
+  const setAuthenticated = useAuthStore((s) => s.setAuthenticated)
+  const authenticated = useAuthStore((s) => s.authenticated)
   const authDisconnect = useAuthStore((s) => s.disconnect)
   const signingRef = useRef(false)
 
+  // Sign-in is user-initiated only — never auto-fired on reconnect. Builds the
+  // SIWE message with the live browser origin so wallets pass domain binding.
   const signIn = useCallback(async (addr: string) => {
     if (signingRef.current) return
     signingRef.current = true
@@ -26,11 +28,12 @@ export function ConnectButton() {
       const nonceRes = await fetch('/api/auth/nonce')
       const { nonce } = await nonceRes.json()
 
+      const { domain, uri } = browserSiweOrigin()
       const message = new SiweMessage({
-        domain: APP_DOMAIN,
+        domain,
         address: addr,
         statement: 'Sign in to DenScope',
-        uri: APP_URI,
+        uri,
         version: '1',
         chainId,
         nonce,
@@ -38,28 +41,39 @@ export function ConnectButton() {
 
       const signature = await signMessageAsync({ message })
 
-      await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, signature }),
       })
+      setAuthenticated(res.ok)
     } catch {
-      // User rejected signature or network error — silent, session just won't be created
+      // User rejected signature or network error — silent, no session created
     } finally {
       signingRef.current = false
     }
-  }, [chainId, signMessageAsync])
+  }, [chainId, signMessageAsync, setAuthenticated])
 
+  // On (re)connect: restore the address for display only. No signature prompt.
   useEffect(() => {
     if (isConnected && address) {
       setAddress(address)
-      signIn(address)
     } else {
       authDisconnect()
     }
-  }, [isConnected, address, setAddress, authDisconnect, signIn])
+  }, [isConnected, address, setAddress, authDisconnect])
 
-  if (isConnected && address) {
+  const handleConnect = useCallback(async () => {
+    try {
+      const result = await connectAsync({ connector: injected() })
+      const addr = result.accounts[0]
+      if (addr) await signIn(addr)
+    } catch {
+      // User dismissed the wallet connection prompt
+    }
+  }, [connectAsync, signIn])
+
+  if (isConnected && address && authenticated) {
     return (
       <div className="flex items-center gap-2">
         <span className="font-mono text-xs text-text-secondary">
@@ -75,9 +89,21 @@ export function ConnectButton() {
     )
   }
 
+  // Connected (e.g. restored on reload) but no session yet — explicit sign-in.
+  if (isConnected && address) {
+    return (
+      <button
+        onClick={() => signIn(address)}
+        className="border border-accent/30 bg-accent/5 px-3 py-1 text-xs font-mono text-accent hover:bg-accent/10 hover:border-accent/50 transition-colors"
+      >
+        Sign in
+      </button>
+    )
+  }
+
   return (
     <button
-      onClick={() => connect({ connector: injected() })}
+      onClick={handleConnect}
       className="border border-accent/30 bg-accent/5 px-3 py-1 text-xs font-mono text-accent hover:bg-accent/10 hover:border-accent/50 transition-colors"
     >
       Connect Wallet

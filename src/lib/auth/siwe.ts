@@ -1,9 +1,11 @@
 import { SiweMessage } from 'siwe'
 
-const DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'localhost:3000'
-const URI = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-
 type CreateMessageParams = {
+  /** Must equal the requesting origin's host (window.location.host) so wallets
+   *  pass their phishing/domain-binding check. */
+  domain: string
+  /** Must equal window.location.origin. */
+  uri: string
   address: string
   chainId: number
   nonce: string
@@ -11,21 +13,28 @@ type CreateMessageParams = {
 }
 
 export function createSiweMessage({
+  domain,
+  uri,
   address,
   chainId,
   nonce,
   statement = 'Sign in to DenScope',
 }: CreateMessageParams): string {
   const message = new SiweMessage({
-    domain: DOMAIN,
+    domain,
     address,
     statement,
-    uri: URI,
+    uri,
     version: '1',
     chainId,
     nonce,
   })
   return message.prepareMessage()
+}
+
+/** Domain + URI bound to the live browser origin. Client-only (reads window). */
+export function browserSiweOrigin(): { domain: string; uri: string } {
+  return { domain: window.location.host, uri: window.location.origin }
 }
 
 export function generateNonce(): string {
