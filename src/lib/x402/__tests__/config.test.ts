@@ -12,6 +12,27 @@ describe('x402 config', () => {
     process.env = originalEnv
   })
 
+  // R9 — SEC-09 baseline: importing the payment config must not require env.
+  it('imports without NEXT_PUBLIC_APP_URL set (SEC-09)', async () => {
+    delete process.env.NEXT_PUBLIC_APP_URL
+    delete process.env.X402_BASE_URL
+    await expect(import('../config')).resolves.toBeDefined()
+  })
+
+  it('throws only when a resource URL is actually needed', async () => {
+    delete process.env.NEXT_PUBLIC_APP_URL
+    delete process.env.X402_BASE_URL
+    const { x402Config } = await import('../config')
+    expect(() => x402Config.resourceBaseUrl()).toThrow(/NEXT_PUBLIC_APP_URL/)
+  })
+
+  it('prefers X402_BASE_URL over the site URL', async () => {
+    process.env.X402_BASE_URL = 'https://example.test'
+    delete process.env.NEXT_PUBLIC_APP_URL
+    const { x402Config } = await import('../config')
+    expect(x402Config.resourceBaseUrl()).toBe('https://example.test')
+  })
+
   it('uses Celo mainnet defaults when no env vars set', async () => {
     delete process.env.X402_PAY_TO
     delete process.env.X402_NETWORK
@@ -34,5 +55,84 @@ describe('x402 config', () => {
     const { x402Config } = await import('../config')
     expect(x402Config.pricing.score).toBe(0.001)
     expect(x402Config.pricing.signals).toBe(0.0005)
+  })
+})
+
+// R8 — facilitator invariant (SEC-05)
+describe('facilitatorGuard', () => {
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    vi.resetModules()
+    process.env = { ...originalEnv }
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  it('approves the configured Celo facilitator', async () => {
+    const { facilitatorGuard } = await import('../config')
+    const result = facilitatorGuard('https://facilitator.ultravioletadao.xyz')
+    expect(result).toEqual({
+      ok: true,
+      url: 'https://facilitator.ultravioletadao.xyz',
+      host: 'facilitator.ultravioletadao.xyz',
+    })
+  })
+
+  it('rejects the public x402.org facilitator', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('https://x402.org/facilitator')).toEqual({
+      ok: false,
+      reason: 'not_approved',
+    })
+  })
+
+  it('rejects an arbitrary unapproved host', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('https://facilitator.attacker.example')).toEqual({
+      ok: false,
+      reason: 'not_approved',
+    })
+  })
+
+  it('rejects an unset URL rather than falling back', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('')).toEqual({ ok: false, reason: 'unset' })
+    expect(facilitatorGuard(undefined)).not.toEqual({ ok: false, reason: 'unset' }) // falls to config default
+  })
+
+  it('rejects a malformed URL', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('not a url')).toEqual({ ok: false, reason: 'malformed' })
+  })
+
+  it('rejects plaintext http to a remote host', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('http://facilitator.ultravioletadao.xyz')).toEqual({
+      ok: false,
+      reason: 'insecure_transport',
+    })
+  })
+
+  it('allows http only for a loopback facilitator in local development', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('http://localhost:4020')).toMatchObject({ ok: true, host: 'localhost' })
+    expect(facilitatorGuard('http://127.0.0.1:4020')).toMatchObject({ ok: true })
+  })
+
+  it('is not host-case sensitive', async () => {
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('https://Facilitator.UltravioletaDAO.xyz').ok).toBe(true)
+  })
+
+  it('does not pre-approve the Stellar pilot facilitator', async () => {
+    // Adding it is a reviewed code change, made when the pilot ships.
+    const { facilitatorGuard } = await import('../config')
+    expect(facilitatorGuard('https://facilitator.testnet.x402seek.xyz')).toEqual({
+      ok: false,
+      reason: 'not_approved',
+    })
   })
 })

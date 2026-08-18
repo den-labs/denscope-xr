@@ -2,6 +2,39 @@
 
 import { siteUrl } from '@/config/site'
 
+/**
+ * Facilitator hosts this deployment is allowed to settle through (SEC-05).
+ *
+ * Deliberately a code-defined ALLOW list rather than an env var or a deny list.
+ * A deny list only catches the mistakes someone thought of; an env-configured
+ * allow list can drift silently with the very variable it is supposed to guard.
+ *
+ * The failure this prevents is specific and has happened before: `@x402/core`'s
+ * HTTPFacilitatorClient falls back to `https://x402.org/facilitator` when no URL
+ * is configured, which produces a completely working payment flow whose
+ * settlement lands somewhere else entirely, with no error anywhere. The
+ * x402Seek facilitator shipped exactly that bug (evidence E-06a) and wrote
+ * `assertOwnFacilitator()` in response. DenScope had no equivalent.
+ *
+ * Adding a host here is a reviewed code change. The Stellar testnet pilot will
+ * add exactly one entry; it is deliberately not pre-added.
+ */
+export const APPROVED_FACILITATOR_HOSTS: ReadonlySet<string> = new Set([
+  // Celo mainnet — the facilitator the live deployment already settles through.
+  'facilitator.ultravioletadao.xyz',
+])
+
+/**
+ * Facilitator request timeout.
+ *
+ * Was 30s, which is the maximum-damage setting for SEC-04: each anonymous
+ * garbage payload held a serverless function open for that long. A legitimate
+ * `/verify` is a signature check plus a chain read and settles well inside a
+ * few seconds; `maxTimeoutSeconds` advertised in the 402 is 30, and a client
+ * that has waited 15s for verification has already lost the round trip.
+ */
+export const FACILITATOR_TIMEOUT_MS = 15_000
+
 export const x402Config = {
   /** Wallet that receives USDC payments */
   payTo: process.env.X402_PAY_TO ?? '',
@@ -29,7 +62,9 @@ export const x402Config = {
     return process.env.X402_BASE_URL ?? siteUrl()
   },
 
-  /** UltravioletaDAO facilitator URL */
+  /** Facilitator endpoint. Must resolve to an approved host — see
+   *  {@link facilitatorGuard}. There is no default that reaches the network:
+   *  an unset value is a configuration error, not a fallback. */
   facilitatorUrl:
     process.env.X402_FACILITATOR_URL ??
     'https://facilitator.ultravioletadao.xyz',
@@ -40,6 +75,44 @@ export const x402Config = {
     signals: parseFloat(process.env.X402_PRICE_SIGNALS ?? '0.0005'),
     evaluate: parseFloat(process.env.X402_PRICE_EVALUATE ?? '0.001'),
   } as Record<string, number>,
+}
+
+export type FacilitatorGuardResult =
+  | { ok: true; url: string; host: string }
+  | { ok: false; reason: 'unset' | 'malformed' | 'not_approved' | 'insecure_transport' }
+
+/**
+ * Assert that the configured facilitator is one we intend to settle through.
+ *
+ * Called before every outbound facilitator request. Never accepts a
+ * caller-supplied value — the facilitator is not selectable per request, and
+ * this function takes no request input by design.
+ */
+export function facilitatorGuard(
+  raw: string | undefined = process.env.X402_FACILITATOR_URL ?? x402Config.facilitatorUrl,
+): FacilitatorGuardResult {
+  if (!raw || raw.trim() === '') return { ok: false, reason: 'unset' }
+
+  let parsed: URL
+  try {
+    parsed = new URL(raw)
+  } catch {
+    return { ok: false, reason: 'malformed' }
+  }
+
+  // Payment authorisations in flight must not be observable. http:// is only
+  // tolerated for a loopback facilitator in local development.
+  const host = parsed.hostname.toLowerCase()
+  const isLoopback = host === 'localhost' || host === '127.0.0.1'
+  if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && isLoopback)) {
+    return { ok: false, reason: 'insecure_transport' }
+  }
+
+  if (!APPROVED_FACILITATOR_HOSTS.has(host) && !isLoopback) {
+    return { ok: false, reason: 'not_approved' }
+  }
+
+  return { ok: true, url: raw, host }
 }
 
 /** Whether x402 is configured (payTo must be set) */
