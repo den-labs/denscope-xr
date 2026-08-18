@@ -93,7 +93,7 @@ export async function authenticateHybrid(
 
   // --- Path 3: No auth at all ---
   if (isX402Enabled()) {
-    const resourceUrl = `${x402Config.baseUrl}${endpoint.path}`
+    const resourceUrl = `${x402Config.resourceBaseUrl()}${endpoint.path}`
     const { body, header } = createPaymentRequired({
       resourceUrl,
       description: endpoint.description,

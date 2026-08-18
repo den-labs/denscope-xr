@@ -7,7 +7,7 @@ vi.mock('../config', () => ({
     network: 'eip155:42220',
     assetAddress: '0xUSDC',
     assetName: 'USD Coin',
-    baseUrl: 'https://www.denscope.xyz',
+    resourceBaseUrl: () => 'https://www.denscope.xyz',
     facilitatorUrl: 'https://facilitator.test',
     pricing: { score: 0.001, signals: 0.0005 },
   },

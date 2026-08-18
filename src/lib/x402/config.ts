@@ -17,8 +17,17 @@ export const x402Config = {
   /** Token name for EIP-712 domain */
   assetName: process.env.X402_ASSET_NAME ?? 'USD Coin',
 
-  /** Public base URL for resource field */
-  baseUrl: process.env.X402_BASE_URL ?? siteUrl(),
+  /** Public base URL for the `resource` field.
+   *
+   *  Lazy on purpose. `siteUrl()` throws when NEXT_PUBLIC_APP_URL is unset —
+   *  which is the correct fail-fast behaviour — but calling it eagerly at module
+   *  scope turned that into an import-time crash that took down every route
+   *  importing this module, and made the payment config the one module with no
+   *  green local coverage (SEC-09). Reading it here defers the throw to the one
+   *  place that actually needs a URL: building the 402 `resource`. */
+  resourceBaseUrl(): string {
+    return process.env.X402_BASE_URL ?? siteUrl()
+  },
 
   /** UltravioletaDAO facilitator URL */
   facilitatorUrl:
