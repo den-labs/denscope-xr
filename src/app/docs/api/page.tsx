@@ -137,7 +137,10 @@ try {
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Option 2: x402 Payment (for agents)</h4>
           <p className="text-sm text-text-secondary">
             Any wallet can query trust data with zero setup. No API key, no account needed.
-            Available on <code className="text-xs font-mono">/score</code> and <code className="text-xs font-mono">/signals</code> endpoints.
+            Available on <code className="text-xs font-mono">/signals</code> and <code className="text-xs font-mono">/trust/evaluate</code>.
+            Payment is settled only after the result has been computed: a request that fails
+            validation, names an unknown agent, or errors internally is never charged.
+            Retrying with the same payment returns the same stored result rather than charging twice.
           </p>
           <ul className="list-disc list-inside text-sm text-text-secondary mt-2 space-y-1">
             <li>Call the endpoint without auth &rarr; receive HTTP 402 + <code className="text-xs font-mono">PAYMENT-REQUIRED</code> header</li>
@@ -165,7 +168,7 @@ try {
           <Endpoint
             method="GET"
             path="/api/v1/agent/{chain}/{id}/score"
-            desc="Trust score (0-100) with confidence level and component breakdown. Supports x402 ($0.001/call)."
+            desc="Trust score (0-100) with confidence level and component breakdown. Free — API key only."
           />
           <Endpoint
             method="GET"
@@ -201,9 +204,9 @@ try {
             <Row cells={['chainId', 'number', 'Yes', 'Chain ID (42220, 1187947933, etc.)']} />
             <Row cells={['agentId', 'number', 'Yes', 'Agent ID']} />
             <Row cells={['preset', 'string', 'Yes', 'Evaluation preset']} />
-            <Row cells={['context', 'string', 'No', 'Free-text context hint (v0: logged, not used in logic)']} />
-            <Row cells={['sensitivity', 'string', 'No', 'low, normal, high (v0: defaults to normal, reserved)']} />
-            <Row cells={['objective', 'string', 'No', 'Free-text objective hint (v0: logged, not used in logic)']} />
+            <Row cells={['context', 'string', 'No', 'Free-text hint, max 512 chars (v0: accepted, does not affect the result)']} />
+            <Row cells={['sensitivity', 'string', 'No', 'low, normal, high (v0: reserved, does not affect the result)']} />
+            <Row cells={['objective', 'string', 'No', 'Free-text hint, max 512 chars (v0: accepted, does not affect the result)']} />
           </Table>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Presets</h4>
@@ -296,29 +299,44 @@ console.log(result.evaluation.rationale)`}</CodeHighlight>
 
         <Section title="x402 Payment Flow" id="x402-payment-flow">
           <p className="text-sm text-text-secondary">
-            The <code className="text-xs font-mono">/score</code> and <code className="text-xs font-mono">/signals</code> endpoints
+            The <code className="text-xs font-mono">/signals</code> and <code className="text-xs font-mono">/trust/evaluate</code> endpoints
             accept x402 micropayments via the UltravioletaDAO facilitator on Celo. This enables autonomous agents to query trust
-            data without human-managed API keys.
+            data without human-managed API keys. Free endpoints — including{' '}
+            <code className="text-xs font-mono">/score</code> — never return 402.
           </p>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Flow</h4>
           <CodeHighlight>{`# 1. Call without auth -> get 402 with payment instructions
-curl -i https://www.denscope.xyz/api/v1/agent/42220/5/score
+curl -i -X POST https://www.denscope.xyz/api/v1/trust/evaluate
 # HTTP/2 402
 # PAYMENT-REQUIRED: <base64-encoded JSON>
 
 # 2. Decode PAYMENT-REQUIRED header -> sign EIP-712 off-chain
 
 # 3. Retry with X-PAYMENT header
-curl -H "X-PAYMENT: <base64-encoded payment>" \\
-  https://www.denscope.xyz/api/v1/agent/42220/5/score
-# HTTP/2 200 { score: { value: 85, ... } }`}</CodeHighlight>
+curl -X POST -H "X-PAYMENT: <base64-encoded payment>" \\
+  -H "content-type: application/json" \\
+  -d '{"chainId":42220,"agentId":5,"preset":"defi_counterparty"}' \\
+  https://www.denscope.xyz/api/v1/trust/evaluate
+# HTTP/2 200 { evaluation: { recommended_action: "review", ... } }`}</CodeHighlight>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Pricing</h4>
           <Table headers={['Endpoint', 'Price (USDC)', 'micro-USDC']}>
-            <Row cells={['/score', '$0.001', '1000']} />
+            <Row cells={['/trust/evaluate', '$0.001', '1000']} />
             <Row cells={['/signals', '$0.0005', '500']} />
           </Table>
+
+          <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">When you are charged</h4>
+          <ul className="list-disc list-inside text-sm text-text-secondary mt-2 space-y-1">
+            <li>Your payment is <strong>verified</strong> first — verification moves no funds.</li>
+            <li>The request is then validated and the result computed.</li>
+            <li>Settlement happens <strong>only after a result exists</strong>. A 400, 404, 429 or 500 costs you nothing.</li>
+            <li>The delivered result is stored against your payment for 24h: retrying with the same
+              <code className="text-xs font-mono"> X-PAYMENT</code> returns the same result and does not charge again
+              (look for <code className="text-xs font-mono">X-Payment-Replay: true</code>).</li>
+            <li>There is no refund endpoint, by design — DenScope holds no key that can spend, so it
+              prevents invalid settlement rather than reversing it.</li>
+          </ul>
 
           <h4 className="text-xs text-text-muted uppercase font-mono mt-4 mb-2">Details</h4>
           <ul className="list-disc list-inside text-sm text-text-secondary mt-2 space-y-1">
