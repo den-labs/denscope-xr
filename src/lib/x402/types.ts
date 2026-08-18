@@ -43,9 +43,7 @@ export interface X402SettleResult {
   error?: string
 }
 
-/** Context attached to request after successful x402 payment */
-export interface X402Context {
-  payer: string
-  transaction?: string
-  authMethod: 'x402'
-}
+/* X402Context was attached to a request once a payment had already settled.
+ * The lifecycle no longer has that state: between authorisation and delivery a
+ * payment is PENDING, not settled, and its identity lives in PendingPayment
+ * (middleware.ts) / SettledPaymentIdentity (idempotency.ts). */
