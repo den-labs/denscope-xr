@@ -18,6 +18,7 @@ function makeEvidence(overrides: Partial<GatheredEvidence> = {}): GatheredEviden
     openIncidents: 0, openCriticalIncidents: 0, openWarningIncidents: 0,
     hasSybilIncident: false, resolvedSybilCount: 0,
     ageDays: 120, lastActivityDays: 3, agentExists: true,
+    dataAsOf: '2026-08-19T00:00:00.000Z',
     ...overrides,
   }
 }

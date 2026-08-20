@@ -3,6 +3,7 @@ import { getPreset } from './presets'
 import { gatherEvidence } from './gather'
 import { interpretEvidence } from './interpret'
 import { generateRationale } from './rationale'
+import { buildLimitations } from './limitations'
 
 export async function composeEvaluation(
   request: EvaluateRequest,
@@ -35,6 +36,10 @@ export async function composeEvaluation(
       evaluatedAt: new Date().toISOString(),
       chainId,
       agentId,
+      limitations: buildLimitations(evidence),
+      // Freshness of the inputs, not of the computation. `evaluatedAt` says when
+      // we answered; this says how current the evidence behind the answer was.
+      dataAsOf: evidence.dataAsOf ?? new Date().toISOString(),
     },
   }
 }
