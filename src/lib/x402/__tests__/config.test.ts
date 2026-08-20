@@ -127,12 +127,28 @@ describe('facilitatorGuard', () => {
     expect(facilitatorGuard('https://Facilitator.UltravioletaDAO.xyz').ok).toBe(true)
   })
 
-  it('does not pre-approve the Stellar pilot facilitator', async () => {
-    // Adding it is a reviewed code change, made when the pilot ships.
+  it('approves the Stellar pilot facilitator', async () => {
+    // Added as a reviewed code change when the pilot shipped. Before this, the
+    // guard refused it, which is the behaviour that must hold for every host
+    // that has NOT been through review — see the next test.
     const { facilitatorGuard } = await import('../config')
     expect(facilitatorGuard('https://facilitator.testnet.x402seek.xyz')).toEqual({
-      ok: false,
-      reason: 'not_approved',
+      ok: true,
+      url: 'https://facilitator.testnet.x402seek.xyz',
+      host: 'facilitator.testnet.x402seek.xyz',
     })
+  })
+
+  it('refuses a facilitator that merely looks related to an approved one', async () => {
+    // The allow list is exact-host. A lookalike is a different operator.
+    const { facilitatorGuard } = await import('../config')
+    for (const host of [
+      'https://facilitator.testnet.x402seek.xyz.evil.tld',
+      'https://testnet.x402seek.xyz',
+      'https://facilitator.x402seek.xyz',
+      'https://x402.org/facilitator',
+    ]) {
+      expect(facilitatorGuard(host)).toEqual({ ok: false, reason: 'not_approved' })
+    }
   })
 })

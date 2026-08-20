@@ -22,6 +22,10 @@ import { siteUrl } from '@/config/site'
 export const APPROVED_FACILITATOR_HOSTS: ReadonlySet<string> = new Set([
   // Celo mainnet — the facilitator the live deployment already settles through.
   'facilitator.ultravioletadao.xyz',
+  // Stellar testnet pilot — the hosted DenLabs facilitator. Probed to report
+  // `exact` on `stellar:testnet` with `areFeesSponsored: true`. The x402seek
+  // hostname is known naming debt, not a second operator.
+  'facilitator.testnet.x402seek.xyz',
 ])
 
 /**
@@ -75,6 +79,43 @@ export const x402Config = {
     signals: parseFloat(process.env.X402_PRICE_SIGNALS ?? '0.0005'),
     evaluate: parseFloat(process.env.X402_PRICE_EVALUATE ?? '0.001'),
   } as Record<string, number>,
+}
+
+/**
+ * Stellar testnet pilot configuration.
+ *
+ * Deliberately a SEPARATE object rather than new keys on `x402Config`: the two
+ * rails share no asset, no decimals, no payee and no facilitator, and merging
+ * them is how a 6-decimal amount ends up on a 7-decimal chain.
+ *
+ * Note what is absent. A seller receives; it never authorises and never submits.
+ * There is no secret key here, no env var for one, and no code path that would
+ * read one. If a change ever appears to need the seller's secret in the
+ * application, that is a design regression, not a missing variable.
+ */
+export const stellarConfig = {
+  /** Dedicated DenScope seller account, classic `G…` strkey. Public key only. */
+  payTo: process.env.X402_STELLAR_PAY_TO ?? '',
+
+  /** CAIP-2. Testnet for the pilot; pubnet is explicitly out of scope. */
+  network: process.env.X402_STELLAR_NETWORK ?? 'stellar:testnet',
+
+  /** Hosted DenLabs facilitator. Must survive {@link facilitatorGuard}. */
+  facilitatorUrl:
+    process.env.X402_STELLAR_FACILITATOR_URL ??
+    'https://facilitator.testnet.x402seek.xyz',
+
+  /**
+   * Price in USD. The atomic amount is NEVER computed here — `ExactStellarScheme`
+   * `.parsePrice()` does it, which is what makes 0.001 become `10000` (7 decimals)
+   * rather than `1000` (the EVM 6-decimal assumption).
+   */
+  price: parseFloat(process.env.X402_STELLAR_PRICE_EVALUATE ?? '0.001'),
+}
+
+/** Whether the Stellar rail is configured. Requires a seller address. */
+export function isStellarRailEnabled(): boolean {
+  return stellarConfig.payTo.length > 0
 }
 
 export type FacilitatorGuardResult =
