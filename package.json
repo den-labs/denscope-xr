@@ -25,7 +25,8 @@
     "perf:review": "tsx scripts/perf-review-template.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "stellar:seller-setup": "tsx scripts/stellar-seller-setup.ts"
+    "stellar:seller-setup": "tsx scripts/stellar-seller-setup.ts",
+    "stellar:buyer-setup": "tsx scripts/stellar-buyer-setup.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^16.0.1",
