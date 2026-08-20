@@ -5,10 +5,17 @@
  * only retry available is a fresh payment, which is a second charge for one
  * purchase. With it, presenting the same settled payment returns the same bytes.
  *
- * The key is the payment's own identity — `(network, payer, nonce)` — not a
+ * The key is the payment's own identity — `(network, payer, paymentId)` — not a
  * caller-supplied idempotency key. That distinction is the security property:
  * a caller cannot name someone else's result, because reaching this store at
- * all requires a payload the facilitator verified as signed by that payer.
+ * all requires a payload the facilitator verified as paid by that payer.
+ *
+ * NAMING: the DB column is `nonce`, because that is what the deployed schema
+ * calls it and renaming it would need a migration for no behavioural gain. In
+ * code the field is `paymentId`, because only the EVM rail has an EIP-3009
+ * nonce — on Stellar it is a canonical transaction hash, and propagating
+ * `nonce` there would assert a protocol feature that does not exist. The two
+ * names meet in this file and nowhere else.
  *
  * FAIL CLOSED. Every function here reports store unavailability rather than
  * swallowing it, and callers must refuse the paid request when it happens.
@@ -17,15 +24,9 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import type { PaymentIdentity } from './rails/types'
 
-/** Identity of a payment the facilitator has confirmed the payer for. */
-export interface SettledPaymentIdentity {
-  network: string
-  /** Confirmed payer, lowercased. Never the merely-claimed address. */
-  payer: string
-  /** EIP-3009 authorization nonce, lowercased. */
-  nonce: string
-}
+export type { PaymentIdentity }
 
 export interface DeliveredResult {
   status: number
@@ -44,7 +45,7 @@ export type DeliveredLookup =
  *   caller must fail the request, not proceed.
  */
 export async function lookupDeliveredResult(
-  id: SettledPaymentIdentity,
+  id: PaymentIdentity,
 ): Promise<DeliveredLookup> {
   try {
     const { data, error } = await supabaseAdmin
@@ -52,7 +53,7 @@ export async function lookupDeliveredResult(
       .select('response_status, response_body, tx_hash, expires_at')
       .eq('network', id.network)
       .eq('payer', id.payer)
-      .eq('nonce', id.nonce)
+      .eq('nonce', id.paymentId)
       .maybeSingle()
 
     if (error) return { available: false }
@@ -97,7 +98,7 @@ export type StoreOutcome =
  * should serve the winner's stored result.
  */
 export async function storeDeliveredResult(params: {
-  id: SettledPaymentIdentity
+  id: PaymentIdentity
   endpoint: string
   amountMicro: number
   txHash: string | null
@@ -108,7 +109,7 @@ export async function storeDeliveredResult(params: {
     const { error } = await supabaseAdmin.from('x402_settlements').insert({
       network: params.id.network,
       payer: params.id.payer,
-      nonce: params.id.nonce,
+      nonce: params.id.paymentId,
       endpoint: params.endpoint,
       amount_micro: params.amountMicro,
       tx_hash: params.txHash,

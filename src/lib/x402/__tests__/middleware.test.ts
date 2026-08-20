@@ -11,6 +11,22 @@ vi.mock('../config', () => ({
     pricing: { score: 0.001, signals: 0.0005, evaluate: 0.001 },
   },
   isX402Enabled: () => true,
+  // This suite exercises the EVM rail. Stellar off means `activeRail()` resolves
+  // to the wrapper around the deployed Celo code, so every assertion below is
+  // still an assertion about production behaviour.
+  isStellarRailEnabled: () => false,
+  stellarConfig: {
+    payTo: '',
+    network: 'stellar:testnet',
+    facilitatorUrl: 'https://facilitator.testnet.x402seek.xyz',
+    price: 0.001,
+  },
+  facilitatorGuard: () => ({
+    ok: true,
+    url: 'https://facilitator.testnet.x402seek.xyz',
+    host: 'facilitator.testnet.x402seek.xyz',
+  }),
+  FACILITATOR_TIMEOUT_MS: 15_000,
 }))
 
 vi.mock('@/lib/api-keys/authenticate', () => ({
@@ -237,7 +253,9 @@ describe('authorizePaidRequest — replay (SEC-02, R5)', () => {
     expect(lookupDeliveredResult).toHaveBeenCalledWith({
       network: 'eip155:42220',
       payer: confirmed,
-      nonce: NONCE,
+      // `paymentId` in code, `nonce` in the DB column. On this rail it IS the
+      // EIP-3009 nonce; on Stellar it is a canonical transaction hash.
+      paymentId: NONCE,
     })
   })
 

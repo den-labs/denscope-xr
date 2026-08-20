@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { PaymentRequirement } from './types'
-import { x402Config, isX402Enabled } from './config'
-import { createPaymentRequired } from './payment-required'
-import { verifyX402Payment, settleX402Payment } from './facilitator'
-import { inspectPaymentHeader } from './payload'
+import { isX402Enabled } from './config'
+import { activeRail } from './rails'
+import type { PaymentIdentity } from './rails/types'
 import { resolveClientIp } from './client-ip'
 import { consumeVerifyAttempt } from './verify-limit'
 import {
   lookupDeliveredResult,
   storeDeliveredResult,
   type DeliveredResult,
-  type SettledPaymentIdentity,
 } from './idempotency'
 import { recordX402Payment } from './payments'
 import {
@@ -64,7 +62,10 @@ export interface PaidEndpoint {
 export interface PendingPayment {
   payload: Record<string, unknown>
   requirements: PaymentRequirement
-  identity: SettledPaymentIdentity
+  identity: PaymentIdentity
+  /** Atomic units of the rail's asset, taken from the advertised requirements
+   *  so what is stored is always what was quoted. Decimals are rail-specific:
+   *  6 on EVM USDC, 7 on Stellar USDC. */
   amountMicro: number
   endpointPath: string
   priceKey: string
@@ -77,38 +78,17 @@ export type PaidAuth =
   | { ok: true; method: 'x402-replay'; delivered: DeliveredResult }
   | { ok: false; error: NextResponse }
 
-/** Price of an endpoint in atomic units of the configured asset.
- *  6 decimals matches USDC on EVM chains. A 7-decimal asset (Stellar) would
- *  need this to become asset-aware; that is pilot scope, not remediation. */
-export function microUnitsFor(priceKey: string): number {
-  return Math.round((x402Config.pricing[priceKey] ?? 0.001) * 1_000_000)
-}
-
-function buildRequirements(priceKey: string): PaymentRequirement {
-  return {
-    scheme: 'exact',
-    network: x402Config.network,
-    amount: String(microUnitsFor(priceKey)),
-    asset: x402Config.assetAddress,
-    payTo: x402Config.payTo,
-    maxTimeoutSeconds: 30,
-    extra: {
-      assetTransferMethod: 'eip3009',
-      name: x402Config.assetName,
-      version: '2',
-    },
-  }
-}
-
-function paymentRequired(endpoint: PaidEndpoint): NextResponse {
-  const { body, header } = createPaymentRequired({
-    resourceUrl: `${x402Config.resourceBaseUrl()}${endpoint.path}`,
-    description: endpoint.description,
-    priceKey: endpoint.priceKey,
-  })
+async function paymentRequired(endpoint: PaidEndpoint): Promise<NextResponse> {
+  const { body, header } = await activeRail().paymentRequired(endpoint)
   return new NextResponse(JSON.stringify(body), {
     status: 402,
-    headers: { 'Content-Type': 'application/json', 'PAYMENT-REQUIRED': header },
+    headers: {
+      'Content-Type': 'application/json',
+      'PAYMENT-REQUIRED': header,
+      // A 402 quotes a price to one caller; it must not be reused from a shared
+      // cache for another.
+      'Cache-Control': 'private, no-store',
+    },
   })
 }
 
@@ -133,11 +113,12 @@ export async function authorizePaidRequest(
     return { ok: true, method: 'api-key', keyId: auth.keyId, rateLimit: auth.rateLimit }
   }
 
+  const rail = activeRail()
   const paymentHeader = headers.get('X-PAYMENT')
 
   // --- Path 3: no credentials at all -----------------------------------------
   if (!paymentHeader) {
-    if (isX402Enabled()) return { ok: false, error: paymentRequired(endpoint) }
+    if (isX402Enabled()) return { ok: false, error: await paymentRequired(endpoint) }
     return {
       ok: false,
       error: jsonError(
@@ -150,7 +131,7 @@ export async function authorizePaidRequest(
   // --- Path 2: x402 ----------------------------------------------------------
   // (a) Local shape check. Free to run, and it is what stops an anonymous
   //     caller turning arbitrary bytes into an outbound facilitator request.
-  const inspection = inspectPaymentHeader(paymentHeader)
+  const inspection = rail.inspect(paymentHeader)
   if (!inspection.ok) {
     return { ok: false, error: jsonError(402, 'payment_malformed', { reason: inspection.reason }) }
   }
@@ -173,19 +154,20 @@ export async function authorizePaidRequest(
   }
 
   // (c) Verification. Read-only — this moves no funds.
-  const requirements = buildRequirements(endpoint.priceKey)
-  const verified = await verifyX402Payment(inspection.payload, requirements)
+  const requirements = await rail.requirements(endpoint)
+  const verified = await rail.verify(inspection.payload, requirements)
   if (!verified.valid) {
     return { ok: false, error: jsonError(402, 'payment_invalid', { reason: verified.error }) }
   }
 
-  // Prefer the payer the facilitator CONFIRMED. The claimed address is only a
-  // fallback for a facilitator that omits it, and is safe here only because
-  // verification already succeeded against the signature over that address.
-  const identity: SettledPaymentIdentity = {
-    network: x402Config.network,
-    payer: (verified.payer ?? inspection.identity.claimedPayer).toLowerCase(),
-    nonce: inspection.identity.nonce,
+  // Identity is assembled ONLY here, after a successful verification, and only
+  // by the rail. Before this line there is a fingerprint and no payer — which
+  // is what stops a replay lookup keyed on an address nobody confirmed.
+  const identity = rail.identify(inspection, verified)
+  if (!identity) {
+    // Verification succeeded but produced no authoritative payer. Refuse rather
+    // than guess: guessing here reads someone else's paid result.
+    return { ok: false, error: jsonError(402, 'payment_unattributable') }
   }
 
   // (d) Replay. A payment that already bought a result buys the same result
@@ -206,7 +188,7 @@ export async function authorizePaidRequest(
       payload: inspection.payload,
       requirements,
       identity,
-      amountMicro: microUnitsFor(endpoint.priceKey),
+      amountMicro: Number(requirements.amount),
       endpointPath: endpoint.path,
       priceKey: endpoint.priceKey,
     },
@@ -237,7 +219,7 @@ export async function deliverPaidResult(
   const { pending } = auth
 
   // Funds move here, and only here.
-  const settled = await settleX402Payment(pending.payload, pending.requirements)
+  const settled = await activeRail().settle(pending.payload, pending.requirements)
   if (!settled.success) {
     return {
       ok: false,
@@ -257,9 +239,10 @@ export async function deliverPaidResult(
   })
 
   if (stored.duplicate) {
-    // A concurrent request settled the same payment first. EIP-3009 guarantees
-    // the chain accepted only one of them, so serve the winner's stored result
-    // rather than our own — the caller must see one answer, not two.
+    // A concurrent request settled the same payment first. Both rails make the
+    // chain accept only one of them — an EIP-3009 nonce is single-use, and a
+    // Stellar sequence number is consumed — so serve the winner's stored result
+    // rather than our own: the caller must see one answer, not two.
     const prior = await lookupDeliveredResult(pending.identity)
     if (prior.available && prior.result) {
       return {
