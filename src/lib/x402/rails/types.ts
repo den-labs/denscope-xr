@@ -99,6 +99,16 @@ export interface PaymentRail {
   readonly network: string
 
   /**
+   * Whether this rail can price and sell this endpoint.
+   *
+   * Rail choice is per RESOURCE, not per deployment. Production sells more than
+   * one paid resource, and the pilot moves exactly one of them; a
+   * deployment-wide switch would drag the others onto a rail that has no price
+   * for them and turn a working 402 into a 500.
+   */
+  supports(endpoint: RailEndpoint): boolean
+
+  /**
    * Local, zero-I/O, allocation-bounded shape check (SEC-04).
    *
    * Runs BEFORE the abuse limiter and before any outbound request, so arbitrary

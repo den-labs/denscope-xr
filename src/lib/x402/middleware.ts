@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { PaymentRequirement } from './types'
 import { isX402Enabled } from './config'
 import { activeRail } from './rails'
-import type { PaymentIdentity } from './rails/types'
+import type { PaymentIdentity, PaymentRail } from './rails/types'
 import { resolveClientIp } from './client-ip'
 import { consumeVerifyAttempt } from './verify-limit'
 import {
@@ -61,6 +61,8 @@ export interface PaidEndpoint {
  *  not to a result — and has cost them nothing yet. */
 export interface PendingPayment {
   payload: Record<string, unknown>
+  /** The rail that verified this payment. Settlement MUST use the same one. */
+  rail: PaymentRail
   requirements: PaymentRequirement
   identity: PaymentIdentity
   /** Atomic units of the rail's asset, taken from the advertised requirements
@@ -79,7 +81,7 @@ export type PaidAuth =
   | { ok: false; error: NextResponse }
 
 async function paymentRequired(endpoint: PaidEndpoint): Promise<NextResponse> {
-  const { body, header } = await activeRail().paymentRequired(endpoint)
+  const { body, header } = await activeRail(endpoint).paymentRequired(endpoint)
   return new NextResponse(JSON.stringify(body), {
     status: 402,
     headers: {
@@ -113,7 +115,7 @@ export async function authorizePaidRequest(
     return { ok: true, method: 'api-key', keyId: auth.keyId, rateLimit: auth.rateLimit }
   }
 
-  const rail = activeRail()
+  const rail = activeRail(endpoint)
   const paymentHeader = headers.get('X-PAYMENT')
 
   // --- Path 3: no credentials at all -----------------------------------------
@@ -186,6 +188,7 @@ export async function authorizePaidRequest(
     method: 'x402',
     pending: {
       payload: inspection.payload,
+      rail,
       requirements,
       identity,
       amountMicro: Number(requirements.amount),
@@ -219,7 +222,7 @@ export async function deliverPaidResult(
   const { pending } = auth
 
   // Funds move here, and only here.
-  const settled = await activeRail().settle(pending.payload, pending.requirements)
+  const settled = await pending.rail.settle(pending.payload, pending.requirements)
   if (!settled.success) {
     return {
       ok: false,

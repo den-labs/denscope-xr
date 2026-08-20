@@ -39,6 +39,12 @@ export const evmRail: PaymentRail = {
     return x402Config.network
   },
 
+  // Every priced endpoint. The EVM rail is the deployed default and prices
+  // whatever `x402Config.pricing` names.
+  supports(): boolean {
+    return true
+  },
+
   inspect(header: string): RailInspection {
     const inspection = inspectPaymentHeader(header)
     if (!inspection.ok) return { ok: false, reason: inspection.reason }

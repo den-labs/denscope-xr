@@ -107,6 +107,11 @@ export const stellarRail: PaymentRail = {
     return stellarConfig.network
   },
 
+  /** The pilot sells exactly one resource. Nothing else routes here. */
+  supports(endpoint: RailEndpoint): boolean {
+    return endpoint.priceKey === PILOT_PRICE_KEY
+  },
+
   /**
    * Local shape check (SEC-04). Zero I/O, bounded work, no signature recovery —
    * the facilitator remains the only authority on whether a payment is valid.
