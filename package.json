@@ -26,7 +26,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "stellar:seller-setup": "tsx scripts/stellar-seller-setup.ts",
-    "stellar:buyer-setup": "tsx scripts/stellar-buyer-setup.ts"
+    "stellar:buyer-setup": "tsx scripts/stellar-buyer-setup.ts",
+    "stellar:e2e": "tsx scripts/stellar-payable-e2e.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^16.0.1",
