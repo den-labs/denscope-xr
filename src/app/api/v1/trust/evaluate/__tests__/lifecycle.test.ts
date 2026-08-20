@@ -25,6 +25,21 @@ vi.mock('@/lib/x402/config', () => ({
     pricing: { evaluate: 0.001, score: 0.001, signals: 0.0005 },
   },
   isX402Enabled: () => true,
+  // EVM rail. The Stellar equivalents of these regressions live in
+  // src/lib/x402/rails/__tests__/stellar.test.ts.
+  isStellarRailEnabled: () => false,
+  stellarConfig: {
+    payTo: '',
+    network: 'stellar:testnet',
+    facilitatorUrl: 'https://facilitator.testnet.x402seek.xyz',
+    price: 0.001,
+  },
+  facilitatorGuard: () => ({
+    ok: true,
+    url: 'https://facilitator.testnet.x402seek.xyz',
+    host: 'facilitator.testnet.x402seek.xyz',
+  }),
+  FACILITATOR_TIMEOUT_MS: 15_000,
 }))
 
 vi.mock('@/lib/api-keys/authenticate', () => ({
