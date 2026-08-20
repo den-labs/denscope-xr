@@ -56,3 +56,6 @@ _bmad-output/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# stellar seller secret (never commit; move to treasury password manager)
+.stellar-seller-secret
