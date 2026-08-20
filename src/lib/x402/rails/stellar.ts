@@ -60,6 +60,12 @@ const RESOURCE_METADATA = {
   tags: ['trust', 'reputation', 'risk', 'erc-8004', 'agent', 'due-diligence', 'onchain'],
 } as const
 
+/**
+ * The facilitator's invalidReason for a payment whose authorisation has already
+ * been spent. Observed live on 2026-08-20 when the settled payment was re-sent.
+ */
+export const CONSUMED_PAYMENT_REASON = 'invalid_exact_stellar_payload_simulation_failed'
+
 /** The single paid resource in the pilot. Adding another is a reviewed change. */
 const PILOT_PRICE_KEY = 'evaluate'
 
@@ -238,6 +244,41 @@ export const stellarRail: PaymentRail = {
     } catch (error) {
       return { success: false, error: facilitatorFailure(error, 'settle') }
     }
+  },
+
+  /**
+   * A consumed Stellar payment no longer verifies, so recovery must be able to
+   * happen before verification is attempted.
+   *
+   * The key carries no payer, because nothing local can confirm one. It names
+   * the PAYMENT. That is sufficient and not a weakening: possession of a valid
+   * `X-PAYMENT` is already bearer authority in x402 — the same bytes are what
+   * bought the result in the first place — and the lifecycle additionally
+   * requires the stored endpoint to match, so one payment can only ever
+   * re-deliver the one resource it purchased. No value moves on this path.
+   */
+  preVerifyRecoveryKey(
+    inspection: Extract<RailInspection, { ok: true }>,
+  ): { network: string; paymentId: string } {
+    return {
+      network: stellarConfig.network,
+      paymentId: inspection.paymentFingerprint,
+    }
+  },
+
+  /**
+   * The single facilitator failure that means "already consumed".
+   *
+   * Narrow on purpose. Treating any verification failure as a replay would hand
+   * out stored results for payments that never settled, and would mask genuine
+   * validation problems. This token is upstream text, so if the facilitator ever
+   * renames it the behaviour degrades to fail-closed — the buyer sees the 402
+   * they see today rather than someone else's result. That is the safe
+   * direction, and it is why this is an equality test and not a substring
+   * search for "simulation" or "failed".
+   */
+  isConsumedPaymentFailure(reason: string | undefined): boolean {
+    return reason === CONSUMED_PAYMENT_REASON
   },
 
   identify(

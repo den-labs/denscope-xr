@@ -78,6 +78,60 @@ export async function lookupDeliveredResult(
   }
 }
 
+/**
+ * Look up a delivered result by the PAYMENT alone, without a confirmed payer.
+ *
+ * Exists for rails where a consumed payment no longer verifies — Stellar, where
+ * the facilitator re-simulates a transaction whose authorisation has been spent.
+ * Without this, a buyer who lost the response could never reach the result they
+ * paid for, because verification refuses before the keyed lookup is reached.
+ *
+ * `endpoint` is part of the query, not decoration: one payment buys one
+ * resource, and a fingerprint must never re-deliver a result bought elsewhere.
+ *
+ * This does not weaken SEC-02. The caller must already hold the exact signed
+ * payment bytes, which is the same bearer authority that bought the result in
+ * the first place, and nothing here moves value or creates a settlement.
+ *
+ * @param key - Configured network, the rail's payment fingerprint, and the
+ *   endpoint being requested.
+ * @returns `{ available: false }` when the store could not be consulted. The
+ *   caller must not read that as "no stored result".
+ */
+export async function lookupDeliveredByPayment(key: {
+  network: string
+  paymentId: string
+  endpoint: string
+}): Promise<DeliveredLookup> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('x402_settlements')
+      .select('response_status, response_body, tx_hash, expires_at')
+      .eq('network', key.network)
+      .eq('nonce', key.paymentId)
+      .eq('endpoint', key.endpoint)
+      .maybeSingle()
+
+    if (error) return { available: false }
+    if (!data) return { available: true, result: null }
+
+    if (data.expires_at && new Date(data.expires_at as string).getTime() < Date.now()) {
+      return { available: true, result: null }
+    }
+
+    return {
+      available: true,
+      result: {
+        status: (data.response_status as number) ?? 200,
+        body: data.response_body,
+        txHash: (data.tx_hash as string | null) ?? null,
+      },
+    }
+  } catch {
+    return { available: false }
+  }
+}
+
 export type StoreOutcome =
   /** Row written; this request owns the delivery. */
   | { stored: true; duplicate: false }

@@ -151,4 +151,34 @@ export interface PaymentRail {
     inspection: Extract<RailInspection, { ok: true }>,
     verified: RailVerifyResult,
   ): PaymentIdentity | null
+
+  /**
+   * Recovery key usable BEFORE verification, when the rail has one.
+   *
+   * Exists because on some rails a consumed payment no longer verifies. Stellar
+   * is one: the facilitator's `/verify` re-simulates the transaction, and a
+   * transaction whose authorisation has been spent does not simulate — so a
+   * buyer who lost the response could never reach the result they paid for.
+   *
+   * This is NOT a {@link PaymentIdentity}: it has no payer, because nothing
+   * local can confirm one. It identifies the PAYMENT, not the payer, and is
+   * only ever used to look up a result that this exact payment already bought.
+   * The lifecycle additionally requires the stored endpoint to match, so one
+   * payment can only re-deliver the one resource it purchased.
+   *
+   * Rails that do not need it omit it, and the lifecycle then behaves exactly
+   * as it does today.
+   */
+  preVerifyRecoveryKey?(
+    inspection: Extract<RailInspection, { ok: true }>,
+  ): { network: string; paymentId: string } | null
+
+  /**
+   * Whether a verification failure means "this payment was already consumed".
+   *
+   * Deliberately a narrow, closed test rather than "any failure": treating
+   * every facilitator error as a replay would mask genuine validation problems
+   * and hand out results for payments that never settled.
+   */
+  isConsumedPaymentFailure?(reason: string | undefined): boolean
 }

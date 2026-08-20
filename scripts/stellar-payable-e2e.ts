@@ -78,7 +78,7 @@ async function sign() {
 
   const secret = readFileSync(BUYER_SECRET_FILE, 'utf8').trim()
   const signer = createEd25519Signer(secret, APPROVED.network as Network)
-  const scheme = new ExactStellarScheme(signer, { rpcUrl: RPC_URL })
+  const scheme = new ExactStellarScheme(signer, { url: RPC_URL })
 
   console.log('signing exactly one payment…')
   const partial = await scheme.createPaymentPayload(2, requirements)

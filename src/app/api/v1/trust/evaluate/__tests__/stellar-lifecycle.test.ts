@@ -71,6 +71,7 @@ vi.mock('@/lib/api-keys/authenticate', () => ({
 vi.mock('@/lib/x402/verify-limit', () => ({ consumeVerifyAttempt: vi.fn() }))
 vi.mock('@/lib/x402/idempotency', () => ({
   lookupDeliveredResult: vi.fn(),
+  lookupDeliveredByPayment: vi.fn(),
   storeDeliveredResult: vi.fn(),
 }))
 vi.mock('@/lib/x402/payments', () => ({ recordX402Payment: vi.fn(async () => undefined) }))
@@ -79,7 +80,11 @@ vi.mock('@/lib/evaluation/compose', () => ({ composeEvaluation: vi.fn() }))
 
 import { POST } from '../route'
 import { consumeVerifyAttempt } from '@/lib/x402/verify-limit'
-import { lookupDeliveredResult, storeDeliveredResult } from '@/lib/x402/idempotency'
+import {
+  lookupDeliveredResult,
+  lookupDeliveredByPayment,
+  storeDeliveredResult,
+} from '@/lib/x402/idempotency'
 import { composeEvaluation } from '@/lib/evaluation/compose'
 
 /** Locally signed testnet envelope. Never submitted. */
@@ -134,6 +139,9 @@ beforeEach(() => {
     retryAfterSeconds: 60,
     available: true,
   })
+  vi.mocked(lookupDeliveredByPayment).mockReset()
+  // Default: no prior purchase, so these tests exercise the first-payment path.
+  vi.mocked(lookupDeliveredByPayment).mockResolvedValue({ available: true, result: null })
   vi.mocked(lookupDeliveredResult).mockResolvedValue({ available: true, result: null })
   vi.mocked(storeDeliveredResult).mockResolvedValue({ stored: true, duplicate: false })
   verify.mockResolvedValue({ isValid: true, payer: BUYER })

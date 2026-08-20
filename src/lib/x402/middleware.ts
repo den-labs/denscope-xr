@@ -7,6 +7,7 @@ import { resolveClientIp } from './client-ip'
 import { consumeVerifyAttempt } from './verify-limit'
 import {
   lookupDeliveredResult,
+  lookupDeliveredByPayment,
   storeDeliveredResult,
   type DeliveredResult,
 } from './idempotency'
@@ -28,6 +29,7 @@ import type { RateLimitResult } from '@/lib/api-keys/rate-limit'
  *     1. API key present            -> normal quota auth, nothing paid
  *     2. X-PAYMENT present
  *          a. local shape check     (SEC-04: garbage never reaches the facilitator)
+ *          a2. pre-verify recovery  (rails where a consumed payment no longer verifies)
  *          b. abuse limiter         (SEC-04: garbage volume is bounded)
  *          c. facilitator /verify   (read-only; no funds move)
  *          d. replay lookup         (SEC-02: already-settled payment -> stored result)
@@ -138,6 +140,28 @@ export async function authorizePaidRequest(
     return { ok: false, error: jsonError(402, 'payment_malformed', { reason: inspection.reason }) }
   }
 
+  // (a2) Pre-verify recovery, for rails that need it.
+  //
+  // On Stellar a consumed payment no longer verifies — the facilitator
+  // re-simulates a transaction whose authorisation has been spent — so a buyer
+  // who lost the response could never reach the result they paid for if this
+  // ran after verification. It is keyed on the payment, never on a payer, and
+  // the endpoint must match so one payment cannot re-deliver another
+  // resource's result. It moves no value and creates no settlement.
+  //
+  // An unavailable store is NOT treated as a miss that ends the request: it
+  // falls through to the normal path, which fails closed on its own lookup.
+  const recoveryKey = rail.preVerifyRecoveryKey?.(inspection)
+  if (recoveryKey) {
+    const recovered = await lookupDeliveredByPayment({
+      ...recoveryKey,
+      endpoint: endpoint.path,
+    })
+    if (recovered.available && recovered.result) {
+      return { ok: true, method: 'x402-replay', delivered: recovered.result }
+    }
+  }
+
   // (b) Abuse limiter, keyed on the resolved client IP. Only requests that are
   //     about to cost us a facilitator round-trip are counted.
   const client = resolveClientIp(headers)
@@ -159,6 +183,24 @@ export async function authorizePaidRequest(
   const requirements = await rail.requirements(endpoint)
   const verified = await rail.verify(inspection.payload, requirements)
   if (!verified.valid) {
+    // Lost-response race: this request missed the pre-verify lookup, a
+    // concurrent one settled the same payment in the meantime, and verification
+    // now reports the payment as consumed. One more read-only look before
+    // refusing — the result the caller paid for may exist by now.
+    //
+    // Eligibility is a narrow equality test owned by the rail, not "any
+    // failure". Treating every facilitator error as a replay would hand out
+    // stored results for payments that never settled.
+    if (recoveryKey && rail.isConsumedPaymentFailure?.(verified.error)) {
+      const recovered = await lookupDeliveredByPayment({
+        ...recoveryKey,
+        endpoint: endpoint.path,
+      })
+      if (recovered.available && recovered.result) {
+        return { ok: true, method: 'x402-replay', delivered: recovered.result }
+      }
+    }
+    // No stored result: fail closed. Nothing is settled and nothing is retried.
     return { ok: false, error: jsonError(402, 'payment_invalid', { reason: verified.error }) }
   }
 
