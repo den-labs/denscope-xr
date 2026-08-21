@@ -34,6 +34,7 @@ import {
 import type { Network, PaymentPayload } from '@x402/core/types'
 
 import { siteUrl } from '@/config/site'
+import { buildBazaarExtension } from '../bazaar'
 import type { PaymentRequirement } from '../types'
 import {
   stellarConfig,
@@ -199,6 +200,11 @@ export const stellarRail: PaymentRail = {
         description: endpoint.description,
         ...RESOURCE_METADATA,
       },
+      // Discovery metadata a conforming buyer carries into its payment payload.
+      // Without it the facilitator's catalog gate returns
+      // `skipped: no-bazaar-extension` after an otherwise perfect settlement.
+      // It is advertisement only — it can never influence what is charged.
+      extensions: buildBazaarExtension(),
       error: 'missing payment header',
     }
     return {
