@@ -1,0 +1,26 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "DenScope",
+  "description": "Real-time ERC-8004 agent explorer with trust scoring, signal detection, and x402 micropayments. Indexes on-chain Identity and Reputation Registry activity across Celo and Avalanche, and serves trust scores, risk signals and agent search over an HTTP API.",
+  "image": "https://www.denscope.xyz/denscope-logo.png",
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://www.denscope.xyz"
+    },
+    {
+      "name": "x402",
+      "endpoint": "https://www.denscope.xyz/api/v1/trust/evaluate",
+      "description": "Paid trust evaluation. Ownership is declared at /.well-known/x402 per Resource Ownership Convention v1."
+    }
+  ],
+  "x402Support": true,
+  "active": true,
+  "registrations": [
+    {
+      "agentId": 0,
+      "agentRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+    }
+  ],
+  "supportedTrust": ["reputation"]
+}
