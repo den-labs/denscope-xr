@@ -24,14 +24,21 @@
     "og:fetch": "tsx scripts/fetch-og-cards.ts",
     "perf:review": "tsx scripts/perf-review-template.ts",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "stellar:seller-setup": "tsx scripts/stellar-seller-setup.ts",
+    "stellar:buyer-setup": "tsx scripts/stellar-buyer-setup.ts",
+    "stellar:e2e": "tsx scripts/stellar-payable-e2e.ts"
   },
   "dependencies": {
+    "@stellar/stellar-sdk": "^16.0.1",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.21",
     "@vercel/analytics": "^2.0.1",
     "@wagmi/connectors": "^7.1.7",
     "@wagmi/core": "^3.3.3",
+    "@x402/core": "2.23.0",
+    "@x402/extensions": "2.23.0",
+    "@x402/stellar": "2.23.0",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",

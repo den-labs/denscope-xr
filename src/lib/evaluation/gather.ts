@@ -43,6 +43,7 @@ export async function gatherEvidence(
       ageDays: 0,
       lastActivityDays: Infinity,
       agentExists: false,
+      dataAsOf: null,
     }
   }
 
@@ -82,5 +83,16 @@ export async function gatherEvidence(
     ageDays,
     lastActivityDays,
     agentExists: true,
+    dataAsOf: freshestOf(score?.updatedAt, lastSeen),
   }
+}
+
+/** Newest of the dated inputs, ISO 8601. Null when neither is dated. */
+function freshestOf(...candidates: (string | null | undefined)[]): string | null {
+  const times = candidates
+    .filter((c): c is string => typeof c === 'string' && c.length > 0)
+    .map((c) => new Date(c).getTime())
+    .filter((t) => Number.isFinite(t))
+  if (times.length === 0) return null
+  return new Date(Math.max(...times)).toISOString()
 }

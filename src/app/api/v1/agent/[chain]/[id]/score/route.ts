@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { siteUrl } from '@/config/site'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { authenticateHybrid, buildHybridHeaders } from '@/lib/x402/middleware'
-import { recordX402Payment } from '@/lib/x402/payments'
+import { authenticateApiKey, buildRateLimitHeaders } from '@/lib/api-keys/authenticate'
 import { toTrustScore } from '@/types/trust-score'
 
 type RouteParams = { params: Promise<{ chain: string; id: string }> }
 
+/**
+ * Trust score — FREE, API key only.
+ *
+ * This endpoint used to charge $0.001 per call over x402. It no longer does.
+ * The v1 formula is published at /docs/api#trust-score-formula and every input
+ * is public on-chain data, so anyone with the events can recompute the number
+ * themselves: charging for it was gating a lookup rather than selling analysis.
+ *
+ * The boundary DenScope now holds is "free = what the chain says, paid = what
+ * DenScope concludes". The paid product is the contextual decision at
+ * /api/v1/trust/evaluate, which turns this score plus incidents, freshness and
+ * a risk preset into a recommended action.
+ *
+ * Removing payment here also shrinks the surface that has to be economically
+ * correct: /score can no longer take money and return 404.
+ */
 export async function GET(req: NextRequest, { params }: RouteParams) {
+  const auth = await authenticateApiKey(req.headers)
+  if (!auth.ok) return auth.error
+
   const { chain, id } = await params
   const chainId = Number(chain)
   const agentId = Number(id)
 
-  const endpointPath = `/api/v1/agent/${chain}/${id}/score`
-  const auth = await authenticateHybrid(req.headers, {
-    path: endpointPath,
-    priceKey: 'score',
-    description: 'Trust score query for ERC-8004 agent',
-  })
-  if (!auth.ok) return auth.error
-
   if (!chainId || !agentId) {
     return NextResponse.json({ error: 'Invalid chain or agent ID' }, { status: 400 })
   }
+
+  const headers = buildRateLimitHeaders(auth.rateLimit)
 
   const { data } = await supabaseAdmin
     .from('trust_scores')
@@ -30,11 +42,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     .eq('chain_id', chainId)
     .eq('agent_id', agentId)
     .maybeSingle()
-
-  // Record x402 payment (fire-and-forget)
-  if (auth.method === 'x402') {
-    recordX402Payment({ chainId, agentId, endpoint: endpointPath, x402: auth.x402, priceKey: 'score' })
-  }
 
   // Return computed score, or default score for agents with no feedback yet
   if (data) {
@@ -58,7 +65,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         updatedAt: score.updatedAt,
       },
       formula: `${siteUrl()}/docs/api#trust-score-formula`,
-    }, { headers: buildHybridHeaders(auth) })
+    }, { headers })
   }
 
   // Agent exists but has no trust score computed yet — return baseline
@@ -87,5 +94,5 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       updatedAt: null,
     },
     formula: `${siteUrl()}/docs/api#trust-score-formula`,
-  }, { headers: buildHybridHeaders(auth) })
+  }, { headers })
 }

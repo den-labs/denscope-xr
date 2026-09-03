@@ -19,6 +19,7 @@ function makeEvidence(overrides: Partial<GatheredEvidence> = {}): GatheredEviden
     ageDays: 120,
     lastActivityDays: 3,
     agentExists: true,
+    dataAsOf: '2026-08-19T00:00:00.000Z',
     ...overrides,
   }
 }

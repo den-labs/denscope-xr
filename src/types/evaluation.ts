@@ -34,6 +34,9 @@ export type GatheredEvidence = {
   ageDays: number
   lastActivityDays: number
   agentExists: boolean
+  /** Freshest input this evaluation saw: max(score updated_at, agent last_seen).
+   *  ISO 8601, or null when nothing dated was available. */
+  dataAsOf: string | null
 }
 
 // --- Preset Config (internal) ---
@@ -92,6 +95,17 @@ export type Evaluation = {
   evaluatedAt: string
   chainId: number
   agentId: number
+  /**
+   * What this decision cannot tell you.
+   *
+   * Ships WITH the paid decision rather than living in documentation, because a
+   * machine client that buys a verdict and never reads a docs page is the
+   * expected consumer. A buyer who is told nothing about the boundaries of the
+   * answer will over-trust it.
+   */
+  limitations: string[]
+  /** Freshness of the underlying data, ISO 8601. Bounded by the 1-minute poller. */
+  dataAsOf: string
 }
 
 export type EvaluateResponse = {
