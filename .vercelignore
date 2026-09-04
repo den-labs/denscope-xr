@@ -1,0 +1,25 @@
+# .vercelignore -- controls what the Vercel CLI uploads on `vercel deploy`.
+#
+# The CLI does NOT read .gitignore. Anything not excluded here is uploaded
+# into the deployment source archive, gitignored secrets included. Confirmed
+# on 2026-09-03 by inspecting a live production deployment: it shipped the
+# project's .env file.
+#
+# Neither DenScope nor Ayni has a Git integration on Vercel, so every deploy
+# is a CLI upload from a working directory. This file is the only guard.
+
+# Everything dot-prefixed.
+#
+# Nothing dot-prefixed is needed to build these projects on Vercel: env vars
+# come from the project settings, and the real build configs (next.config.ts,
+# eslint.config.mjs, tsconfig.json, package.json) are not dotfiles.
+#
+# One rule covers .env*, local key material, and the agent tool directories
+# (.claude/, .cursor/, .superpowers/, ...) without a list that goes stale
+# every time a new tool is installed.
+.*
+
+# Build output and caches -- rebuilt remotely.
+node_modules
+test-results
+tsconfig.tsbuildinfo
