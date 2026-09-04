@@ -3,21 +3,25 @@
 # The CLI does NOT read .gitignore. Anything not excluded here is uploaded
 # into the deployment source archive, gitignored secrets included. Confirmed
 # on 2026-09-03 by inspecting a live production deployment: it shipped the
-# project's .env file.
+# project's local .env files and agent tool directories.
 #
 # Neither DenScope nor Ayni has a Git integration on Vercel, so every deploy
 # is a CLI upload from a working directory. This file is the only guard.
 
-# Everything dot-prefixed.
+# Root-level dot entries only.
 #
-# Nothing dot-prefixed is needed to build these projects on Vercel: env vars
-# come from the project settings, and the real build configs (next.config.ts,
-# eslint.config.mjs, tsconfig.json, package.json) are not dotfiles.
+# The leading slash is load-bearing. An unanchored `.*` also matches dot
+# components nested inside a path: on 2026-09-03 it silently dropped
+# src/app/.well-known/x402/ from a production build, and the route 404'd
+# until this was fixed. Do not remove the slash.
 #
-# One rule covers .env*, local key material, and the agent tool directories
-# (.claude/, .cursor/, .superpowers/, ...) without a list that goes stale
-# every time a new tool is installed.
-.*
+# Nothing dot-prefixed at the repo root is needed to build these projects on
+# Vercel: env vars come from the project settings, and the real build configs
+# (next.config.ts, eslint.config.mjs, tsconfig.json, package.json) are not
+# dotfiles. One rule covers .env*, local key material and the agent tool
+# directories (.claude/, .cursor/, .superpowers/, ...) without a list that
+# goes stale every time a new tool is installed.
+/.*
 
 # Build output and caches -- rebuilt remotely.
 node_modules
